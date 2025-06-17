@@ -7,12 +7,6 @@ from app.api_client import InsureFlowApiClient
 
 st.set_page_config(page_title="InsureFlow Payments", layout="wide")
 
-# Add an informational message about ports
-st.info(
-    "ℹ️ **How Ports Work on Render:** This dashboard runs on port `8501` inside its container. "
-    "However, Render exposes it to the web on a standard HTTPS port (443), so you don't need to add a port number to the URL."
-)
-
 st.title("InsureFlow Payment Monitoring Dashboard")
 
 api_client = InsureFlowApiClient()
