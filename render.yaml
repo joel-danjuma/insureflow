@@ -1,0 +1,72 @@
+# render.yaml
+# This file defines the infrastructure for deploying InsureFlow on Render.
+# For more details, see the Render documentation: https://render.com/docs/blueprint-spec
+
+services:
+  # 1. PostgreSQL Database
+  - name: insureflow-db
+    type: psql
+    psqlVersion: 14
+    # The following properties are optional, but recommended for production
+    region: oregon # e.g., oregon, frankfurt, ohio, singapore
+    plan: starter # 'starter' is free, but you can choose a paid plan for more resources
+
+  # 2. Redis Cache
+  - name: insureflow-redis
+    type: redis
+    plan: free # 'free' plan is suitable for development/small projects
+    region: oregon
+
+  # 3. FastAPI Backend Application
+  - name: insureflow-backend
+    type: web
+    region: oregon
+    plan: starter
+    # Tell Render to use the image from your container registry
+    image:
+      # IMPORTANT: Replace 'your-dockerhub-username' with your actual username
+      url: your-dockerhub-username/insureflow-backend:latest
+    healthCheckPath: /
+    envVars:
+      # This is where you will set your secrets in the Render dashboard
+      # Render automatically provides DATABASE_URL and REDIS_URL
+      - key: DATABASE_URL
+        fromService:
+          type: psql
+          name: insureflow-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: insureflow-redis
+          property: connectionString
+      # --- Add your other secrets below ---
+      # Go to the "Environment" section of your service in the Render dashboard
+      # and add these as "Secret Files" or "Environment Variables".
+      - key: SQUAD_SECRET_KEY
+        value: "your_squad_secret_key_here" # Replace with your actual key
+      - key: SQUAD_PUBLIC_KEY
+        value: "your_squad_public_key_here" # Replace with your actual key
+      - key: JWT_SECRET_KEY
+        generateValue: true # Let Render generate a secure secret key for JWT
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 30
+
+  # 4. Streamlit Dashboard
+  - name: insureflow-dashboard
+    type: web
+    region: oregon
+    plan: starter
+    # Tell Render to use the image from your container registry
+    image:
+      # IMPORTANT: Replace 'your-dockerhub-username' with your actual username
+      url: your-dockerhub-username/insureflow-dashboard:latest
+    envVars:
+      # The dashboard needs to know the URL of the backend service
+      - key: BACKEND_URL
+        fromService:
+          type: web
+          name: insureflow-backend
+          property: url 

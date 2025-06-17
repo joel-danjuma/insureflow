@@ -1,0 +1,329 @@
+# InsureFlow Premium Collection Platform - Product Requirements Document
+
+## Overview  
+
+InsureFlow is a modern insurance premium collection and management platform designed to streamline payment workflows for insurance companies, brokers, and customers. The platform addresses the critical challenge of managing complex premium payment cycles, broker commissions, and automated reconciliation processes in the insurance industry.
+
+**Problem Statement**: Insurance companies struggle with fragmented premium collection systems, manual reconciliation processes, and lack of real-time visibility into outstanding premiums across multiple brokers and channels.
+
+**Solution**: A comprehensive backend service with FastAPI and Streamlit dashboard that automates premium collection, provides real-time payment tracking, integrates with Squad Co payment gateway for seamless transactions, and offers intelligent reporting and reconciliation capabilities.
+
+**Target Users**: 
+- Insurance Companies (Primary)
+- Insurance Brokers (Secondary)
+- End Customers/Policyholders (Tertiary)
+
+## Core Features  
+
+### 1. **Multi-Tenant Authentication System**
+- **What it does**: Provides secure, role-based access control for different user types (insurers, brokers, admins)
+- **Why it's important**: Ensures data security and appropriate access levels for different stakeholders
+- **How it works**: JWT-based authentication with role-based permissions, OAuth2 integration, and secure session management
+
+### 2. **Policy & Premium Management**
+- **What it does**: Manages insurance policies, premium calculations, due dates, and payment schedules
+- **Why it's important**: Core functionality for tracking and managing the entire premium lifecycle
+- **How it works**: RESTful APIs for CRUD operations on policies, automated premium calculations, and payment scheduling
+
+### 3. **Squad Co Payment Integration**
+- **What it does**: Processes premium payments through multiple channels (cards, bank transfers, USSD)
+- **Why it's important**: Provides flexible payment options and seamless transaction processing
+- **How it works**: Integration with Squad Co APIs for payment initiation, webhook handling for payment confirmations, and automated reconciliation
+
+### 4. **Broker Dashboard & Commission Management**
+- **What it does**: Tracks broker performance, manages commission calculations, and provides broker-specific analytics
+- **Why it's important**: Enables effective broker relationship management and transparent commission tracking
+- **How it works**: Real-time dashboards showing broker metrics, automated commission calculations, and payment tracking
+
+### 5. **Automated Reconciliation Engine**
+- **What it does**: Automatically matches payments to policies and generates reconciliation reports
+- **Why it's important**: Reduces manual effort and ensures accurate financial reporting
+- **How it works**: Intelligent matching algorithms, exception handling for unmatched payments, and automated reporting
+
+### 6. **Real-time Analytics & Reporting**
+- **What it does**: Provides comprehensive insights into payment trends, outstanding premiums, and business performance
+- **Why it's important**: Enables data-driven decision making and proactive premium management
+- **How it works**: Interactive Streamlit dashboard with real-time charts, KPI tracking, and customizable reports
+
+## User Experience  
+
+### **User Personas**
+
+1. **Insurance Company Administrator**
+   - Needs: Comprehensive view of all premiums, broker performance, and system configuration
+   - Goals: Optimize premium collection rates and minimize outstanding amounts
+   - Pain Points: Manual reconciliation, lack of real-time visibility
+
+2. **Insurance Broker**
+   - Needs: Easy policy creation, commission tracking, and customer payment facilitation
+   - Goals: Maximize commission earnings and improve customer experience
+   - Pain Points: Complex payment processes, delayed commission visibility
+
+3. **Policyholder/Customer**
+   - Needs: Simple payment process, multiple payment options, and payment confirmations
+   - Goals: Quick and secure premium payments
+   - Pain Points: Limited payment options, unclear payment status
+
+### **Key User Flows**
+
+1. **Premium Payment Flow**:
+   Customer receives payment notification → Accesses secure payment portal → Selects payment method → Completes payment via Squad Co → Receives confirmation → System updates policy status
+
+2. **Broker Onboarding Flow**:
+   Admin creates broker account → Broker receives credentials → Sets up profile → Configures commission structure → Begins policy creation
+
+3. **Policy Creation Flow**:
+   Broker logs in → Creates new policy → Sets premium amount and schedule → System generates payment links → Customer receives payment notification
+
+### **UI/UX Considerations**
+- Mobile-responsive design for customer payment interfaces
+- Intuitive dashboard layouts matching the provided screenshots
+- Real-time updates and notifications
+- Accessibility compliance (WCAG 2.1)
+- Multi-language support capability
+
+## Technical Architecture  
+
+### **System Components**
+
+1. **Backend API Service (FastAPI)**
+   - Authentication & Authorization Service
+   - Policy Management Service
+   - Payment Processing Service
+   - Broker Management Service
+   - Reconciliation Engine
+   - Notification Service
+
+2. **Frontend Dashboard (Streamlit)**
+   - Admin Dashboard
+   - Broker Dashboard  
+   - Customer Payment Portal
+   - Analytics & Reporting Interface
+
+3. **Database Layer**
+   - PostgreSQL for transactional data
+   - Redis for caching and session management
+   - TimescaleDB for time-series analytics
+
+4. **External Integrations**
+   - Squad Co Payment Gateway
+   - Email/SMS notification services
+   - Document storage (AWS S3/Google Cloud Storage)
+
+### **Data Models**
+
+**Core Entities:**
+- Users (Admins, Brokers, Customers)
+- Insurance Companies
+- Policies
+- Premiums
+- Payments
+- Brokers
+- Commissions
+- Transactions
+
+**Key Relationships:**
+- One-to-Many: Company → Brokers → Policies
+- Many-to-Many: Brokers ↔ Policies (for complex broker arrangements)
+- One-to-Many: Policy → Premiums → Payments
+
+### **APIs and Integrations**
+
+**Internal APIs:**
+- `/auth/` - Authentication and user management
+- `/policies/` - Policy CRUD operations
+- `/premiums/` - Premium management
+- `/payments/` - Payment processing
+- `/brokers/` - Broker management
+- `/analytics/` - Reporting and analytics
+
+**External Integrations:**
+- Squad Co Payment API for payment processing
+- Squad Co Webhook API for payment confirmations
+- Email/SMS APIs for notifications
+- Document storage APIs for policy documents
+
+### **Infrastructure Requirements**
+
+**Development Environment:**
+- Docker containers for service isolation
+- Docker Compose for local development
+- PostgreSQL 14+ database
+- Redis 6+ for caching
+
+**Production Environment:**
+- Kubernetes cluster for scalability
+- Load balancers for high availability
+- SSL certificates for security
+- Monitoring and logging (Prometheus/Grafana)
+
+## Development Roadmap  
+
+### **Phase 1: Core Foundation (MVP)**
+**Scope**: Basic premium collection and payment processing
+- User authentication system (Admin, Broker roles)
+- Basic policy and premium management
+- Squad Co payment integration (card payments only)
+- Simple payment confirmation and status tracking
+- Basic Streamlit dashboard for payment monitoring
+
+**Deliverables**:
+- Functional authentication API
+- Policy creation and management endpoints
+- Squad Co payment initiation and webhook handling
+- Basic payment dashboard
+- Database schema implementation
+
+### **Phase 2: Broker Management & Advanced Payments**
+**Scope**: Complete broker functionality and expanded payment options
+- Comprehensive broker management system
+- Commission calculation and tracking
+- Multiple payment channels (USSD, Bank Transfer)
+- Automated payment reminders and notifications
+- Enhanced dashboard with broker analytics
+
+**Deliverables**:
+- Broker registration and management system
+- Commission calculation engine
+- Extended Squad Co integration (all payment methods)
+- Notification system implementation
+- Enhanced Streamlit dashboard with broker metrics
+
+### **Phase 3: Automation & Intelligence**
+**Scope**: Automated reconciliation and advanced analytics
+- Automated reconciliation engine
+- Advanced reporting and analytics
+- Recurring payment support
+- Customer self-service portal
+- Performance optimization
+
+**Deliverables**:
+- Automated reconciliation system
+- Comprehensive analytics dashboard
+- Customer payment portal
+- Recurring payment scheduling
+- System performance optimization
+
+### **Phase 4: Enterprise Features**
+**Scope**: Enterprise-grade features and integrations
+- Multi-tenant architecture refinement
+- Advanced reporting with custom filters
+- API rate limiting and security enhancements
+- Integration with external insurance systems
+- Mobile app API support
+
+**Deliverables**:
+- Enterprise security features
+- Advanced analytics and reporting
+- External system integrations
+- Mobile API endpoints
+- Comprehensive documentation
+
+## Logical Dependency Chain
+
+### **Foundation Layer (Build First)**
+1. **Database Schema Design** - Core data models and relationships
+2. **Authentication System** - JWT implementation with role-based access
+3. **Basic FastAPI Application** - Project structure and core endpoints
+4. **Squad Co Integration** - Payment initiation and webhook handling
+
+### **Core Functionality Layer**
+5. **Policy Management** - CRUD operations for policies and premiums
+6. **Payment Processing** - End-to-end payment flow with Squad Co
+7. **Basic Dashboard** - Streamlit interface for payment monitoring
+8. **User Management** - Broker and customer account management
+
+### **Business Logic Layer**
+9. **Broker Management** - Comprehensive broker functionality
+10. **Commission Engine** - Automated commission calculations
+11. **Notification System** - Email/SMS notifications for payments
+12. **Enhanced Dashboard** - Advanced analytics and reporting
+
+### **Optimization Layer**
+13. **Reconciliation Engine** - Automated payment matching
+14. **Performance Optimization** - Caching, indexing, and query optimization
+15. **Advanced Features** - Recurring payments, custom reporting
+
+## Risks and Mitigations  
+
+### **Technical Challenges**
+
+**Risk**: Squad Co API integration complexity and webhook reliability
+**Mitigation**: Implement comprehensive error handling, retry mechanisms, and webhook validation. Create fallback payment confirmation methods.
+
+**Risk**: Database performance with large transaction volumes
+**Mitigation**: Implement proper indexing, database partitioning, and caching strategies. Use TimescaleDB for time-series data.
+
+**Risk**: Security vulnerabilities in payment processing
+**Mitigation**: Implement OAuth2, encrypt sensitive data, regular security audits, and PCI DSS compliance measures.
+
+### **Business Risks**
+
+**Risk**: Complex insurance business logic requirements
+**Mitigation**: Start with simplified MVP focusing on core payment flows. Iterate based on user feedback and gradually add complexity.
+
+**Risk**: Integration challenges with existing insurance systems
+**Mitigation**: Design APIs with flexibility in mind. Create standardized integration patterns and comprehensive documentation.
+
+### **MVP Strategy**
+
+**Risk**: Building too much complexity initially
+**Mitigation**: Focus on core payment collection flow first. Ensure basic functionality works reliably before adding advanced features.
+
+**Quick Win Strategy**: 
+- Get a working payment flow with Squad Co within 2 weeks
+- Create a simple dashboard showing payment status within 3 weeks
+- Demonstrate value with real payment processing before building advanced features
+
+## Appendix  
+
+### **Research Findings**
+
+**Squad Co Payment Gateway Capabilities:**
+- Supports global payments with multiple payment methods including cards, bank transfers, and USSD
+- Provides webhook notifications for payment confirmations and tokenization for recurring payments
+- Offers both inline payment modal and direct API integration options
+- Includes virtual account creation for receiving bank transfers
+
+**Insurance Platform Requirements (Based on Screenshots):**
+- Support for multiple brokers (IBN, SCIB, Ark Insurance as shown)
+- Real-time premium tracking and outstanding payment monitoring
+- Commission tracking and automated reconciliation capabilities
+- Multi-currency support and payment method flexibility
+
+### **Technical Specifications**
+
+**Required Environment Variables:**
+```
+SQUAD_SECRET_KEY=your_squad_secret_key
+SQUAD_PUBLIC_KEY=your_squad_public_key
+SQUAD_WEBHOOK_URL=your_webhook_endpoint
+DATABASE_URL=postgresql://user:pass@localhost/insureflow
+REDIS_URL=redis://localhost:6379
+JWT_SECRET_KEY=your_jwt_secret
+```
+
+**Core Dependencies:**
+```
+fastapi>=0.104.0
+sqlalchemy>=2.0.0
+alembic>=1.12.0
+pydantic>=2.4.0
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+redis>=5.0.0
+streamlit>=1.28.0
+requests>=2.31.0
+```
+
+**Database Performance Considerations:**
+- Index on policy_number, broker_id, payment_date
+- Partition large tables by date for better performance
+- Implement connection pooling for high concurrency
+
+**Security Requirements:**
+- HTTPS enforcement for all endpoints
+- Rate limiting on payment APIs
+- Input validation and sanitization
+- Audit logging for all financial transactions
+- Data encryption at rest and in transit
