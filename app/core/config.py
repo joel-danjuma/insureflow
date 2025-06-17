@@ -10,19 +10,19 @@ class Settings(BaseSettings):
     """Application settings."""
     
     # Database settings
-    DATABASE_URL: str = "postgresql://insureflow:insureflow@localhost:5433/insureflow"
+    DATABASE_URL: str
     
     # Redis settings
-    REDIS_URL: str = "redis://localhost:6379"
+    REDIS_URL: str
     
     # JWT settings
-    JWT_SECRET_KEY: str = "your_super_secret_jwt_key_here_change_in_production"
-    JWT_ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    JWT_SECRET_KEY: str
+    ALGORITHM: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
     
     # Squad Co Payment Gateway settings
-    SQUAD_SECRET_KEY: Optional[str] = None
-    SQUAD_PUBLIC_KEY: Optional[str] = None
+    SQUAD_SECRET_KEY: str
+    SQUAD_PUBLIC_KEY: str
     SQUAD_WEBHOOK_URL: Optional[str] = None
     SQUAD_BASE_URL: str = "https://api-d.squadco.com"
     
@@ -42,8 +42,16 @@ class Settings(BaseSettings):
         "http://localhost:8501"
     ]
     
+    # Optional API Keys
+    ANTHROPIC_API_KEY: Optional[str] = None
+    PERPLEXITY_API_KEY: Optional[str] = None
+    OPENAI_API_KEY: Optional[str] = None
+    GOOGLE_API_KEY: Optional[str] = None
+    
     class Config:
         env_file = ".env"
+        env_file_encoding = 'utf-8'
+        extra = 'ignore'  # Ignore extra variables from the env file
         case_sensitive = True
 
 

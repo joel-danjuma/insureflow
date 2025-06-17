@@ -68,7 +68,8 @@ services:
       - app
     volumes:
       - .:/app
-    command: ["streamlit", "run", "app/dashboard.py", "--server.address", "0.0.0.0"]
+    command: >
+      sh -c "PYTHONPATH=. streamlit run app/dashboard.py --server.address=0.0.0.0"
     restart: unless-stopped
 
 volumes:
