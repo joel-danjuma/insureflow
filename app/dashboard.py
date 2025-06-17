@@ -18,16 +18,44 @@ st.title("InsureFlow Payment Monitoring Dashboard")
 api_client = InsureFlowApiClient()
 
 if "token" not in st.session_state:
-    st.header("Login")
-    email = st.text_input("Email")
-    password = st.text_input("Password", type="password")
-    if st.button("Login"):
-        if api_client.login(email, password):
-            st.success("Logged in successfully!")
-            st.rerun()
-        else:
-            st.error("Invalid credentials")
+    login_tab, signup_tab = st.tabs(["Login", "Sign Up"])
+
+    with login_tab:
+        st.header("Login")
+        login_email = st.text_input("Email", key="login_email")
+        login_password = st.text_input("Password", type="password", key="login_password")
+        if st.button("Login"):
+            if api_client.login(login_email, login_password):
+                st.success("Logged in successfully!")
+                st.rerun()
+            else:
+                st.error("Invalid credentials")
+
+    with signup_tab:
+        st.header("Create a New Account")
+        signup_email = st.text_input("Email", key="signup_email")
+        signup_username = st.text_input("Username", key="signup_username")
+        signup_fullname = st.text_input("Full Name", key="signup_fullname")
+        signup_password = st.text_input("Password", type="password", key="signup_password")
+
+        if st.button("Sign Up"):
+            success, message = api_client.register(
+                email=signup_email,
+                password=signup_password,
+                full_name=signup_fullname,
+                username=signup_username,
+            )
+            if success:
+                st.success("Registration successful! You are now logged in.")
+                st.rerun()
+            else:
+                st.error(f"Registration failed: {message}")
 else:
+    st.sidebar.success("You are logged in.")
+    if st.sidebar.button("Logout"):
+        del st.session_state["token"]
+        st.rerun()
+        
     st.header("Policies and Premiums")
     
     policies = api_client.get_policies()

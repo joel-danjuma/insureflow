@@ -32,6 +32,32 @@ class InsureFlowApiClient:
             return True
         return False
 
+    def register(self, email, password, full_name, username):
+        """
+        Registers a new user and authenticates if successful.
+        """
+        response = self.client.post(
+            f"{self.base_url}/auth/register",
+            json={
+                "email": email,
+                "password": password,
+                "full_name": full_name,
+                "username": username,
+            },
+        )
+        if response.status_code == 200:
+            self.token = response.json()["access_token"]
+            st.session_state["token"] = self.token
+            self.client.headers["Authorization"] = f"Bearer {self.token}"
+            return True, "Registration successful!"
+        else:
+            error_detail = "An unknown error occurred."
+            try:
+                error_detail = response.json().get("detail", error_detail)
+            except Exception:
+                pass
+            return False, error_detail
+
     def get_policies(self):
         """
         Retrieves a list of policies.
