@@ -59,6 +59,17 @@ class InsureFlowApiClient:
                 pass
             return False, error_detail
 
+    def get_dashboard_data(self):
+        """
+        Retrieves aggregated data for the main dashboard.
+        """
+        if not self.token:
+            return None
+        response = self.client.get(f"{self.base_url}/dashboard/")
+        if response.status_code == 200:
+            return response.json()
+        return None
+
     def get_policies(self):
         """
         Retrieves a list of policies.
