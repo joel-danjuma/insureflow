@@ -17,11 +17,15 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
     """
     Registers a new user.
     """
-    db_user = user_crud.get_user_by_email(db, email=user.email)
-    if db_user:
+    if user_crud.get_user_by_email(db, email=user.email):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered",
+        )
+    if user_crud.get_user_by_username(db, username=user.username):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already registered",
         )
     user_crud.create_user(db=db, user=user)
     return {"message": "User registered successfully"}
