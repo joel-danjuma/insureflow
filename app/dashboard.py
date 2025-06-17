@@ -31,6 +31,7 @@ if "token" not in st.session_state:
         signup_username = st.text_input("Username", key="signup_username")
         signup_fullname = st.text_input("Full Name", key="signup_fullname")
         signup_password = st.text_input("Password", type="password", key="signup_password")
+        signup_role = st.selectbox("Role", ["customer", "broker", "admin"], key="signup_role")
 
         if st.button("Sign Up"):
             success, message = api_client.register(
@@ -38,6 +39,7 @@ if "token" not in st.session_state:
                 password=signup_password,
                 full_name=signup_fullname,
                 username=signup_username,
+                role=signup_role,
             )
             if success:
                 st.success("Registration successful! You are now logged in.")

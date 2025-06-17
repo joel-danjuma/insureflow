@@ -32,7 +32,7 @@ class InsureFlowApiClient:
             return True
         return False
 
-    def register(self, email, password, full_name, username):
+    def register(self, email, password, full_name, username, role):
         """
         Registers a new user and authenticates if successful.
         """
@@ -43,6 +43,7 @@ class InsureFlowApiClient:
                 "password": password,
                 "full_name": full_name,
                 "username": username,
+                "role": role,
             },
         )
         if response.status_code == 200:
