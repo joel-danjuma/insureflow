@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     
     # JWT settings
     JWT_SECRET_KEY: str
-    ALGORITHM: str
+    JWT_ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
     
     # Squad Co Payment Gateway settings
