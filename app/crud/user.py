@@ -4,7 +4,7 @@ CRUD operations for the User model.
 from typing import List, Optional
 from sqlalchemy.orm import Session
 
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.schemas.auth import UserCreate
 from app.schemas.user import UserUpdate
 from app.core.security import get_password_hash
@@ -43,7 +43,7 @@ def create_user(db: Session, user: UserCreate) -> User:
         email=user.email,
         hashed_password=hashed_password,
         full_name=user.full_name,
-        role=user.role,
+        role=UserRole[user.role.upper()],  # Convert string to enum member
         is_active=True,  # Default to active on creation
     )
     db.add(db_user)
