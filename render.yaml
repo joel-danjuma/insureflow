@@ -25,7 +25,7 @@ services:
     # Tell Render to use the image from your container registry
     image:
       # IMPORTANT: Replace 'your-dockerhub-username' with your actual username
-      url: your-dockerhub-username/insureflow-backend:latest
+      url: joeldanjuma/insureflow-backend:latest
     healthCheckPath: /
     envVars:
       # This is where you will set your secrets in the Render dashboard
@@ -62,7 +62,7 @@ services:
     # Tell Render to use the image from your container registry
     image:
       # IMPORTANT: Replace 'your-dockerhub-username' with your actual username
-      url: your-dockerhub-username/insureflow-dashboard:latest
+      url: joeldanjuma/insureflow-dashboard:latest
     envVars:
       # The dashboard needs to know the URL of the backend service
       - key: BACKEND_URL
