@@ -1,6 +1,6 @@
-# render.yaml
-# This file defines the infrastructure for deploying InsureFlow on Render.
-# For more details, see the Render documentation: https://render.com/docs/blueprint-spec
+# render-combined.yaml
+# This file defines the infrastructure for deploying InsureFlow as a single combined service on Render.
+# Uses Nginx reverse proxy to route traffic between FastAPI backend and Streamlit dashboard.
 
 services:
   # 1. PostgreSQL Database
@@ -17,16 +17,16 @@ services:
     plan: free # 'free' plan is suitable for development/small projects
     region: oregon
 
-  # 3. FastAPI Backend Application
-  - name: insureflow-backend
+  # 3. Combined FastAPI Backend + Streamlit Dashboard Application
+  - name: insureflow-app
     type: web
     region: oregon
     plan: starter
-    # Tell Render to use the image from your container registry
+    # Tell Render to use the combined image from your container registry
     image:
       # IMPORTANT: Replace 'your-dockerhub-username' with your actual username
-      url: joeldanjuma/insureflow-backend:latest
-    healthCheckPath: /
+      url: joeldanjuma/insureflow-combined:latest
+    healthCheckPath: /health
     envVars:
       # This is where you will set your secrets in the Render dashboard
       # Render automatically provides DATABASE_URL and REDIS_URL
@@ -52,21 +52,4 @@ services:
       - key: JWT_ALGORITHM
         value: HS256
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
-        value: 30
-
-  # 4. Streamlit Dashboard
-  - name: insureflow-dashboard
-    type: web
-    region: oregon
-    plan: starter
-    # Tell Render to use the image from your container registry
-    image:
-      # IMPORTANT: Replace 'your-dockerhub-username' with your actual username
-      url: joeldanjuma/insureflow-dashboard:latest
-    envVars:
-      # The dashboard needs to know the URL of the backend service
-      - key: BACKEND_URL
-        fromService:
-          type: web
-          name: insureflow-backend
-          property: url 
+        value: 30 
