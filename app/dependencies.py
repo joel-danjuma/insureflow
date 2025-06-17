@@ -17,24 +17,29 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
     """
     Dependency to get the current user from a JWT token.
-    --- FOR TESTING: THIS IS CURRENTLY BYPASSED TO RETURN THE FIRST USER ---
     """
-    user = db.query(User).first()
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    payload = decode_access_token(token)
+    if payload is None:
+        raise credentials_exception
+    email: str = payload.get("sub")
+    if email is None:
+        raise credentials_exception
+    token_data = TokenData(email=email)
+    
+    user = user_crud.get_user_by_email(db, email=token_data.email)
     if user is None:
-        # If no users exist, raise an error to indicate the app needs a user to be created.
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No users found in the database. Please register a user first.",
-        )
+        raise credentials_exception
     return user
 
 def get_current_active_user(current_user: User = Depends(get_current_user)) -> User:
     """
     Dependency to get the current active user.
-    --- FOR TESTING: THIS IS CURRENTLY BYPASSED ---
     """
-    if not current_user: # Added check for None
-        raise HTTPException(status_code=400, detail="No active user found for testing.")
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
