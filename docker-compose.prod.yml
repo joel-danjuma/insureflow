@@ -34,7 +34,7 @@ services:
 
   backend:
     build: .
-    container_name: insureflow_app
+    container_name: insureflow_backend
     env_file:
       - .env
     ports:
