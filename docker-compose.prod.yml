@@ -69,7 +69,7 @@ services:
     volumes:
       - .:/app
     command: >
-      sh -c "PYTHONPATH=. streamlit run app/dashboard.py --server.address=0.0.0.0"
+      sh -c "PYTHONPATH=. streamlit run app/Home.py --server.address=0.0.0.0"
     restart: unless-stopped
 
 volumes:
