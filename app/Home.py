@@ -58,6 +58,16 @@ def main_dashboard():
     else:
         st.warning("Could not load dashboard data.")
 
+def broker_dashboard():
+    # This function can be moved to the pages/1_Broker_Dashboard.py file
+    # For now, we call it here for simplicity.
+    st.title("Broker Dashboard")
+    st.write("Broker-specific components go here.")
+
+def customer_dashboard():
+    st.title("My Policies")
+    st.write("Customer-specific components go here.")
+
 
 if "token" not in st.session_state:
     login_tab, signup_tab = st.tabs(["Login", "Sign Up"])
@@ -98,6 +108,19 @@ if "token" not in st.session_state:
 else:
     st.sidebar.success("You are logged in.")
     if st.sidebar.button("Logout"):
-        del st.session_state["token"]
+        # Clear the entire session state on logout
+        for key in st.session_state.keys():
+            del st.session_state[key]
         st.rerun()
-    main_dashboard()
+
+    # Role-based routing
+    user_role = st.session_state.get("user", {}).get("role")
+    
+    if user_role == "admin":
+        main_dashboard()
+    elif user_role == "broker":
+        broker_dashboard() # We will later move this to its own page
+    elif user_role == "customer":
+        customer_dashboard()
+    else:
+        st.error("Unknown user role. Please contact support.")

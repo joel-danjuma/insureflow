@@ -26,8 +26,10 @@ class InsureFlowApiClient:
             data={"username": username, "password": password},
         )
         if response.status_code == 200:
-            self.token = response.json()["access_token"]
-            st.session_state["token"] = self.token
+            token_data = response.json()
+            st.session_state["token"] = token_data.get("access_token")
+            st.session_state["user"] = token_data  # Store the whole user object
+            self.token = st.session_state["token"]
             self.client.headers["Authorization"] = f"Bearer {self.token}"
             return True
         return False
@@ -47,8 +49,10 @@ class InsureFlowApiClient:
             },
         )
         if response.status_code == 200:
-            self.token = response.json()["access_token"]
-            st.session_state["token"] = self.token
+            token_data = response.json()
+            st.session_state["token"] = token_data.get("access_token")
+            st.session_state["user"] = token_data # Store the whole user object
+            self.token = st.session_state["token"]
             self.client.headers["Authorization"] = f"Bearer {self.token}"
             return True, "Registration successful!"
         else:

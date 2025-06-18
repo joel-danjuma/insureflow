@@ -37,7 +37,13 @@ def register_user(
     access_token = create_access_token(
         data={"sub": new_user.email}, expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+        "access_token": access_token, 
+        "token_type": "bearer",
+        "user_id": new_user.id,
+        "email": new_user.email,
+        "role": new_user.role.value
+    }
 
 @router.post("/login", response_model=Token)
 def login_for_access_token(
@@ -60,4 +66,10 @@ def login_for_access_token(
     access_token = create_access_token(
         data={"sub": user.email}, expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer"} 
+    return {
+        "access_token": access_token, 
+        "token_type": "bearer",
+        "user_id": user.id,
+        "email": user.email,
+        "role": user.role.value
+    } 
