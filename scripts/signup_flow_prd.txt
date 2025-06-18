@@ -1,0 +1,36 @@
+# PRD: User Sign-Up Flow
+
+## 1. Objective
+To implement a complete user registration (sign-up) flow, allowing new users to create an account. This involves creating both the backend endpoint for user creation and the frontend UI (page and form) for user interaction.
+
+## 2. Key Features & Requirements
+
+### 2.1. Backend API Endpoint
+-   **Endpoint**: Create a new `POST` endpoint at `/api/v1/users/`.
+-   **Request Body**: The endpoint should accept a JSON payload with `full_name` (string), `email` (string), and `password` (string). A new Pydantic schema (`UserCreate`) will be required for this.
+-   **Functionality**:
+    -   The endpoint must check if a user with the given email already exists. If so, it should return a `400 Bad Request` error with a clear message.
+    -   The user's password must be securely hashed before being stored in the database. The existing `get_password_hash` utility should be used.
+    -   New users should be created with the `CUSTOMER` role by default.
+-   **Response**: Upon successful creation, the endpoint should return the newly created user object (using the `User` schema) with a `201 Created` status code. The password should not be included in the response.
+
+### 2.2. Frontend User Interface
+-   **Sign-Up Page**:
+    -   Create a new page at the route `/signup`.
+    -   This page will contain the registration form.
+-   **Navigation**:
+    -   Add a link on the existing `/login` page that navigates to the `/signup` page (e.g., "Don't have an account? Sign Up").
+-   **Sign-Up Form Component**:
+    -   Create a new reusable React component: `SignUpForm.tsx`.
+    -   The form will have input fields for "Full Name", "Email", and "Password".
+    -   Implement client-side validation for all fields (e.g., all fields required, valid email format, password minimum length). `react-hook-form` and `zod` should be used for consistency.
+-   **API Integration**:
+    -   The `SignUpForm` will call the new `POST /api/v1/users/` backend endpoint upon submission.
+    -   The UI must handle loading states (e.g., disabling the submit button) and display any errors returned from the backend (e.g., "Email already registered").
+-   **User Experience**:
+    -   Upon successful registration, the user should be automatically redirected to the `/login` page.
+    -   A success message should be displayed to the user, prompting them to sign in with their new credentials. A query parameter or a temporary state management solution could be used for this.
+
+## 3. Assumptions
+-   The existing authentication flow and database structure are in place.
+-   The `CUSTOMER` role exists in the `UserRole` enum in the backend. 

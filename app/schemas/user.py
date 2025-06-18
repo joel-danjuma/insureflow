@@ -5,41 +5,56 @@ from typing import Optional
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
 
+from app.models.user import UserRole
+
+
+# Shared properties
 class UserBase(BaseModel):
     email: EmailStr
-    full_name: str
-    role: str
-    is_active: bool = True
+    full_name: Optional[str] = None
 
-class User(UserBase):
-    """
-    User schema for responses (excludes sensitive data like hashed_password).
-    """
+
+# Properties to receive via API on creation
+class UserCreate(UserBase):
+    password: str
+
+
+# Properties to receive via API on update
+class UserUpdate(BaseModel):
+    email: Optional[EmailStr] = None
+    full_name: Optional[str] = None
+    is_active: Optional[bool] = None
+    password: Optional[str] = None
+
+
+# Properties shared by models in DB
+class UserInDBBase(UserBase):
     id: int
-    created_at: datetime
-    updated_at: Optional[datetime] = None
+    is_active: bool
+    role: str
 
     class Config:
         from_attributes = True
 
-class UserUpdate(BaseModel):
-    """
-    Schema for updating user information.
-    """
-    email: Optional[EmailStr] = None
-    full_name: Optional[str] = None
-    role: Optional[str] = None
-    is_active: Optional[bool] = None
 
-class UserInDB(UserBase):
+# Properties to return to client
+class User(UserInDBBase):
+    """
+    User schema for responses (excludes sensitive data like hashed_password).
+    """
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+
+# Properties stored in DB
+class UserInDB(UserInDBBase):
     """
     Schema representing a user in the database (includes hashed_password).
     This should not be used for API responses.
     """
-    id: int
     hashed_password: str
     created_at: datetime
     updated_at: Optional[datetime] = None
 
     class Config:
-        from_attributes = True 
+        orm_mode = True 

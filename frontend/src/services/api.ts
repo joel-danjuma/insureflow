@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { LoginFormData } from '@/components/LoginForm';
+import { SignUpFormData } from '@/components/SignUpForm';
 
 // This will be the base URL for our backend
 // In development, Next.js can proxy requests to avoid CORS issues.
@@ -31,6 +32,18 @@ export const authService = {
         throw new Error(error.response.data.detail || 'Login failed');
       }
       throw new Error('An unexpected error occurred during login.');
+    }
+  },
+
+  register: async (data: SignUpFormData) => {
+    try {
+      const response = await apiClient.post('/users/', data);
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        throw new Error(error.response.data.detail || 'Registration failed');
+      }
+      throw new Error('An unexpected error occurred during registration.');
     }
   },
 
