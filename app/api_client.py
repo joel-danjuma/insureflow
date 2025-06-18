@@ -94,4 +94,53 @@ class InsureFlowApiClient:
         response = self.client.get(f"{self.base_url}/premiums/by-policy/{policy_id}")
         if response.status_code == 200:
             return response.json()
-        return None 
+        return None
+
+    def get_broker_profile(self):
+        """
+        Retrieves the profile for the currently logged-in broker.
+        """
+        if not self.token:
+            return None
+        response = self.client.get(f"{self.base_url}/brokers/me")
+        if response.status_code == 200:
+            return response.json()
+        return None
+
+    def update_broker_profile(self, update_data: dict):
+        """
+        Updates the profile for the currently logged-in broker.
+        """
+        if not self.token:
+            return False, "Not authenticated"
+        
+        response = self.client.put(f"{self.base_url}/brokers/me", json=update_data)
+        
+        if response.status_code == 200:
+            return True, "Profile updated successfully."
+        else:
+            error_detail = "An unknown error occurred."
+            try:
+                error_detail = response.json().get("detail", error_detail)
+            except Exception:
+                pass
+            return False, error_detail
+
+    def initiate_bulk_payment(self, premium_ids: list[int]):
+        """
+        Initiates a bulk payment for a list of premium IDs.
+        """
+        if not self.token:
+            return None, "Not authenticated"
+        
+        response = self.client.post(f"{self.base_url}/payments/bulk-initiate", json={"premium_ids": premium_ids})
+
+        if response.status_code == 200:
+            return response.json(), None
+        else:
+            error_detail = "An unknown error occurred."
+            try:
+                error_detail = response.json().get("detail", error_detail)
+            except Exception:
+                pass
+            return None, error_detail 

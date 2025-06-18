@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from app.api_client import InsureFlowApiClient
 
 st.set_page_config(layout="wide")
 
@@ -13,14 +14,17 @@ local_css("app/styles.css")
 
 st.title("Broker Dashboard - Ark Insurance")
 
-# --- Mock Data ---
-outstanding_premiums_data = {
-    'Policy Namer': ['PL-8874380', 'PL-678001', 'PL-769012'],
-    'Customer Name': ['James Adevemi', 'Grace Ibexwe', 'David Osondu'],
-    'Due Date': ['10/05/2025', '20/05/2025', '06/06/2025'],
-    'Amount': ['N 3,600,000', 'N 4,500,000', 'N 2,250,000']
-}
+# --- Data Fetching ---
+# This would be replaced with a call to the API client
+# broker_data = api_client.get_broker_dashboard_data()
+# For now, using mock data.
+outstanding_premiums_data = [
+    {'id': 1, 'Policy Namer': 'PL-8874380', 'Customer Name': 'James Adevemi', 'Due Date': '10/05/2025', 'Amount': 3600000},
+    {'id': 2, 'Policy Namer': 'PL-678001', 'Customer Name': 'Grace Ibexwe', 'Due Date': '20/05/2025', 'Amount': 4500000},
+    {'id': 3, 'Policy Namer': 'PL-769012', 'Customer Name': 'David Osondu', 'Due Date': '06/06/2025', 'Amount': 2250000}
+]
 outstanding_premiums_df = pd.DataFrame(outstanding_premiums_data)
+outstanding_premiums_df['Select'] = False
 
 commissions_data = {
     'Month': ['March', 'April'],
@@ -33,13 +37,38 @@ donut_df = pd.DataFrame(donut_chart_data)
 
 # --- Layout ---
 st.header("Outstanding Premiums")
-col1, col2 = st.columns([0.8, 0.2])
-with col1:
-    st.dataframe(outstanding_premiums_df, use_container_width=True)
-with col2:
-    st.button("FILTER", use_container_width=True)
-    st.button("IMPORT", use_container_width=True)
+editable_df = st.data_editor(
+    outstanding_premiums_df,
+    column_config={
+        "Select": st.column_config.CheckboxColumn(required=True),
+        "Amount": st.column_config.NumberColumn(format="N %d"),
+    },
+    disabled=["Policy Namer", "Customer Name", "Due Date", "Amount"],
+    hide_index=True,
+    use_container_width=True
+)
 
+selected_premiums = editable_df[editable_df.Select]
+selected_ids = selected_premiums['id'].tolist()
+
+# --- Actions and Summary ---
+col1, col2 = st.columns([0.7, 0.3])
+with col1:
+    if not selected_premiums.empty:
+        total_selected = selected_premiums['Amount'].sum()
+        st.subheader(f"Total Selected: N {total_selected:,.2f}")
+        
+        if st.button("Pay Selected Premiums (Bulk Payment)", use_container_width=True):
+            api_client = InsureFlowApiClient()
+            payment_info, error = api_client.initiate_bulk_payment(selected_ids)
+            if error:
+                st.error(f"Failed to initiate bulk payment: {error}")
+            else:
+                payment_url = payment_info.get("payment_url")
+                st.success("Redirecting to payment gateway...")
+                st.markdown(f'<meta http-equiv="refresh" content="0; url={payment_url}">', unsafe_allow_html=True)
+    else:
+        st.info("Select one or more premiums to make a bulk payment.")
 
 col3, col4 = st.columns(2)
 

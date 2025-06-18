@@ -9,6 +9,7 @@ from app.schemas.payment import (
     PaymentInitiationResponse,
     SquadCoWebhookPayload,
     PaymentCreate,
+    BulkPaymentInitiationRequest,
 )
 from app.services import payment_service
 from app.crud import payment as crud_payment
@@ -41,25 +42,41 @@ async def handle_squad_co_webhook(
     # Handle successful charge events
     if payload.event == "charge.success":
         webhook_data = payload.data
-        
-        # 1. Find the corresponding payment in our database
-        payment = crud_payment.get_payment_by_transaction_ref(
-            db, transaction_ref=webhook_data.transaction_reference
-        )
-        if not payment:
-            # If payment not found, we might want to log this or handle it
-            # For now, we'll just ignore it
-            return Response(status_code=status.HTTP_200_OK)
-            
-        # 2. Update the payment status
-        crud_payment.update_payment_status(db, payment=payment, webhook_data=webhook_data)
-        
-        # 3. Update the premium status to 'paid'
-        if payment.premium_id:
-            crud_premium.update_premium_status_to_paid(db, premium_id=payment.premium_id)
-            
+        transaction_ref = webhook_data.transaction_reference
+
+        # Check if this is a bulk payment
+        metadata = webhook_data.get("metadata", {})
+        if metadata.get("type") == "bulk_payment" and "premium_ids" in metadata:
+            premium_ids = metadata["premium_ids"]
+            for premium_id in premium_ids:
+                payment = crud_payment.get_payment_by_premium_and_ref(db, premium_id=premium_id, transaction_ref=transaction_ref)
+                if payment:
+                    crud_payment.update_payment_status(db, payment=payment, webhook_data=webhook_data)
+                    crud_premium.update_premium_status_to_paid(db, premium_id=premium_id)
+        else:
+            # Handle single payment
+            payment = crud_payment.get_payment_by_transaction_ref(
+                db, transaction_ref=transaction_ref
+            )
+            if payment:
+                crud_payment.update_payment_status(db, payment=payment, webhook_data=webhook_data)
+                if payment.premium_id:
+                    crud_premium.update_premium_status_to_paid(db, premium_id=payment.premium_id)
+
     # Acknowledge receipt of the webhook
     return Response(status_code=status.HTTP_200_OK)
+
+@router.post("/bulk-initiate", response_model=PaymentInitiationResponse)
+async def initiate_bulk_payment(
+    request: BulkPaymentInitiationRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Initiates a bulk payment for multiple premiums.
+    """
+    return await payment_service.initiate_bulk_premium_payment(
+        premium_ids=request.premium_ids, db=db
+    )
 
 @router.post("/initiate/{premium_id}", response_model=PaymentInitiationResponse)
 async def initiate_payment(

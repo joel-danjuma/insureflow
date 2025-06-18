@@ -3,10 +3,13 @@ Pydantic schemas for payment-related operations.
 """
 from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from decimal import Decimal
 
 from app.models.payment import PaymentMethod, PaymentTransactionStatus
+
+class BulkPaymentInitiationRequest(BaseModel):
+    premium_ids: List[int]
 
 class PaymentBase(BaseModel):
     premium_id: int
