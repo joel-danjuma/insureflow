@@ -45,7 +45,7 @@ with st.form(key="update_broker_form"):
         }
         success, message = api_client.update_broker_profile(update_data)
         if success:
-            st.success("Profile updated successfully!")
+            st.toast("✅ Profile updated successfully!", icon="🎉")
             st.rerun()
         else:
             st.error(f"Failed to update profile: {message}") 

@@ -64,6 +64,7 @@ with col1:
             if error:
                 st.error(f"Failed to initiate bulk payment: {error}")
             else:
+                st.toast(f"✅ Bulk payment for {len(selected_ids)} premiums initiated!", icon="🚀")
                 payment_url = payment_info.get("payment_url")
                 st.success("Redirecting to payment gateway...")
                 st.markdown(f'<meta http-equiv="refresh" content="0; url={payment_url}">', unsafe_allow_html=True)
