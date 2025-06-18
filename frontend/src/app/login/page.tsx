@@ -19,8 +19,12 @@ const LoginPage = () => {
       const response = await authService.login(data);
       setToken(response.access_token);
       router.push('/dashboard');
-    } catch (err: any) {
-      setError(err.message || 'An unknown error occurred.');
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('An unknown error occurred.');
+      }
     } finally {
       setIsLoading(false);
     }

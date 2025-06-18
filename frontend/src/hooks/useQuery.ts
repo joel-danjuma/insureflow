@@ -20,8 +20,12 @@ const useQuery = <T,>(queryFn: () => Promise<T>): QueryResult<T> => {
     try {
       const result = await queryFn();
       setData(result);
-    } catch (err: any) {
-      setError(err);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err);
+      } else {
+        setError(new Error('An unexpected error occurred'));
+      }
     } finally {
       setIsLoading(false);
     }
