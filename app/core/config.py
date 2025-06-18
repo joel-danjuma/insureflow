@@ -2,8 +2,9 @@
 Configuration settings for InsureFlow application.
 """
 import os
-from typing import Optional
+from typing import Optional, List, AnyHttpUrl
 from pydantic_settings import BaseSettings
+from pydantic import EmailStr
 
 
 class Settings(BaseSettings):
@@ -48,6 +49,12 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: Optional[str] = None
     GOOGLE_API_KEY: Optional[str] = None
     
+    BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = [
+        "http://localhost",
+        "http://localhost:3000",
+        "http://localhost:8000",
+    ]
+
     class Config:
         env_file = ".env"
         env_file_encoding = 'utf-8'

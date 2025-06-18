@@ -1,7 +1,16 @@
 # FastAPI and core dependencies
-fastapi==0.115.12
-uvicorn[standard]==0.30.5
-python-multipart>=0.0.6
+fastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+alembic
+pydantic[email]
+pydantic-settings
+passlib[bcrypt]
+python-jose[cryptography]
+python-multipart
+requests
+axios
 
 # Database dependencies
 sqlalchemy==2.0.31
@@ -24,11 +33,6 @@ redis==5.0.7
 # HTTP client for external API integrations
 httpx==0.28.1
 requests>=2.31.0
-
-# Streamlit for dashboard
-streamlit==1.37.0
-plotly>=5.17.0
-pandas>=2.0.0
 
 # Environment and configuration
 python-dotenv==1.1.0

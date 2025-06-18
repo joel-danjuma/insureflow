@@ -68,17 +68,17 @@ sleep 30
 print_status "Checking service health..."
 
 # Check FastAPI
-if curl -f http://localhost:8000/health > /dev/null 2>&1; then
+if curl -f http://localhost:8000/api/v1/docs > /dev/null 2>&1; then
     print_status "FastAPI backend is running ✓"
 else
     print_warning "FastAPI backend health check failed"
 fi
 
-# Check Streamlit
-if curl -f http://localhost:8501 > /dev/null 2>&1; then
-    print_status "Streamlit dashboard is running ✓"
+# Check Next.js Frontend
+if curl -f http://localhost:3000 > /dev/null 2>&1; then
+    print_status "Next.js frontend is running ✓"
 else
-    print_warning "Streamlit dashboard health check failed"
+    print_warning "Next.js frontend health check failed"
 fi
 
 # Check PostgreSQL
@@ -89,7 +89,7 @@ else
 fi
 
 # Check Redis
-if docker exec insureflow_redis redis-cli ping > /dev/null 2>&1; then
+if docker exec -it insureflow_redis redis-cli ping | grep PONG > /dev/null 2>&1; then
     print_status "Redis is running ✓"
 else
     print_warning "Redis health check failed"
@@ -97,10 +97,9 @@ fi
 
 print_status "Deployment completed!"
 echo ""
-echo "📋 Service URLs:"
-echo "   FastAPI Backend: http://localhost:8000"
-echo "   API Documentation: http://localhost:8000/docs"
-echo "   Streamlit Dashboard: http://localhost:8501"
+echo "📋 Service URLs (behind Nginx):"
+echo "   Application: http://your_domain.com"
+echo "   API Docs: http://your_domain.com/api/v1/docs"
 echo ""
 echo "🔧 Next steps:"
 echo "   1. Configure Nginx using the nginx-vps.conf file"

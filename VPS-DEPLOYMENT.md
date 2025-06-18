@@ -1,6 +1,6 @@
 # InsureFlow VPS Deployment Guide
 
-This guide will help you deploy InsureFlow to your Hostinger VPS with Docker and Nginx.
+This guide will help you deploy InsureFlow to your VPS with Docker and Nginx.
 
 ## Prerequisites
 
@@ -12,28 +12,28 @@ This guide will help you deploy InsureFlow to your Hostinger VPS with Docker and
 ## Architecture
 
 The VPS deployment uses:
+- **Next.js Frontend**: Running on port 3000
 - **FastAPI Backend**: Running on port 8000
-- **Streamlit Dashboard**: Running on port 8501
 - **PostgreSQL Database**: Running on port 5432
-- **Redis**: Running on port 6379
-- **Nginx**: Reverse proxy routing traffic between services
+- **Redis**: Running on port 6379 (if used)
+- **Nginx**: Reverse proxy routing traffic, directing UI traffic to the frontend and `/api` traffic to the backend.
 
 ## Step 1: Upload Files to VPS
 
-Upload your InsureFlow project to your VPS. You can use SCP, SFTP, or Git:
+Upload your InsureFlow project to your VPS. The recommended method is using Git.
 
 ```bash
-# Option 1: Using Git (recommended)
+# Clone your repository
 git clone https://github.com/yourusername/insureflow.git
 cd insureflow
 
-# Option 2: Using SCP
-scp -r ./insureflow user@your-vps-ip:/home/user/
+# Or if already cloned, pull the latest changes
+git pull origin main
 ```
 
 ## Step 2: Set Up Environment Variables
 
-1. Copy the production environment template:
+1. Copy the production environment template. **This is a critical step for production security.**
 ```bash
 cp env.production .env
 ```
@@ -44,125 +44,110 @@ nano .env
 ```
 
 Required values to update:
-- `POSTGRES_PASSWORD`: Strong password for PostgreSQL
-- `JWT_SECRET_KEY`: Strong secret key for JWT tokens
-- `SQUAD_SECRET_KEY`: Your Squad Co secret key
-- `SQUAD_PUBLIC_KEY`: Your Squad Co public key
+- `POSTGRES_PASSWORD`: A strong password for your PostgreSQL database.
+- `SECRET_KEY`: A strong, unique secret key for JWT tokens.
+- `SQUAD_SECRET_KEY`: Your Squad Co secret key.
+- `SQUAD_PUBLIC_KEY`: Your Squad Co public key.
+- `BACKEND_CORS_ORIGINS`: Add your production domain (e.g., `https://your-domain.com`).
 
 ## Step 3: Deploy with Docker
 
-Run the deployment script:
+Run the updated deployment script:
 ```bash
 ./deploy-vps.sh
 ```
 
 This script will:
-- Check prerequisites
-- Stop any existing containers
-- Build and start all services
-- Perform health checks
-- Display service URLs
+- Check for prerequisites like Docker and a `.env` file.
+- Stop any existing containers.
+- Build and start the `frontend` and `backend` services.
+- Perform health checks on the new services.
+- Display the final URLs (as seen through Nginx).
 
 ## Step 4: Configure Nginx
 
-1. Copy the Nginx configuration:
+1. Copy the Nginx configuration to the appropriate directory:
 ```bash
 sudo cp nginx-vps.conf /etc/nginx/sites-available/insureflow
 ```
 
-2. Edit the configuration with your domain:
+2. Edit the configuration to include your domain name:
 ```bash
 sudo nano /etc/nginx/sites-available/insureflow
 ```
-Replace `your-domain.com` with your actual domain name.
+Replace `your_domain.com` with your actual domain name.
 
-3. Enable the site:
+3. Enable the Nginx site by creating a symbolic link:
 ```bash
 sudo ln -s /etc/nginx/sites-available/insureflow /etc/nginx/sites-enabled/
 ```
 
-4. Test Nginx configuration:
+4. Test your Nginx configuration for syntax errors:
 ```bash
 sudo nginx -t
 ```
 
-5. Reload Nginx:
+5. If the test is successful, reload Nginx to apply the changes:
 ```bash
 sudo systemctl reload nginx
 ```
 
-## Step 5: Set Up SSL (Optional but Recommended)
+## Step 5: Set Up SSL (Recommended)
 
-1. Install Certbot:
-```bash
-sudo apt update
-sudo apt install certbot python3-certbot-nginx
-```
-
-2. Get SSL certificate:
-```bash
-sudo certbot --nginx -d your-domain.com -d www.your-domain.com
-```
-
-3. Test auto-renewal:
-```bash
-sudo certbot renew --dry-run
-```
+Follow the instructions in the original guide to install Certbot and obtain an SSL certificate for your domain. This is a crucial step for any production application.
 
 ## Step 6: Verify Deployment
 
-After deployment, your application will be available at:
+After deployment, your application should be available at:
 
-- **Main Application**: `http://your-domain.com` (or `http://your-vps-ip`)
-- **API Documentation**: `http://your-domain.com/docs`
-- **Health Check**: `http://your-domain.com/health`
+- **Main Application**: `http://your-domain.com` (or `https://` if SSL is configured)
+- **API Documentation**: `http://your-domain.com/api/v1/docs`
 
 ## Management Commands
 
 ### View Logs
 ```bash
 # All services
-docker-compose -f docker-compose.prod.yml logs -f
+docker-compose logs -f
 
-# Specific service
-docker-compose -f docker-compose.prod.yml logs -f app
-docker-compose -f docker-compose.prod.yml logs -f dashboard
+# Specific service (e.g., frontend or backend)
+docker-compose logs -f frontend
+docker-compose logs -f backend
 ```
 
 ### Restart Services
 ```bash
 # Restart all services
-docker-compose -f docker-compose.prod.yml restart
+docker-compose restart
 
-# Restart specific service
-docker-compose -f docker-compose.prod.yml restart app
+# Restart a specific service
+docker-compose restart frontend
 ```
 
 ### Stop Services
 ```bash
-docker-compose -f docker-compose.prod.yml down
+docker-compose down
 ```
 
 ### Update Application
 ```bash
-# Pull latest changes
+# 1. Pull latest changes from Git
 git pull origin main
 
-# Rebuild and restart
-docker-compose -f docker-compose.prod.yml up -d --build
+# 2. Rebuild and restart the services
+./deploy-vps.sh
 ```
 
 ## Troubleshooting
 
 ### Service Health Checks
-
-Check if services are running:
+You can manually check if services are responding inside the VPS:
 ```bash
-# FastAPI
-curl http://localhost:8000/health
+# Next.js Frontend
+curl http://localhost:3000
 
-# Streamlit
-curl http://localhost:8501
+# FastAPI Backend
+curl http://localhost:8000/api/v1/docs
 
 # PostgreSQL
 docker exec insureflow_db pg_isready -U insureflow
@@ -172,24 +157,22 @@ docker exec insureflow_redis redis-cli ping
 ```
 
 ### Common Issues
-
-1. **Port conflicts**: Make sure ports 8000, 8501, 5432, and 6379 are not used by other services.
-
-2. **Database connection issues**: Check if PostgreSQL is running and environment variables are correct.
-
-3. **Nginx configuration errors**: Run `sudo nginx -t` to check for syntax errors.
-
-4. **SSL certificate issues**: Make sure your domain is properly pointed to your VPS IP.
+- **CORS errors**: Ensure your production domain is listed in `BACKEND_CORS_ORIGINS` in your `.env` file.
+- **502 Bad Gateway from Nginx**: This usually means the `frontend` or `backend` service is down. Check the logs (`docker-compose logs -f <service_name>`) to diagnose the issue.
+- **Database connection issues**: Double-check that the database credentials in your `.env` file are correct.
 
 ### View Container Status
 ```bash
-docker-compose -f docker-compose.prod.yml ps
+docker-compose ps
 ```
 
 ### Access Container Shell
 ```bash
-# FastAPI container
+# Backend (FastAPI) container
 docker exec -it insureflow_app bash
+
+# Frontend (Next.js) container
+docker exec -it insureflow-frontend-1 bash # Note: container name may vary, check with `docker ps`
 
 # Database container
 docker exec -it insureflow_db psql -U insureflow -d insureflow

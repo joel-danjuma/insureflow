@@ -1,0 +1,71 @@
+# PRD: Streamlit to Next.js Dashboard Migration
+
+## 1. Objective
+Replace the existing Streamlit dashboard with a modern, scalable Next.js frontend application. The new frontend will provide tailored dashboard experiences for two primary user roles: "Insurance Company Admin" and "Broker". This migration aims to improve UI/UX, align with custom design specifications, and establish a more maintainable frontend architecture.
+
+## 2. Key Features & Requirements
+
+### 2.1. Project Scaffolding & Setup
+-   A new directory named `frontend` will be created at the project root to house the Next.js application.
+-   The application will be initialized using `create-next-app`.
+-   Tailwind CSS will be integrated for styling to facilitate rapid UI development.
+
+### 2.2. UI/UX & Componentization
+-   **Design Unification**: Unify the designs from the two provided HTML files (`admin_dashboard.html`, `broker_dashboard.html`) into a cohesive and reusable component system.
+-   **Component Library**: Develop a set of reusable React components, including:
+    -   `Layout`: A main layout component with a sidebar and main content area.
+    -   `Sidebar`: Navigation component.
+    -   `MetricCard`: A card to display key performance indicators (KPIs) like "New Policies" or "Outstanding Premiums".
+    -   `DataTable`: A generic table component for displaying lists of data (e.g., recent policies, brokers).
+    -   `LoginForm`: A form for user authentication.
+-   **Styling**: Implement the unified design using Tailwind CSS.
+
+### 2.3. Routing & Page Structure
+-   **/login**: A public page for user login.
+-   **/dashboard**: A protected route. After login, this page will:
+    -   Fetch the current user's role from the backend.
+    -   Conditionally render either the "Admin Dashboard" view or the "Broker Dashboard" view based on the role.
+
+### 2.4. Backend Integration
+-   **API Client**: Implement a service/utility in the frontend to handle all API calls to the FastAPI backend. It should manage base URLs and authentication headers.
+-   **Authentication**:
+    -   The `/login` page will post credentials to the existing `/api/v1/auth/token` endpoint.
+    -   On successful login, the received JWT will be securely stored in the browser (e.g., in an HttpOnly cookie).
+    -   The API client will automatically include the token in headers for all subsequent authenticated requests.
+-   **Data Fetching**:
+    -   The dashboard pages will fetch data from the relevant FastAPI endpoints (e.g., `/api/v1/dashboard/kpis`, `/api/v1/dashboard/recent-policies`).
+    -   The UI must handle loading and error states gracefully during data fetching.
+-   **CORS Configuration**: The FastAPI backend must be updated to accept requests from the Next.js frontend's origin (e.g., `http://localhost:3000` in development). This involves adding and configuring `CORSMiddleware`.
+
+### 2.5. Containerization & Deployment
+-   **Frontend Dockerfile**: Create a multi-stage `Dockerfile` for the Next.js application to build an optimized production image.
+-   **Docker Compose Update**:
+    -   Add a new service named `frontend` to the `docker-compose.yml` and `docker-compose.prod.yml` files.
+    -   This service will build using the new frontend `Dockerfile`.
+-   **Nginx Configuration**:
+    -   Update `nginx-vps.conf` to handle the new service.
+    -   Route requests to `/` (and other frontend paths) to the `frontend` service.
+    -   Continue to proxy requests to `/api/*` to the `backend` service.
+-   **Streamlit Decommissioning**:
+    -   Remove the old Streamlit pages (`Home.py`, `pages/1_Broker_Dashboard.py`, `pages/2_Custom_Account.py`).
+    -   Remove Streamlit from `requirements.txt`.
+    -   Update `docker-compose.yml` to remove any Streamlit-specific configurations if they exist.
+
+## 3. User Roles & Dashboards
+
+### 3.1. Admin Dashboard
+-   Displays company-wide metrics:
+    -   New Policies This Month
+    -   Total Outstanding Premiums
+    -   Total Number of Brokers
+-   Displays a list of recent policies across the entire system.
+
+### 3.2. Broker Dashboard
+-   Displays metrics specific to the logged-in broker:
+    -   New Policies This Month (for this broker)
+    -   Outstanding Premiums (for this broker's policies)
+-   Displays a list of their own recent policies.
+
+## 4. Assumptions
+-   The user will provide the two HTML design files (`admin_dashboard.html` and `broker_dashboard.html`). If not, placeholder designs will be used.
+-   The existing FastAPI backend and its endpoints are functional. 

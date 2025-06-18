@@ -1,9 +1,9 @@
 services:
   db:
-    image: postgres:14-alpine
+    image: postgres:13
     container_name: insureflow_db
     env_file:
-      - app.env
+      - ./.env
     volumes:
       - postgres_data:/var/lib/postgresql/data/
       - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -28,12 +28,12 @@ services:
       timeout: 5s
       retries: 5
 
-  app:
+  backend:
     build: .
     container_name: insureflow_app
     # Create an app.env file from env.example and fill in the values
     env_file:
-      - app.env
+      - ./.env
     ports:
       - "8000:8000"
     depends_on:
@@ -43,18 +43,15 @@ services:
         condition: service_healthy
     volumes:
       - .:/app
-    command: ["/app/scripts/start.sh"]
 
-  dashboard:
-    build: .
-    container_name: insureflow_dashboard
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     ports:
-      - "8501:8501"
+      - "3000:3000"
     depends_on:
-      - app
-    volumes:
-      - .:/app
-    command: ["streamlit", "run", "app/dashboard.py"]
+      - backend
 
 volumes:
   postgres_data:
