@@ -32,3 +32,4 @@ venv/
 app.env
 .roomodes
 .windsurfrules
+.env
