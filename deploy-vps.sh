@@ -50,15 +50,15 @@ print_status "Environment file found ✓"
 
 # Stop any existing containers
 print_status "Stopping existing containers..."
-docker-compose -f docker-compose.prod.yml down || true
+docker compose -f docker-compose.prod.yml down || true
 
 # Remove old images (optional - uncomment if you want to force rebuild)
 # print_status "Removing old images..."
-# docker-compose -f docker-compose.prod.yml down --rmi all || true
+# docker compose -f docker-compose.prod.yml down --rmi all || true
 
 # Build and start services
 print_status "Building and starting services..."
-docker-compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.prod.yml up -d --build
 
 # Wait for services to be ready
 print_status "Waiting for services to start..."
@@ -106,5 +106,5 @@ echo "   1. Configure Nginx using the nginx-vps.conf file"
 echo "   2. Update your domain name in the Nginx config"
 echo "   3. Set up SSL with Let's Encrypt (optional)"
 echo ""
-echo "📊 To view logs: docker-compose -f docker-compose.prod.yml logs -f"
-echo "🛑 To stop services: docker-compose -f docker-compose.prod.yml down" 
+echo "📊 To view logs: docker compose -f docker-compose.prod.yml logs -f"
+echo "🛑 To stop services: docker compose -f docker-compose.prod.yml down" 
