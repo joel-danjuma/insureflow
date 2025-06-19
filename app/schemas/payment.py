@@ -8,8 +8,16 @@ from decimal import Decimal
 
 from app.models.payment import PaymentMethod, PaymentTransactionStatus
 
+class PaymentInitiationRequest(BaseModel):
+    policy_id: int
+    email: EmailStr
+    amount: float
+
+class PaymentVerificationRequest(BaseModel):
+    transaction_ref: str
+
 class BulkPaymentInitiationRequest(BaseModel):
-    premium_ids: List[int]
+    policy_ids: List[int]
 
 class PaymentBase(BaseModel):
     premium_id: int

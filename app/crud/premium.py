@@ -19,6 +19,21 @@ def get_premiums_by_policy(db: Session, policy_id: int, skip: int = 0, limit: in
     """
     return db.query(Premium).filter(Premium.policy_id == policy_id).offset(skip).limit(limit).all()
 
+def get_premiums_by_ids(db: Session, premium_ids: List[int]) -> List[Premium]:
+    """
+    Retrieves a list of premiums by their IDs.
+    """
+    return db.query(Premium).filter(Premium.id.in_(premium_ids)).all()
+
+def get_unpaid_premiums_for_policies(db: Session, policy_ids: List[int]) -> List[Premium]:
+    """
+    Retrieves all unpaid premiums for a given list of policy IDs.
+    """
+    return db.query(Premium).filter(
+        Premium.policy_id.in_(policy_ids),
+        Premium.status != 'paid'
+    ).all()
+
 def create_premium(db: Session, premium: PremiumCreate) -> Premium:
     """
     Creates a new premium in the database.

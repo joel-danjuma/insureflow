@@ -1,0 +1,41 @@
+# PRD: Dashboard Actions and Theming
+
+## 1. Objective
+Enhance the application by adding critical new functionality to the dashboards for both Insurance Firm and Broker users. This includes implementing a multi-policy payment flow for brokers and a payment reminder system for the insurance firm. Additionally, a new, modern color scheme will be implemented across the application.
+
+## 2. Key Features & Requirements
+
+### 2.1. Broker Dashboard: Bulk Policy Payment
+-   **UI - Selectable Policies**:
+    -   The "Client Portfolio" table on the Broker Dashboard must be updated to include a checkbox on each row.
+    -   A "Select All" checkbox will be added to the table header.
+    -   A "Pay Selected Premiums" button will be added, likely above or below the table. This button should be disabled if no policies are selected.
+-   **Backend - Bulk Payment Endpoint**:
+    -   A new backend endpoint, `POST /api/v1/payments/bulk-pay`, must be created.
+    -   This endpoint will accept a list of policy IDs in the request body.
+    -   The endpoint will process payments for each selected policy, likely by interacting with the existing payment service (e.g., Squad Co / "habari endpoint").
+-   **Functionality**:
+    -   When the "Pay Selected Premiums" button is clicked, the frontend will gather the IDs of all selected policies.
+    -   It will then call the new bulk payment endpoint.
+    -   The UI must show a loading state during the payment process and provide clear feedback on success or failure.
+
+### 2.2. Insurance Firm Dashboard: Payment Reminders
+-   **UI - Send Reminder Button**:
+    -   The "Broker Information" table on the Insurance Firm Dashboard will be updated to include a "Send Reminder" button on each row.
+-   **Backend - Reminder Endpoint & Logic**:
+    -   A new field, `reminder_sent_at` (DateTime, nullable), must be added to the `Policy` model in the database via an Alembic migration.
+    -   A new backend endpoint, `POST /api/v1/brokers/{broker_id}/send-reminders`, must be created.
+    -   When called, this endpoint will find all policies associated with the specified broker that have outstanding premiums and set their `reminder_sent_at` timestamp to the current time.
+-   **Broker Dashboard - Escalation Indicator**:
+    -   The Broker's "Client Portfolio" table must be updated to visually indicate which policies have had a reminder sent.
+    -   This can be a colored dot, an icon, or a highlighted row next to policies where `reminder_sent_at` is not null. This serves as the "escalation" for the broker to follow up on payment.
+
+### 2.3. New Application Theme
+-   **Color Palette**: The application's color scheme will be updated globally.
+    -   **Background**: A dark "slate" color will be used for the main application background.
+    -   **Text**: All light-colored text should be changed to pure white for better contrast and readability against the dark background.
+    -   **Highlight/Accent**: An "orange" color will be used for primary buttons, highlights, and active state indicators.
+-   **Implementation**:
+    -   This will require updates to `tailwind.config.js` to define the new color palette.
+    -   Global styles in `globals.css` will be updated to set the base background and text colors.
+    -   All relevant components (`Layout`, `Sidebar`, `MetricCard`, `DataTable`, buttons, etc.) will be updated to use the new color scheme. 

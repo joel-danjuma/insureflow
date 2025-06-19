@@ -1,26 +1,51 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import MetricCard from '@/components/MetricCard';
 import { DataTable } from '@/components/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
+import { paymentService } from '@/services/api';
 
 type ClientPortfolioItem = {
+    id: number;
     clientName: string;
     policyType: string;
     policyStatus: 'Active' | 'Pending';
-    premiumAmount: string;
+    premiumAmount: number;
     nextPaymentDate: string;
 };
 
 const mockPortfolio: ClientPortfolioItem[] = [
-    { clientName: 'Lucas Bennett', policyType: 'Auto Insurance', policyStatus: 'Active', premiumAmount: '$1,200', nextPaymentDate: '2024-08-15' },
-    { clientName: 'Sophia Carter', policyType: 'Home Insurance', policyStatus: 'Active', premiumAmount: '$1,500', nextPaymentDate: '2024-09-01' },
-    { clientName: 'Owen Davis', policyType: 'Life Insurance', policyStatus: 'Pending', premiumAmount: '$2,000', nextPaymentDate: '2024-07-20' },
-    { clientName: 'Chloe Foster', policyType: 'Health Insurance', policyStatus: 'Active', premiumAmount: '$1,800', nextPaymentDate: '2024-08-05' },
+    { id: 1, clientName: 'Lucas Bennett', policyType: 'Auto Insurance', policyStatus: 'Active', premiumAmount: 1200, nextPaymentDate: '2024-08-15' },
+    { id: 2, clientName: 'Sophia Carter', policyType: 'Home Insurance', policyStatus: 'Active', premiumAmount: 1500, nextPaymentDate: '2024-09-01' },
+    { id: 3, clientName: 'Owen Davis', policyType: 'Life Insurance', policyStatus: 'Pending', premiumAmount: 2000, nextPaymentDate: '2024-07-20' },
+    { id: 4, clientName: 'Chloe Foster', policyType: 'Health Insurance', policyStatus: 'Active', premiumAmount: 1800, nextPaymentDate: '2024-08-05' },
 ];
 
 const portfolioColumns: ColumnDef<ClientPortfolioItem>[] = [
+    {
+        id: 'select',
+        header: ({ table }) => (
+            <input
+                type="checkbox"
+                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                checked={table.getIsAllPageRowsSelected()}
+                onChange={(value) => table.toggleAllPageRowsSelected(!!value.target.checked)}
+                aria-label="Select all"
+            />
+        ),
+        cell: ({ row }) => (
+            <input
+                type="checkbox"
+                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                checked={row.getIsSelected()}
+                onChange={(value) => row.toggleSelected(!!value.target.checked)}
+                aria-label="Select row"
+            />
+        ),
+        enableSorting: false,
+        enableHiding: false,
+    },
     { accessorKey: 'clientName', header: 'Client Name' },
     { accessorKey: 'policyType', header: 'Policy Type' },
     { 
@@ -35,11 +60,42 @@ const portfolioColumns: ColumnDef<ClientPortfolioItem>[] = [
             )
         }
     },
-    { accessorKey: 'premiumAmount', header: 'Premium Amount' },
+    { accessorKey: 'premiumAmount', header: 'Premium Amount', cell: ({ row }) => `$${row.original.premiumAmount.toFixed(2)}` },
     { accessorKey: 'nextPaymentDate', header: 'Next Payment Date' },
 ];
 
 const BrokerDashboard = () => {
+    const [selectedPolicies, setSelectedPolicies] = useState<ClientPortfolioItem[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const totalSelectedAmount = useMemo(() => {
+        return selectedPolicies.reduce((sum, policy) => sum + policy.premiumAmount, 0);
+    }, [selectedPolicies]);
+
+    const handlePaySelected = async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const policyIds = selectedPolicies.map(p => p.id);
+            const response = await paymentService.initiateBulkPayment(policyIds);
+            // Redirect to the payment URL provided by the backend
+            if (response.payment_url) {
+                window.location.href = response.payment_url;
+            } else {
+                throw new Error('No payment URL received from server.');
+            }
+        } catch (err) {
+            if (err instanceof Error) {
+                setError(err.message);
+            } else {
+                setError('An unknown error occurred.');
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
   return (
     <>
       <div className="flex flex-wrap justify-between gap-3 pb-4">
@@ -68,9 +124,21 @@ const BrokerDashboard = () => {
         </div>
       </div>
       
-      <h2 className="text-[#101418] text-[22px] font-bold leading-tight tracking-[-0.015em] pt-8 pb-3">Client Portfolio</h2>
+      <h2 className="text-slate-900 text-[22px] font-bold leading-tight tracking-[-0.015em] pt-8 pb-3">Client Portfolio</h2>
+      
+      <div className="flex justify-end mb-4">
+        <button 
+            onClick={handlePaySelected}
+            disabled={selectedPolicies.length === 0 || isLoading}
+            className="px-4 py-2 bg-orange-600 text-white rounded-lg shadow hover:bg-orange-700 disabled:bg-slate-400 disabled:cursor-not-allowed"
+        >
+            {isLoading ? 'Processing...' : `Pay for Selected (${selectedPolicies.length}) - $${totalSelectedAmount.toFixed(2)}`}
+        </button>
+      </div>
+      {error && <p className="text-sm text-red-600 my-2 text-right">{error}</p>}
+
       <div className="w-full overflow-hidden rounded-xl border border-[#d4dbe2] bg-white">
-        <DataTable columns={portfolioColumns} data={mockPortfolio} />
+        <DataTable columns={portfolioColumns} data={mockPortfolio} onRowSelectionChange={setSelectedPolicies} />
       </div>
     </>
   );

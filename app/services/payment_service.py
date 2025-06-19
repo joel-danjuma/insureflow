@@ -126,4 +126,20 @@ async def initiate_bulk_premium_payment(premium_ids: list[int], db: Session):
         "payment_url": checkout_url,
         "transaction_ref": transaction_ref,
         "message": "Bulk payment initiated successfully."
-    } 
+    }
+
+async def initiate_bulk_policy_payment(policy_ids: list[int], db: Session):
+    """
+    Finds all unpaid premiums for a list of policies and initiates a bulk payment.
+    """
+    if not policy_ids:
+        raise HTTPException(status_code=400, detail="No policy IDs provided.")
+
+    unpaid_premiums = crud_premium.get_unpaid_premiums_for_policies(db, policy_ids=policy_ids)
+    
+    if not unpaid_premiums:
+        raise HTTPException(status_code=400, detail="No outstanding premiums found for the selected policies.")
+
+    unpaid_premium_ids = [p.id for p in unpaid_premiums]
+
+    return await initiate_bulk_premium_payment(premium_ids=unpaid_premium_ids, db=db) 

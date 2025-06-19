@@ -66,4 +66,18 @@ export const authService = {
   },
 };
 
+export const paymentService = {
+  initiateBulkPayment: async (policyIds: number[]) => {
+    try {
+      const response = await apiClient.post('/payments/bulk-initiate', { policy_ids: policyIds });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        throw new Error(error.response.data.detail || 'Bulk payment initiation failed');
+      }
+      throw new Error('An unexpected error occurred during bulk payment initiation.');
+    }
+  },
+};
+
 export default apiClient; 

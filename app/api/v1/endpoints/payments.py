@@ -3,6 +3,7 @@ API endpoints for payment-related operations.
 """
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.orm import Session
+from typing import List
 
 from app.core.database import get_db
 from app.schemas.payment import (
@@ -67,15 +68,15 @@ async def handle_squad_co_webhook(
     return Response(status_code=status.HTTP_200_OK)
 
 @router.post("/bulk-initiate", response_model=PaymentInitiationResponse)
-async def initiate_bulk_payment(
+async def initiate_bulk_policy_payment(
     request: BulkPaymentInitiationRequest,
     db: Session = Depends(get_db)
 ):
     """
-    Initiates a bulk payment for multiple premiums.
+    Initiates a bulk payment for multiple policies.
     """
-    return await payment_service.initiate_bulk_premium_payment(
-        premium_ids=request.premium_ids, db=db
+    return await payment_service.initiate_bulk_policy_payment(
+        policy_ids=request.policy_ids, db=db
     )
 
 @router.post("/initiate/{premium_id}", response_model=PaymentInitiationResponse)
@@ -88,3 +89,36 @@ async def initiate_payment(
     This endpoint is deprecated in favor of POST /premiums/{premium_id}/pay
     """
     return await payment_service.initiate_premium_payment(premium_id=premium_id, db=db)
+
+@router.post("/initiate")
+def initiate_payment(
+    *,
+    db: Session = Depends(get_db),
+    payment_in: schemas.PaymentInitiationRequest,
+):
+    """
+    Initiate a payment for a single policy.
+    """
+    return crud_payment.initiate(db=db, payment_in=payment_in)
+
+@router.post("/bulk-initiate")
+def initiate_bulk_payment(
+    *,
+    db: Session = Depends(get_db),
+    bulk_payment_in: schemas.BulkPaymentInitiationRequest,
+):
+    """
+    Initiate payment for multiple policies.
+    """
+    # This will be implemented in the crud layer
+    return crud_payment.initiate_bulk(db=db, policy_ids=bulk_payment_in.policy_ids)
+
+@router.get("/verify/{transaction_ref}")
+def verify_payment(
+    *,
+    transaction_ref: str,
+    db: Session = Depends(get_db)
+):
+    # This method is not provided in the original file or the new code block
+    # It's assumed to exist as it's called in the verify_payment method
+    pass

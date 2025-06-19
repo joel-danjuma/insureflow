@@ -41,21 +41,21 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
   const links = [...commonLinks, ...(roleLinks[userRole] || [])];
 
   return (
-    <aside className="flex flex-col w-64 bg-white p-4 border-r border-gray-200">
+    <aside className="flex flex-col w-64 bg-white p-4 border-r border-slate-200">
       <div className="flex flex-col mb-8">
-        <h1 className="text-[#101418] text-base font-medium leading-normal">Acme Co</h1>
-        <p className="text-[#5c738a] text-sm font-normal leading-normal">{userRole === UserRole.INSURANCE_FIRM ? 'Insurance Firm' : 'Broker Team'}</p>
+        <h1 className="text-slate-900 text-base font-medium leading-normal">Acme Co</h1>
+        <p className="text-slate-500 text-sm font-normal leading-normal">{userRole === UserRole.INSURANCE_FIRM ? 'Insurance Firm' : 'Broker Team'}</p>
       </div>
       <nav className="flex flex-col gap-2">
         {links.map(({ href, label, icon }) => (
           <Link
             key={label}
             href={href}
-            className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 aria-[current=page]:bg-gray-200 aria-[current=page]:text-gray-900"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 aria-[current=page]:bg-slate-200 aria-[current=page]:text-slate-900"
             aria-current={label === 'Dashboard' ? 'page' : undefined}
           >
-            <div className="text-[#101418]">{icons[icon]}</div>
-            <p className="text-[#101418] text-sm font-medium leading-normal">{label}</p>
+            <div className="text-slate-900">{icons[icon]}</div>
+            <p className="text-slate-900 text-sm font-medium leading-normal">{label}</p>
           </Link>
         ))}
       </nav>

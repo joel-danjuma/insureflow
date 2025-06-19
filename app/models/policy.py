@@ -2,7 +2,7 @@
 Policy model for InsureFlow application.
 """
 from datetime import datetime, date
-from sqlalchemy import Column, Integer, String, DateTime, Date, ForeignKey, Text, Enum
+from sqlalchemy import Column, Integer, String, DateTime, Date, ForeignKey, Text, Enum, Float
 from sqlalchemy.orm import relationship
 import enum
 
@@ -49,6 +49,7 @@ class Policy(Base):
     status = Column(Enum(PolicyStatus), nullable=False, default=PolicyStatus.PENDING)
     start_date = Column(Date, nullable=False)
     end_date = Column(Date, nullable=False)
+    reminder_sent_at = Column(DateTime, nullable=True)
     
     # Coverage information (stored as JSON text for flexibility)
     coverage_details = Column(Text, nullable=True)  # Will store JSON string

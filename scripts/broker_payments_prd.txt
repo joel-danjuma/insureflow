@@ -1,0 +1,34 @@
+# PRD: Broker Payments and UI Theme Update
+
+## 1. Objective
+To implement a critical payment feature for the Broker Dashboard, allowing brokers to select and pay for multiple policy premiums at once. This will be integrated with the backend payment service (Habari). Additionally, the application's visual theme will be updated to a high-contrast black-on-white design.
+
+## 2. Key Features & Requirements
+
+### 2.1. Broker Dashboard: Bulk Premium Payment
+-   **UI - Selectable Policies Table**:
+    -   The "Client Portfolio" `DataTable` component on the Broker Dashboard must be updated.
+    -   A new "checkbox" column will be added as the first column of the table.
+    -   The header of this new column will contain a "Select All" checkbox.
+    -   Each data row will have its own checkbox, allowing for individual selection.
+-   **UI - Payment Button**:
+    -   A "Pay for Selected" button will be added prominently above or below the table.
+    -   This button will display the total number of selected policies and the sum of their premium amounts.
+    -   The button will be disabled if no policies are selected.
+-   **Backend Integration**:
+    -   The "Pay for Selected" button's `onClick` handler will trigger a call to a new backend endpoint.
+    -   This endpoint will be responsible for initiating payments via the Habari/Squad Co service. We will assume a bulk payment endpoint exists at `POST /api/v1/payments/bulk-initiate`. If it doesn't, it will need to be created. The endpoint should accept a list of policy IDs.
+-   **Functionality**:
+    -   The frontend will manage the state of selected policies.
+    -   Clicking "Pay for Selected" will send the list of selected policy IDs to the backend.
+    -   The UI must provide feedback during the payment process (loading state) and on completion (success/error message).
+
+### 2.2. New Application Theme: Black on White
+-   **Color Palette**: The application's color scheme will be globally updated for high contrast and readability.
+    -   **Text**: All primary text will be changed to black (`#000000` or a near-black like `#101418`).
+    -   **Background**: The main application background, including component backgrounds like cards and tables, will be changed to white (`#FFFFFF`) or a very light gray (`#F9FAFB` or similar).
+    -   **Sidebar/Header**: The primary navigation component will have a white or light gray background with black text.
+-   **Implementation**:
+    -   This will primarily involve updating CSS class names in all relevant `.tsx` components (`Layout.tsx`, `Sidebar.tsx`, `MetricCard.tsx`, `DataTable.tsx`, buttons, etc.).
+    -   The goal is to move away from the dark slate theme and implement a clean, professional, light theme.
+    -   Any custom colors defined in `tailwind.config.js` or `globals.css` will be updated or removed as necessary. 

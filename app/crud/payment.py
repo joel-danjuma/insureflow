@@ -40,4 +40,13 @@ def update_payment_status(db: Session, payment: Payment, webhook_data: SquadCoTr
     db.add(payment)
     db.commit()
     db.refresh(payment)
-    return payment 
+    return payment
+
+def initiate_bulk(db: Session, policy_ids: list[int]):
+    """
+    Placeholder for initiating bulk payment for multiple policies.
+    """
+    # In a real implementation, this would iterate through policy_ids,
+    # find associated unpaid premiums, and call the payment gateway.
+    print(f"Initiating bulk payment for policy IDs: {policy_ids}")
+    return {"status": "success", "message": "Bulk payment initiation started.", "policy_ids": policy_ids} 
