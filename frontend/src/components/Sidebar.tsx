@@ -43,9 +43,9 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
   const pathname = usePathname();
 
   return (
-    <aside className="flex flex-col w-64 bg-card p-4 border-r border-border">
+    <aside className="flex flex-col w-64 bg-white p-4 border-r border-gray-200">
       <div className="flex flex-col mb-8 px-3">
-        <h1 className="text-foreground text-base font-bold leading-normal">Acme Co</h1>
+        <h1 className="text-gray-900 text-base font-bold leading-normal">Acme Co</h1>
         <p className="text-sm font-normal text-gray-500">{userRole === UserRole.INSURANCE_FIRM ? 'Insurance Firm' : 'Broker Team'}</p>
       </div>
       <nav className="flex flex-col gap-2">
@@ -53,9 +53,9 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
           <Link
             key={label}
             href={href}
-            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-foreground/80 hover:bg-accent ${pathname === href ? 'bg-accent text-foreground font-semibold' : ''}`}
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 ${pathname === href ? 'bg-gray-200 text-gray-900 font-semibold' : ''}`}
           >
-            <div className="text-foreground">{icons[icon]}</div>
+            <div className="text-gray-900">{icons[icon]}</div>
             <p className="text-sm font-medium leading-normal">{label}</p>
           </Link>
         ))}
