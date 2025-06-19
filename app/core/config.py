@@ -2,9 +2,9 @@
 Configuration settings for InsureFlow application.
 """
 import os
-from typing import Optional, List, AnyHttpUrl
+from pydantic import AnyHttpUrl, EmailStr
 from pydantic_settings import BaseSettings
-from pydantic import EmailStr
+from typing import List, Optional
 
 
 class Settings(BaseSettings):
