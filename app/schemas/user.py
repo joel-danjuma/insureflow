@@ -17,6 +17,7 @@ class UserBase(BaseModel):
 # Properties to receive via API on creation
 class UserCreate(UserBase):
     password: str
+    role: str = 'customer'
 
 
 # Properties to receive via API on update

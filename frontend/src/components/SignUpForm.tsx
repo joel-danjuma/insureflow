@@ -9,6 +9,7 @@ const signUpSchema = z.object({
   full_name: z.string().min(1, { message: 'Full name is required' }),
   email: z.string().email({ message: 'Invalid email address' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
+  role: z.enum(['customer', 'broker']),
 });
 
 export type SignUpFormData = z.infer<typeof signUpSchema>;
@@ -69,6 +70,21 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSubmit, isLoading, error }) =
         {errors.password && <p className="mt-2 text-sm text-red-600">{errors.password.message}</p>}
       </div>
       
+      <div>
+        <label htmlFor="role" className="block text-sm font-medium text-gray-700">
+          I am a
+        </label>
+        <select
+          id="role"
+          {...register('role')}
+          className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+        >
+          <option value="customer">Customer</option>
+          <option value="broker">Broker</option>
+        </select>
+        {errors.role && <p className="mt-2 text-sm text-red-600">{errors.role.message}</p>}
+      </div>
+
       {error && <p className="text-sm text-red-600">{error}</p>}
 
       <div>

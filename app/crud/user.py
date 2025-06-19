@@ -44,18 +44,17 @@ def authenticate_user(db: Session, email: str, password: str) -> Optional[User]:
         return None
     return user
 
-def create_user(db: Session, user: UserCreate) -> User:
+def create_user(db: Session, obj_in: schemas.UserCreate) -> User:
     """
     Creates a new user in the database.
     """
-    hashed_password = get_password_hash(user.password)
+    hashed_password = get_password_hash(obj_in.password)
     db_user = User(
-        username=user.username,
-        email=user.email,
+        email=obj_in.email,
         hashed_password=hashed_password,
-        full_name=user.full_name,
-        role=UserRole[user.role.upper()],  # Convert string to enum member
-        is_active=True,  # Default to active on creation
+        full_name=obj_in.full_name,
+        role=obj_in.role.lower(),
+        is_active=True,
     )
     db.add(db_user)
     db.commit()
