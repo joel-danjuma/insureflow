@@ -24,7 +24,7 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div className="rounded-md border bg-white shadow-sm">
+    <div className="w-full">
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           {table.getHeaderGroups().map((headerGroup) => (
