@@ -22,8 +22,14 @@ const config: Config = {
           900: '#1e3a8a',
         },
       },
+      fontFamily: {
+        'public-sans': ['var(--font-public-sans)', 'Public Sans', 'sans-serif'],
+        'noto-sans': ['var(--font-noto-sans)', 'Noto Sans', 'sans-serif'],
+      },
     },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/container-queries'),
+  ],
 }
 export default config 

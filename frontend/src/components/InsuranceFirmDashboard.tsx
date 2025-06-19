@@ -34,7 +34,7 @@ const InsuranceFirmDashboard = () => {
         </div>
       </div>
       <h2 className="text-[#101418] text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">Broker Information</h2>
-      <div className="px-4 py-3">
+      <div className="px-4 py-3 @container">
         <div className="flex overflow-hidden rounded-xl border border-[#d4dbe2] bg-gray-50">
           <table className="flex-1">
             <thead>
@@ -68,9 +68,43 @@ const InsuranceFirmDashboard = () => {
                   </div>
                 </td>
               </tr>
+              <tr className="border-t border-t-[#d4dbe2]">
+                <td className="h-[72px] px-4 py-2 w-[400px] text-[#101418] text-sm font-normal leading-normal">Ryan Kim</td>
+                <td className="h-[72px] px-4 py-2 w-[400px] text-[#5c738a] text-sm font-normal leading-normal">220</td>
+                <td className="h-[72px] px-4 py-2 w-[400px] text-[#5c738a] text-sm font-normal leading-normal">$22,000</td>
+                <td className="h-[72px] px-4 py-2 w-[400px] text-sm font-normal leading-normal">
+                  <div className="flex items-center gap-3">
+                    <div className="w-[88px] overflow-hidden rounded-sm bg-[#d4dbe2]"><div className="h-1 rounded-full bg-[#3f7fbf]" style={{width: '88.6364%'}}></div></div>
+                    <p className="text-[#101418] text-sm font-medium leading-normal">78</p>
+                  </div>
+                </td>
+              </tr>
+              <tr className="border-t border-t-[#d4dbe2]">
+                <td className="h-[72px] px-4 py-2 w-[400px] text-[#101418] text-sm font-normal leading-normal">Sophia Zhang</td>
+                <td className="h-[72px] px-4 py-2 w-[400px] text-[#5c738a] text-sm font-normal leading-normal">180</td>
+                <td className="h-[72px] px-4 py-2 w-[400px] text-[#5c738a] text-sm font-normal leading-normal">$18,000</td>
+                <td className="h-[72px] px-4 py-2 w-[400px] text-sm font-normal leading-normal">
+                  <div className="flex items-center gap-3">
+                    <div className="w-[88px] overflow-hidden rounded-sm bg-[#d4dbe2]"><div className="h-1 rounded-full bg-[#3f7fbf]" style={{width: '100%'}}></div></div>
+                    <p className="text-[#101418] text-sm font-medium leading-normal">88</p>
+                  </div>
+                </td>
+              </tr>
+              <tr className="border-t border-t-[#d4dbe2]">
+                <td className="h-[72px] px-4 py-2 w-[400px] text-[#101418] text-sm font-normal leading-normal">Liam Davis</td>
+                <td className="h-[72px] px-4 py-2 w-[400px] text-[#5c738a] text-sm font-normal leading-normal">150</td>
+                <td className="h-[72px] px-4 py-2 w-[400px] text-[#5c738a] text-sm font-normal leading-normal">$15,000</td>
+                <td className="h-[72px] px-4 py-2 w-[400px] text-sm font-normal leading-normal">
+                  <div className="flex items-center gap-3">
+                    <div className="w-[88px] overflow-hidden rounded-sm bg-[#d4dbe2]"><div className="h-1 rounded-full bg-[#3f7fbf]" style={{width: '90.9091%'}}></div></div>
+                    <p className="text-[#101418] text-sm font-medium leading-normal">80</p>
+                  </div>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
+
       </div>
       <h2 className="text-[#101418] text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">Claims Data</h2>
       <div className="flex flex-wrap gap-4 px-4 py-6">

@@ -1,8 +1,18 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Public_Sans, Noto_Sans } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const publicSans = Public_Sans({ 
+  subsets: ["latin"],
+  variable: "--font-public-sans",
+  weight: ["400", "500", "700", "900"]
+});
+
+const notoSans = Noto_Sans({ 
+  subsets: ["latin"],
+  variable: "--font-noto-sans",
+  weight: ["400", "500", "700", "900"]
+});
 
 export const metadata: Metadata = {
   title: "InsureFlow",
@@ -16,7 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={`${publicSans.variable} ${notoSans.variable}`} style={{fontFamily: '"Public Sans", "Noto Sans", sans-serif'}}>
         {/* The main layout component is not used here to prevent a nested layout, 
             as the dashboard pages will use it directly. This keeps the login page separate. */}
         {children}
