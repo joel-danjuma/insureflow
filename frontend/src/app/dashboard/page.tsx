@@ -3,45 +3,39 @@
 import React, { useState } from 'react';
 import Layout from '@/components/Layout';
 // import withAuth from '@/hocs/withAuth'; // Auth is temporarily suspended for testing
-import AdminDashboard from '@/components/AdminDashboard';
+import InsuranceFirmDashboard from '@/components/InsuranceFirmDashboard';
 import BrokerDashboard from '@/components/BrokerDashboard';
-
-// This would ideally come from a shared schema definition
-enum UserRole {
-  ADMIN = 'admin',
-  BROKER = 'broker',
-  CUSTOMER = 'customer',
-}
+import { UserRole } from '@/types/user';
 
 const DashboardPage = () => {
-  const [mockRole, setMockRole] = useState<UserRole>(UserRole.ADMIN);
+  const [mockRole, setMockRole] = useState<UserRole>(UserRole.INSURANCE_FIRM);
 
   return (
-    <Layout>
+    <Layout userRole={mockRole}>
       {/* --- MOCK ROLE SWITCHER FOR TESTING --- */}
       <div className="absolute top-4 right-4 bg-yellow-200 p-2 rounded shadow-lg text-sm z-50">
         <h4 className="font-bold mb-2">Testing Controls</h4>
-        <p className="mb-2">Viewing as: <strong>{mockRole.toUpperCase()}</strong></p>
+        <p className="mb-2">Viewing as: <strong>{mockRole.replace('-', ' ').toUpperCase()}</strong></p>
         <div className="flex space-x-2">
           <button 
-            onClick={() => setMockRole(UserRole.ADMIN)}
+            onClick={() => setMockRole(UserRole.INSURANCE_FIRM)}
             className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400"
-            disabled={mockRole === UserRole.ADMIN}
+            disabled={mockRole === UserRole.INSURANCE_FIRM}
           >
-            Admin View
+            Insurance Firm
           </button>
           <button 
             onClick={() => setMockRole(UserRole.BROKER)}
             className="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-400"
             disabled={mockRole === UserRole.BROKER}
           >
-            Broker View
+            Broker
           </button>
         </div>
       </div>
       {/* --- END OF MOCK ROLE SWITCHER --- */}
 
-      {mockRole === UserRole.ADMIN && <AdminDashboard />}
+      {mockRole === UserRole.INSURANCE_FIRM && <InsuranceFirmDashboard />}
       {mockRole === UserRole.BROKER && <BrokerDashboard />}
     </Layout>
   );

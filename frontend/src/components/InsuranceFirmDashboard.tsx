@@ -39,7 +39,7 @@ const brokerColumns: ColumnDef<BrokerInfo>[] = [
     },
 ];
 
-const AdminDashboard = () => {
+const InsuranceFirmDashboard = () => {
   // const { data, isLoading, error } = useQuery(fetchAdminData);
   // For now, we use static data to build the UI.
   const isLoading = false;
@@ -56,7 +56,7 @@ const AdminDashboard = () => {
           <p className="text-[#5c738a] text-sm font-normal leading-normal">Overview of key metrics and performance indicators</p>
         </div>
       </div>
-      <div className="flex flex-wrap gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard title="New Policies" value="1,250" change="+15%" />
         <MetricCard title="Outstanding Premiums" value="$750,000" change="-5%" changeColor="text-red-500" />
         <MetricCard title="Broker Performance" value="Top Broker: Ethan Carter" change="+10%" />
@@ -64,7 +64,7 @@ const AdminDashboard = () => {
       </div>
       
       <h2 className="text-[#101418] text-[22px] font-bold leading-tight tracking-[-0.015em] pt-8 pb-3">Broker Information</h2>
-      <div className="w-full overflow-hidden rounded-xl border border-[#d4dbe2] bg-gray-50">
+      <div className="w-full overflow-hidden rounded-xl border border-[#d4dbe2] bg-white">
         <DataTable columns={brokerColumns} data={mockBrokers} />
       </div>
 
@@ -84,4 +84,4 @@ const AdminDashboard = () => {
   );
 };
 
-export default AdminDashboard; 
+export default InsuranceFirmDashboard; 
