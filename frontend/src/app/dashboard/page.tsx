@@ -13,7 +13,7 @@ const DashboardPage = () => {
   return (
     <Layout userRole={mockRole}>
       {/* --- MOCK ROLE SWITCHER FOR TESTING --- */}
-      <div className="absolute top-4 right-4 bg-yellow-200 p-2 rounded shadow-lg text-sm z-50">
+      <div className="absolute top-20 right-4 bg-yellow-200 p-2 rounded shadow-lg text-sm z-50">
         <h4 className="font-bold mb-2">Testing Controls</h4>
         <p className="mb-2">Viewing as: <strong>{mockRole.replace('-', ' ').toUpperCase()}</strong></p>
         <div className="flex space-x-2">
