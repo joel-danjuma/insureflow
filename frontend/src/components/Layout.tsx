@@ -9,11 +9,13 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children, userRole }) => {
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="relative flex size-full min-h-screen flex-col bg-gray-50 group/design-root overflow-x-hidden">
+      <div className="flex flex-1">
         <Sidebar userRole={userRole} />
-        <main className="flex-1 p-8 overflow-y-auto">
+        <main className="flex flex-1 flex-col px-6 py-5">
             {children}
         </main>
+      </div>
     </div>
   );
 };
