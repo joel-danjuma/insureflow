@@ -1,11 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Layout from '@/components/Layout';
-import withAuth from '@/hocs/withAuth';
-import useQuery from '@/hooks/useQuery';
-import { authService } from '@/services/api';
-import useAuthStore from '@/store/authStore';
+// import withAuth from '@/hocs/withAuth'; // Auth is temporarily suspended for testing
 import AdminDashboard from '@/components/AdminDashboard';
 import BrokerDashboard from '@/components/BrokerDashboard';
 
@@ -16,47 +13,39 @@ enum UserRole {
   CUSTOMER = 'customer',
 }
 
-interface User {
-  id: number;
-  email: string;
-  full_name: string;
-  role: UserRole;
-}
-
 const DashboardPage = () => {
-  const { token } = useAuthStore();
-
-  const fetchUser = React.useCallback(async () => {
-    if (!token) throw new Error('No token found');
-    return authService.getCurrentUser(token);
-  }, [token]);
-
-  const { data: user, isLoading, error } = useQuery<User>(fetchUser);
-
-  if (isLoading) {
-    return (
-      <Layout>
-        <div>Loading user information...</div>
-      </Layout>
-    );
-  }
-
-  if (error || !user) {
-    return (
-      <Layout>
-        <div>Error loading user data. Please try logging in again.</div>
-      </Layout>
-    );
-  }
+  const [mockRole, setMockRole] = useState<UserRole>(UserRole.ADMIN);
 
   return (
     <Layout>
-      {user.role === UserRole.ADMIN && <AdminDashboard />}
-      {user.role === UserRole.BROKER && <BrokerDashboard />}
-      {/* You could add a customer dashboard here as well */}
-      {user.role === UserRole.CUSTOMER && <div>Customer Dashboard (Not Implemented)</div>}
+      {/* --- MOCK ROLE SWITCHER FOR TESTING --- */}
+      <div className="absolute top-4 right-4 bg-yellow-200 p-2 rounded shadow-lg text-sm">
+        <h4 className="font-bold mb-2">Testing Controls</h4>
+        <p className="mb-2">Viewing as: <strong>{mockRole.toUpperCase()}</strong></p>
+        <div className="flex space-x-2">
+          <button 
+            onClick={() => setMockRole(UserRole.ADMIN)}
+            className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400"
+            disabled={mockRole === UserRole.ADMIN}
+          >
+            Admin View
+          </button>
+          <button 
+            onClick={() => setMockRole(UserRole.BROKER)}
+            className="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-400"
+            disabled={mockRole === UserRole.BROKER}
+          >
+            Broker View
+          </button>
+        </div>
+      </div>
+      {/* --- END OF MOCK ROLE SWITCHER --- */}
+
+      {mockRole === UserRole.ADMIN && <AdminDashboard />}
+      {mockRole === UserRole.BROKER && <BrokerDashboard />}
     </Layout>
   );
 };
 
-export default withAuth(DashboardPage); 
+// export default withAuth(DashboardPage); // Auth is temporarily suspended
+export default DashboardPage; 
