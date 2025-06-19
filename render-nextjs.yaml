@@ -1,0 +1,59 @@
+services:
+  # 1. PostgreSQL Database
+  - name: insureflow-db
+    type: psql
+    psqlVersion: 14
+    region: oregon
+    plan: starter
+
+  # 2. Redis Cache
+  - name: insureflow-redis
+    type: redis
+    plan: free
+    region: oregon
+
+  # 3. FastAPI Backend
+  - name: insureflow-backend
+    type: web
+    region: oregon
+    plan: starter
+    runtime: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    healthCheckPath: /api/v1/docs
+    envVars:
+      - key: DATABASE_URL
+        fromService:
+          type: psql
+          name: insureflow-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: insureflow-redis
+          property: connectionString
+      - key: SQUAD_SECRET_KEY
+        sync: false # Add this in Render dashboard
+      - key: SQUAD_PUBLIC_KEY
+        sync: false # Add this in Render dashboard
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 30
+
+  # 4. Next.js Frontend
+  - name: insureflow-frontend
+    type: web
+    region: oregon
+    plan: starter
+    runtime: node
+    rootDir: frontend
+    buildCommand: "npm install && npm run build"
+    startCommand: "npm start"
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        value: https://insureflow-backend.onrender.com/api/v1
+      - key: NODE_ENV
+        value: production 
