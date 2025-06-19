@@ -100,8 +100,8 @@ const BrokerDashboard = () => {
     <>
       <div className="flex flex-wrap justify-between gap-3 pb-4">
         <div className="flex min-w-72 flex-col gap-3">
-          <p className="text-[#101418] tracking-light text-[32px] font-bold leading-tight">Broker Dashboard</p>
-          <p className="text-[#5c738a] text-sm font-normal leading-normal">Overview of your performance and client portfolio</p>
+          <p className="text-foreground tracking-light text-[32px] font-bold leading-tight">Broker Dashboard</p>
+          <p className="text-foreground/70 text-sm font-normal leading-normal">Overview of your performance and client portfolio</p>
         </div>
       </div>
 
@@ -111,33 +111,33 @@ const BrokerDashboard = () => {
         <MetricCard title="Average Commission" value="$5,000" change="+5%" />
       </div>
 
-      <h2 className="text-[#101418] text-[22px] font-bold leading-tight tracking-[-0.015em] pt-5 pb-3">Sales Performance</h2>
+      <h2 className="text-foreground text-[22px] font-bold leading-tight tracking-[-0.015em] pt-5 pb-3">Sales Performance</h2>
       <div className="flex flex-wrap gap-4">
         {/* Placeholder for Sales Performance charts */}
-        <div className="flex min-w-72 flex-1 flex-col gap-2 rounded-xl border border-[#d4dbe2] p-6">
+        <div className="flex min-w-72 flex-1 flex-col gap-2 rounded-xl border border-border p-6">
             <p>Sales Over Time</p>
             <p className="text-3xl font-bold">$250,000</p>
         </div>
-        <div className="flex min-w-72 flex-1 flex-col gap-2 rounded-xl border border-[#d4dbe2] p-6">
+        <div className="flex min-w-72 flex-1 flex-col gap-2 rounded-xl border border-border p-6">
             <p>Sales by Product</p>
             <p className="text-3xl font-bold">$100,000</p>
         </div>
       </div>
       
-      <h2 className="text-slate-900 text-[22px] font-bold leading-tight tracking-[-0.015em] pt-8 pb-3">Client Portfolio</h2>
+      <h2 className="text-foreground text-[22px] font-bold leading-tight tracking-[-0.015em] pt-8 pb-3">Client Portfolio</h2>
       
       <div className="flex justify-end mb-4">
         <button 
             onClick={handlePaySelected}
             disabled={selectedPolicies.length === 0 || isLoading}
-            className="px-4 py-2 bg-orange-600 text-white rounded-lg shadow hover:bg-orange-700 disabled:bg-slate-400 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg shadow hover:bg-primary/90 disabled:bg-slate-400 disabled:cursor-not-allowed"
         >
             {isLoading ? 'Processing...' : `Pay for Selected (${selectedPolicies.length}) - $${totalSelectedAmount.toFixed(2)}`}
         </button>
       </div>
       {error && <p className="text-sm text-red-600 my-2 text-right">{error}</p>}
 
-      <div className="w-full overflow-hidden rounded-xl border border-[#d4dbe2] bg-white">
+      <div className="w-full overflow-hidden rounded-xl border border-border bg-card">
         <DataTable columns={portfolioColumns} data={mockPortfolio} onRowSelectionChange={setSelectedPolicies} />
       </div>
     </>

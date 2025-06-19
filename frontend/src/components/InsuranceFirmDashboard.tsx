@@ -50,10 +50,10 @@ const InsuranceFirmDashboard = () => {
 
   return (
     <>
-      <div className="flex flex-wrap justify-between gap-3 py-4">
+      <div className="flex flex-wrap justify-between gap-3 pb-4">
         <div className="flex min-w-72 flex-col gap-3">
-          <p className="text-[#101418] tracking-light text-[32px] font-bold leading-tight">Dashboard</p>
-          <p className="text-[#5c738a] text-sm font-normal leading-normal">Overview of key metrics and performance indicators</p>
+          <p className="text-foreground tracking-light text-[32px] font-bold leading-tight">Dashboard</p>
+          <p className="text-foreground/70 text-sm font-normal leading-normal">Overview of key metrics and performance indicators</p>
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -63,19 +63,19 @@ const InsuranceFirmDashboard = () => {
         <MetricCard title="Claims Processed" value="320" change="+8%" />
       </div>
       
-      <h2 className="text-[#101418] text-[22px] font-bold leading-tight tracking-[-0.015em] pt-8 pb-3">Broker Information</h2>
-      <div className="w-full overflow-hidden rounded-xl border border-[#d4dbe2] bg-white">
+      <h2 className="text-foreground text-[22px] font-bold leading-tight tracking-[-0.015em] pt-8 pb-3">Broker Information</h2>
+      <div className="w-full overflow-hidden rounded-xl border border-border bg-card">
         <DataTable columns={brokerColumns} data={mockBrokers} />
       </div>
 
-      <h2 className="text-[#101418] text-[22px] font-bold leading-tight tracking-[-0.015em] pt-8 pb-3">Claims Data</h2>
+      <h2 className="text-foreground text-[22px] font-bold leading-tight tracking-[-0.015em] pt-8 pb-3">Claims Data</h2>
       <div className="flex flex-wrap gap-4">
         {/* Placeholder for Claims Data charts */}
-        <div className="flex min-w-72 flex-1 flex-col gap-2 rounded-xl border border-[#d4dbe2] p-6">
+        <div className="flex min-w-72 flex-1 flex-col gap-2 rounded-xl border border-border p-6">
             <p>Claims Processed by Type</p>
             <p className="text-3xl font-bold">150</p>
         </div>
-        <div className="flex min-w-72 flex-1 flex-col gap-2 rounded-xl border border-[#d4dbe2] p-6">
+        <div className="flex min-w-72 flex-1 flex-col gap-2 rounded-xl border border-border p-6">
             <p>Claims Payout Over Time</p>
             <p className="text-3xl font-bold">$2.5M</p>
         </div>

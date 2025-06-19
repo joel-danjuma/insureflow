@@ -43,13 +43,13 @@ export function DataTable<TData, TValue>({
   return (
     <div className="w-full">
       <table className="min-w-full">
-        <thead className="bg-slate-50">
+        <thead className="bg-accent">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
                 <th
                   key={header.id}
-                  className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider"
+                  className="px-6 py-3 text-left text-xs font-medium text-foreground/60 uppercase tracking-wider"
                 >
                   {header.isPlaceholder
                     ? null
@@ -62,15 +62,15 @@ export function DataTable<TData, TValue>({
             </tr>
           ))}
         </thead>
-        <tbody className="bg-white divide-y divide-slate-200">
+        <tbody className="bg-card divide-y divide-border">
           {table.getRowModel().rows?.length ? (
             table.getRowModel().rows.map((row) => (
               <tr 
                 key={row.id} 
-                className={`hover:bg-slate-50 ${row.getIsSelected() ? 'bg-orange-50' : ''}`}
+                className={`hover:bg-accent ${row.getIsSelected() ? 'bg-orange-100/50' : ''}`}
               >
                 {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">
+                  <td key={cell.id} className="px-6 py-4 whitespace-nowrap text-sm text-foreground/90">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}
