@@ -2,24 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: 0 0% 100%; /* White */
-  --foreground: 222.2 47.4% 11.2%; /* Near Black */
-  
-  --card: 0 0% 100%;
-  --card-foreground: 222.2 47.4% 11.2%;
+@layer base {
+  :root {
+    --background: 0 0% 100%; /* White */
+    --foreground: 222.2 47.4% 11.2%; /* Near Black */
+    
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 47.4% 11.2%;
 
-  --primary: 24.6 95% 53.1%; /* Orange */
-  --primary-foreground: 60 9.1% 97.8%; /* Light text for on-orange buttons */
+    --primary: 24.6 95% 53.1%; /* Orange */
+    --primary-foreground: 60 9.1% 97.8%; /* Light text for on-orange buttons */
 
-  --border: 214.3 31.8% 91.4%; /* Light Gray */
-  --accent: 210 40% 96.1%; /* Lightest Gray/Blue for hover */
-  --accent-foreground: 222.2 47.4% 11.2%;
+    --border: 214.3 31.8% 91.4%; /* Light Gray */
+    --accent: 210 40% 96.1%; /* Lightest Gray/Blue for hover */
+    --accent-foreground: 222.2 47.4% 11.2%;
+  }
 }
 
-body {
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
+@layer base {
+  body {
+    @apply bg-background text-foreground;
+  }
 }
 
 @theme {
