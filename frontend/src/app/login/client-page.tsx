@@ -61,9 +61,6 @@ const LoginClientContent = () => {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white p-4">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white">InsureFlow</h1>
-        </div>
         
         {successMessage && (
           <div className="mb-6 p-4 bg-green-900/20 border border-green-500/30 rounded-lg">
