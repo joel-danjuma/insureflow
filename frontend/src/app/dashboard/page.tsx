@@ -35,29 +35,29 @@ const DashboardPage = () => {
   return (
     <Layout userRole={user.role} title="Dashboard">
       {/* Role Switcher for Testing */}
-      <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+      <div className="mb-6 p-4 bg-gray-800 border border-orange-500/30 rounded-lg">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-semibold text-blue-800">Testing Mode - Switch User Role</h3>
-            <p className="text-xs text-blue-600">View different dashboard experiences</p>
+            <h3 className="text-sm font-semibold text-orange-400">Testing Mode - Switch User Role</h3>
+            <p className="text-xs text-gray-400">View different dashboard experiences</p>
           </div>
           <div className="flex gap-2">
             <button
               onClick={() => setCurrentRole(UserRole.ADMIN)}
-              className={`px-3 py-1 text-xs rounded ${
+              className={`px-3 py-1 text-xs rounded transition-colors ${
                 currentRole === UserRole.ADMIN
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-blue-600 border border-blue-300'
+                  ? 'bg-orange-500 text-white'
+                  : 'bg-gray-700 text-gray-300 border border-gray-600 hover:border-orange-500'
               }`}
             >
               Admin View
             </button>
             <button
               onClick={() => setCurrentRole(UserRole.BROKER)}
-              className={`px-3 py-1 text-xs rounded ${
+              className={`px-3 py-1 text-xs rounded transition-colors ${
                 currentRole === UserRole.BROKER
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-blue-600 border border-blue-300'
+                  ? 'bg-orange-500 text-white'
+                  : 'bg-gray-700 text-gray-300 border border-gray-600 hover:border-orange-500'
               }`}
             >
               Broker View

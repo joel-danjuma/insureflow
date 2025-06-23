@@ -124,11 +124,11 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
   };
 
   return (
-    <aside className="flex flex-col w-64 bg-white border-r-2 border-black min-h-screen">
+    <aside className="flex flex-col w-64 bg-gray-900 border-r border-gray-700 min-h-screen">
       {/* Header */}
-      <div className="p-6 border-b-2 border-black">
-        <h1 className="text-2xl font-bold text-black mb-1">InsureFlow</h1>
-        <p className="text-sm text-gray-600">
+      <div className="p-6 border-b border-gray-700 h-[73px] flex flex-col justify-center">
+        <h1 className="text-2xl font-bold text-white mb-1">InsureFlow</h1>
+        <p className="text-sm text-gray-400">
           {user?.full_name || 'User'} • {getRoleDisplayName(currentRole)}
         </p>
       </div>
@@ -142,13 +142,13 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
               <Link
                 key={label}
                 href={href}
-                className={`flex items-center space-x-3 px-4 py-3 text-sm font-medium transition-all duration-200 border-2 ${
+                className={`flex items-center space-x-3 px-4 py-3 text-sm font-medium transition-all duration-200 rounded-lg ${
                   active
-                    ? 'bg-black text-white border-black'
-                    : 'text-black border-transparent hover:border-black hover:bg-gray-50'
+                    ? 'bg-orange-500 text-white'
+                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                 }`}
               >
-                <div className={`${active ? 'text-white' : 'text-black'}`}>
+                <div className={`${active ? 'text-white' : 'text-gray-400'}`}>
                   {icons[icon]}
                 </div>
                 <span>{label}</span>
@@ -158,18 +158,20 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
         </div>
       </nav>
 
-      {/* User Actions */}
-      <div className="p-4 border-t-2 border-black">
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center space-x-3 px-4 py-3 text-sm font-medium text-black border-2 border-transparent hover:border-black hover:bg-gray-50 transition-all duration-200"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256">
-            <path d="M120,216a8,8,0,0,1-8,8H48a16,16,0,0,1-16-16V48A16,16,0,0,1,48,32h64a8,8,0,0,1,0,16H48V208h64A8,8,0,0,1,120,216Zm109.66-93.66-40-40a8,8,0,0,0-11.32,11.32L204.69,120H112a8,8,0,0,0,0,16h92.69l-26.35,26.34a8,8,0,0,0,11.32,11.32l40-40A8,8,0,0,0,229.66,122.34Z"/>
-          </svg>
-          <span>Sign Out</span>
-        </button>
-      </div>
+      {/* User Actions - Only show sign out for non-broker users */}
+      {currentRole !== UserRole.BROKER && (
+        <div className="p-4 border-t border-gray-700">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center space-x-3 px-4 py-3 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-all duration-200 rounded-lg"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256">
+              <path d="M120,216a8,8,0,0,1-8,8H48a16,16,0,0,1-16-16V48A16,16,0,0,1,48,32h64a8,8,0,0,1,0,16H48V208h64A8,8,0,0,1,120,216Zm109.66-93.66-40-40a8,8,0,0,0-11.32,11.32L204.69,120H112a8,8,0,0,0,0,16h92.69l-26.35,26.34a8,8,0,0,0,11.32,11.32l40-40A8,8,0,0,0,229.66,122.34Z"/>
+            </svg>
+            <span>Sign Out</span>
+          </button>
+        </div>
+      )}
     </aside>
   );
 };

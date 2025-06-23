@@ -327,18 +327,19 @@ const InsuranceFirmDashboard = () => {
 
   return (
     <>
+      {/* Header */}
       <div className="flex flex-wrap justify-between gap-3 py-4">
         <div className="flex min-w-72 flex-col gap-3">
-          <p className="text-text-primary tracking-light text-[28px] font-bold leading-tight">Dashboard</p>
-          <p className="text-text-secondary text-sm font-normal leading-normal">Overview of key metrics and performance indicators</p>
+          <p className="text-white tracking-light text-[28px] font-bold leading-tight">Dashboard</p>
+          <p className="text-gray-400 text-sm font-normal leading-normal">Overview of key metrics and performance indicators</p>
         </div>
       </div>
 
       {/* Payment reminder status messages */}
       {reminderError && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+        <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 mb-4">
           <div className="flex">
-            <div className="text-red-600 text-sm">
+            <div className="text-red-400 text-sm">
               <strong>Error:</strong> {reminderError}
             </div>
           </div>
@@ -346,15 +347,16 @@ const InsuranceFirmDashboard = () => {
       )}
 
       {reminderSuccess && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+        <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4 mb-4">
           <div className="flex">
-            <div className="text-green-600 text-sm">
+            <div className="text-green-400 text-sm">
               <strong>Success:</strong> {reminderSuccess}
             </div>
           </div>
         </div>
       )}
       
+      {/* Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard 
           title="New Policies" 
@@ -385,13 +387,13 @@ const InsuranceFirmDashboard = () => {
 
       {/* Payment Reminder System Section */}
       <div className="flex justify-between items-center pt-8 pb-3">
-        <h2 className="text-[#101418] text-[22px] font-bold leading-tight tracking-[-0.015em]">
+        <h2 className="text-white text-[22px] font-bold leading-tight tracking-[-0.015em]">
           Payment Reminders
         </h2>
         <div className="flex gap-3">
           <button
             onClick={() => setShowReminderSection(!showReminderSection)}
-            className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-colors"
+            className="px-4 py-2 border border-orange-500 text-orange-400 rounded-lg font-medium hover:bg-orange-500/10 transition-colors"
           >
             {showReminderSection ? 'Hide Reminders' : `View Outstanding (${outstandingPolicies.length})`}
           </button>
@@ -401,8 +403,8 @@ const InsuranceFirmDashboard = () => {
               disabled={reminderLoading}
               className={`px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
                 reminderLoading
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-orange-600 hover:bg-orange-700'
+                  ? 'bg-gray-600 cursor-not-allowed'
+                  : 'bg-orange-500 hover:bg-orange-600'
               } text-white`}
             >
               {reminderLoading ? 'Sending...' : `Send Reminders (${selectedPolicies.size})`}
@@ -412,67 +414,68 @@ const InsuranceFirmDashboard = () => {
       </div>
 
       {showReminderSection && (
-        <div className="w-full overflow-hidden rounded-xl border border-[#d4dbe2] bg-white mb-6">
+        <div className="w-full overflow-hidden rounded-xl border border-gray-700 bg-gray-800 mb-6">
           {outstandingPolicies.length > 0 ? (
             <DataTable columns={outstandingPoliciesColumns} data={outstandingPolicies} />
           ) : (
             <div className="p-8 text-center">
-              <div className="text-green-600 text-lg font-semibold mb-2">All Caught Up!</div>
-              <p className="text-gray-500">No outstanding premiums requiring reminders at this time.</p>
+              <div className="text-green-400 text-lg font-semibold mb-2">All Caught Up!</div>
+              <p className="text-gray-400">No outstanding premiums requiring reminders at this time.</p>
             </div>
           )}
         </div>
       )}
       
-      <h2 className="text-[#101418] text-[22px] font-bold leading-tight tracking-[-0.015em] pt-8 pb-3">Recent Policies</h2>
-      <div className="w-full overflow-hidden rounded-xl border border-[#d4dbe2] bg-white">
+      <h2 className="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pt-8 pb-3">Recent Policies</h2>
+      <div className="w-full overflow-hidden rounded-xl border border-gray-700 bg-gray-800">
         <DataTable 
           columns={recentPoliciesColumns} 
           data={dashboardData?.recent_policies || []} 
         />
       </div>
 
-      <h2 className="text-[#101418] text-[22px] font-bold leading-tight tracking-[-0.015em] pt-8 pb-3">Broker Performance</h2>
-      <div className="w-full overflow-hidden rounded-xl border border-[#d4dbe2] bg-white">
+      <h2 className="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pt-8 pb-3">Broker Performance</h2>
+      <div className="w-full overflow-hidden rounded-xl border border-gray-700 bg-gray-800">
         <DataTable columns={brokerColumns} data={brokerPerformance} />
       </div>
 
-      <h2 className="text-[#101418] text-[22px] font-bold leading-tight tracking-[-0.015em] pt-8 pb-3">Claims Data</h2>
+      <h2 className="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pt-8 pb-3">Claims Data</h2>
       <div className="flex flex-wrap gap-4 mb-6">
-        <div className="flex min-w-72 flex-1 flex-col gap-2 rounded-xl border border-[#d4dbe2] p-6 bg-white">
-            <p className="text-[#101418] text-sm font-medium leading-normal">Total Claims Processed</p>
-            <p className="text-[#101418] text-3xl font-bold leading-tight tracking-[-0.015em]">{claimsData.totalClaims}</p>
+        <div className="flex min-w-72 flex-1 flex-col gap-2 rounded-xl border border-gray-700 p-6 bg-gray-800">
+            <p className="text-gray-400 text-sm font-medium leading-normal">Total Claims Processed</p>
+            <p className="text-white text-3xl font-bold leading-tight tracking-[-0.015em]">{claimsData.totalClaims}</p>
         </div>
-        <div className="flex min-w-72 flex-1 flex-col gap-2 rounded-xl border border-[#d4dbe2] p-6 bg-white">
-            <p className="text-[#101418] text-sm font-medium leading-normal">Total Claims Payout</p>
-            <p className="text-[#101418] text-3xl font-bold leading-tight tracking-[-0.015em]">{formatNaira(claimsData.totalPayout)}</p>
+        <div className="flex min-w-72 flex-1 flex-col gap-2 rounded-xl border border-gray-700 p-6 bg-gray-800">
+            <p className="text-gray-400 text-sm font-medium leading-normal">Total Claims Payout</p>
+            <p className="text-white text-3xl font-bold leading-tight tracking-[-0.015em]">{formatNaira(claimsData.totalPayout)}</p>
         </div>
       </div>
       
-      <div className="w-full rounded-xl border border-[#d4dbe2] p-6 bg-white">
-        <h3 className="text-[#101418] text-lg font-semibold mb-4">Claims Trends (6 Months)</h3>
+      <div className="w-full rounded-xl border border-gray-700 p-6 bg-gray-800">
+        <h3 className="text-white text-lg font-semibold mb-4">Claims Trends (6 Months)</h3>
         <ResponsiveContainer width="100%" height={300}>
           <AreaChart data={claimsTrendData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis dataKey="month" stroke="#666" />
-            <YAxis stroke="#666" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+            <XAxis dataKey="month" stroke="#9CA3AF" />
+            <YAxis stroke="#9CA3AF" />
             <Tooltip 
               formatter={(value, name) => [
                 name === 'payout' ? formatNaira(Number(value)) : value,
                 name === 'payout' ? 'Payout' : 'Claims'
               ]}
-              labelStyle={{ color: '#101418' }}
+              labelStyle={{ color: '#ffffff' }}
               contentStyle={{ 
-                backgroundColor: 'white', 
-                border: '1px solid #d4dbe2',
-                borderRadius: '8px'
+                backgroundColor: '#1F2937', 
+                border: '1px solid #374151',
+                borderRadius: '8px',
+                color: '#ffffff'
               }}
             />
             <Area 
               type="monotone" 
               dataKey="claims" 
-              stroke="#3f7fbf" 
-              fill="#3f7fbf" 
+              stroke="#F97316" 
+              fill="#F97316" 
               fillOpacity={0.3}
               strokeWidth={2}
             />

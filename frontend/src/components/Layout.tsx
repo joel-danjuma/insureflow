@@ -19,7 +19,7 @@ const Layout: React.FC<LayoutProps> = ({
   showHeader = true 
 }) => {
   return (
-    <div className="flex min-h-screen bg-white">
+    <div className="flex min-h-screen bg-gray-900">
       {/* Sidebar */}
       {showSidebar && <Sidebar userRole={userRole} />}
       
@@ -29,7 +29,7 @@ const Layout: React.FC<LayoutProps> = ({
         {showHeader && <Header title={title} />}
         
         {/* Page Content */}
-        <main className="flex-1 p-6 bg-white">
+        <main className="flex-1 p-6 bg-gray-900">
           {children}
         </main>
       </div>
