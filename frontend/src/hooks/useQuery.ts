@@ -150,8 +150,9 @@ export const useDashboardData = () => {
         return mockDashboardData;
       }
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 30 * 1000, // 30 seconds (reduced from 5 minutes)
     retry: false, // Don't retry, use mock data on failure
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -160,8 +161,9 @@ export const useBrokerProfile = () => {
   return useReactQuery<Broker>({
     queryKey: ['broker', 'profile'],
     queryFn: brokerService.getBrokerProfile,
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    retry: 2,
+    staleTime: 30 * 1000, // 30 seconds (reduced)
+    retry: 1, // Only retry once
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -177,8 +179,9 @@ export const usePolicies = () => {
         return mockPolicies;
       }
     },
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 30 * 1000, // 30 seconds (reduced)
     retry: false, // Don't retry, use mock data on failure
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -194,7 +197,8 @@ export const usePremiums = () => {
         return mockPremiums;
       }
     },
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 30 * 1000, // 30 seconds (reduced)
     retry: false, // Don't retry, use mock data on failure
+    refetchOnWindowFocus: false,
   });
 }; 

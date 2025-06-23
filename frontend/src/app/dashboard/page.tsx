@@ -16,7 +16,8 @@ const mockUser = {
 
 const DashboardPage = () => {
   // const { user } = useAuthStore();
-  const user = mockUser;
+  const [currentRole, setCurrentRole] = React.useState<UserRole>(UserRole.ADMIN);
+  const user = { ...mockUser, role: currentRole };
 
   if (!user) {
     return (
@@ -33,6 +34,38 @@ const DashboardPage = () => {
 
   return (
     <Layout userRole={user.role} title="Dashboard">
+      {/* Role Switcher for Testing */}
+      <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-semibold text-blue-800">Testing Mode - Switch User Role</h3>
+            <p className="text-xs text-blue-600">View different dashboard experiences</p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setCurrentRole(UserRole.ADMIN)}
+              className={`px-3 py-1 text-xs rounded ${
+                currentRole === UserRole.ADMIN
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-blue-600 border border-blue-300'
+              }`}
+            >
+              Admin View
+            </button>
+            <button
+              onClick={() => setCurrentRole(UserRole.BROKER)}
+              className={`px-3 py-1 text-xs rounded ${
+                currentRole === UserRole.BROKER
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-blue-600 border border-blue-300'
+              }`}
+            >
+              Broker View
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Render appropriate dashboard based on user role */}
       {user.role === UserRole.ADMIN && <InsuranceFirmDashboard />}
       {user.role === UserRole.BROKER && <BrokerDashboard />}

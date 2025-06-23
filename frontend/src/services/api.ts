@@ -17,14 +17,21 @@ const getApiUrl = () => {
 
 const API_URL = getApiUrl();
 
-const apiClient = axios.create({
-  baseURL: API_URL,
+// Create axios instance with base configuration
+const api = axios.create({
+  baseURL: process.env.NODE_ENV === 'production' 
+    ? `http://${typeof window !== 'undefined' ? window.location.hostname : 'localhost'}:8000/api/v1`
+    : 'http://localhost:8000/api/v1',
+  timeout: 3000, // 3 second timeout for faster fallback
+  headers: {
+    'Content-Type': 'application/json',
+  },
   // withCredentials will be important for handling cookies if we use them for auth
   withCredentials: true,
 });
 
 // Add a request interceptor to automatically include the auth token
-apiClient.interceptors.request.use((config) => {
+api.interceptors.request.use((config) => {
   // Get token from session storage
   const authStorage = sessionStorage.getItem('auth-storage');
   if (authStorage) {
@@ -41,7 +48,7 @@ apiClient.interceptors.request.use((config) => {
 });
 
 // Add a response interceptor to handle 401 errors
-apiClient.interceptors.response.use(
+api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
@@ -64,7 +71,7 @@ export const authService = {
     form.append('password', credentials.password);
 
     try {
-      const response = await apiClient.post('/auth/login', form, {
+      const response = await api.post('/auth/login', form, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
@@ -80,7 +87,7 @@ export const authService = {
 
   register: async (data: SignUpFormData) => {
     try {
-      const response = await apiClient.post('/auth/register', data);
+      const response = await api.post('/auth/register', data);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
@@ -92,7 +99,7 @@ export const authService = {
 
   getCurrentUser: async (token: string) => {
     try {
-        const response = await apiClient.get('/users/me', {
+        const response = await api.get('/users/me', {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -113,7 +120,7 @@ export const authService = {
     
     // Could also call a logout endpoint if the backend supports it
     // try {
-    //   await apiClient.post('/auth/logout');
+    //   await api.post('/auth/logout');
     // } catch (error) {
     //   console.warn('Logout endpoint call failed:', error);
     // }
@@ -123,7 +130,7 @@ export const authService = {
 export const dashboardService = {
   getDashboardData: async () => {
     try {
-      const response = await apiClient.get('/dashboard/');
+      const response = await api.get('/dashboard/');
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
@@ -137,7 +144,7 @@ export const dashboardService = {
 export const brokerService = {
   getBrokerProfile: async () => {
     try {
-      const response = await apiClient.get('/brokers/me');
+      const response = await api.get('/brokers/me');
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
@@ -151,7 +158,7 @@ export const brokerService = {
 export const policyService = {
   getPolicies: async () => {
     try {
-      const response = await apiClient.get('/policies/');
+      const response = await api.get('/policies/');
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
@@ -165,7 +172,7 @@ export const policyService = {
 export const premiumService = {
   getPremiums: async () => {
     try {
-      const response = await apiClient.get('/premiums/');
+      const response = await api.get('/premiums/');
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
@@ -177,7 +184,7 @@ export const premiumService = {
 
   payPremium: async (premiumId: number) => {
     try {
-      const response = await apiClient.post(`/premiums/${premiumId}/pay`);
+      const response = await api.post(`/premiums/${premiumId}/pay`);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
@@ -191,7 +198,7 @@ export const premiumService = {
 export const paymentService = {
   initiateBulkPayment: async (policyIds: number[]) => {
     try {
-      const response = await apiClient.post('/payments/bulk-initiate', {
+      const response = await api.post('/payments/bulk-initiate', {
         policy_ids: policyIds,
       });
       return response.data;
@@ -205,7 +212,7 @@ export const paymentService = {
 
   verifyPayment: async (transactionRef: string) => {
     try {
-      const response = await apiClient.get(`/payments/verify/${transactionRef}`);
+      const response = await api.get(`/payments/verify/${transactionRef}`);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
@@ -219,7 +226,7 @@ export const paymentService = {
 export const reminderService = {
   sendReminders: async (data: { broker_ids?: number[], policy_ids?: number[] }) => {
     try {
-      const response = await apiClient.post('/reminders/send', data);
+      const response = await api.post('/reminders/send', data);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
@@ -231,7 +238,7 @@ export const reminderService = {
 
   getOutstandingPolicies: async () => {
     try {
-      const response = await apiClient.get('/policies/outstanding');
+      const response = await api.get('/policies/outstanding');
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
@@ -242,4 +249,4 @@ export const reminderService = {
   },
 };
 
-export default apiClient; 
+export default api; 
