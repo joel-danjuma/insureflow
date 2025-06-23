@@ -3,9 +3,19 @@ import { LoginFormData } from '@/components/LoginForm';
 import { SignUpFormData } from '@/components/SignUpForm';
 
 // This will be the base URL for our backend
-// In development, Next.js can proxy requests to avoid CORS issues.
-// In production, this would be the actual domain of your backend.
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+// For VPS deployment, use the current hostname with port 8000
+// In development, it falls back to localhost:8000
+const getApiUrl = () => {
+  if (typeof window !== 'undefined') {
+    // Browser environment - use current hostname with backend port
+    const { protocol, hostname } = window.location;
+    return `${protocol}//${hostname}:8000/api/v1`;
+  }
+  // Server-side rendering fallback
+  return 'http://localhost:8000/api/v1';
+};
+
+const API_URL = getApiUrl();
 
 const apiClient = axios.create({
   baseURL: API_URL,

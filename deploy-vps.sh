@@ -87,7 +87,7 @@ else
 fi
 
 # Check PostgreSQL
-if docker exec insureflow_backend pg_isready -U insureflow -h db > /dev/null 2>&1; then
+if docker exec insureflow_app pg_isready -U insureflow -h db > /dev/null 2>&1; then
     print_status "PostgreSQL database is running ✓"
 else
     print_warning "PostgreSQL database health check failed"
@@ -102,7 +102,7 @@ fi
 
 # Run database migrations first
 print_step "Running database migrations..."
-if docker exec insureflow_backend alembic upgrade head; then
+if docker exec insureflow_app alembic upgrade head; then
     print_status "Database migrations completed ✓"
 else
     print_warning "Database migrations failed - this may be normal for first deployment"
@@ -114,12 +114,12 @@ sleep 10
 
 # Populate database with sample data
 print_step "Populating database with sample data..."
-if docker exec insureflow_backend python scripts/populate_database.py; then
+if docker exec insureflow_app python scripts/populate_database.py; then
     print_status "Database populated with sample data ✓"
     print_status "Dashboard will now show realistic metrics and data"
 else
     print_warning "Database population failed - you may need to run it manually later"
-    print_warning "To populate manually: docker exec insureflow_backend python scripts/populate_database.py"
+    print_warning "To populate manually: docker exec insureflow_app python scripts/populate_database.py"
 fi
 
 print_step "Deployment completed!"
@@ -154,4 +154,4 @@ echo "   • Commission tracking for brokers"
 echo ""
 echo "📊 To view logs: docker compose -f docker-compose.prod.yml logs -f"
 echo "🛑 To stop services: docker compose -f docker-compose.prod.yml down"
-echo "🔄 To repopulate database: docker exec insureflow_backend python scripts/populate_database.py" 
+echo "🔄 To repopulate database: docker exec insureflow_app python scripts/populate_database.py" 
