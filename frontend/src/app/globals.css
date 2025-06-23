@@ -2,24 +2,26 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 214, 214;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
   :root {
-    --font-public-sans: 'Public Sans', sans-serif;
-    --font-noto-sans: 'Noto Sans', sans-serif;
-    
-    /* Dark theme color scheme inspired by the provided image */
-    --bg-primary: #1a1a1a;          /* Very dark background */
-    --bg-secondary: #2a2a2a;        /* Slightly lighter dark background */
-    --bg-tertiary: #333333;         /* Card backgrounds */
-    --text-primary: #ffffff;        /* White text */
-    --text-secondary: #cccccc;      /* Light gray text */
-    --text-muted: #999999;          /* Muted text */
-    --accent-orange: #ff8c42;       /* Orange highlight color */
-    --accent-orange-hover: #ff7428; /* Darker orange for hover states */
-    --border-color: #444444;        /* Border color */
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
   }
-  
-  body {
-    font-family: 'Public Sans', 'Noto Sans', sans-serif;
-  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
 }
