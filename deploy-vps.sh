@@ -73,7 +73,7 @@ sleep 30
 print_step "Checking service health..."
 
 # Check FastAPI
-if curl -f http://localhost:8000/api/v1/docs > /dev/null 2>&1; then
+if curl -f http://localhost:8000/health > /dev/null 2>&1; then
     print_status "FastAPI backend is running ✓"
 else
     print_warning "FastAPI backend health check failed"
