@@ -1,6 +1,5 @@
 import React, { Suspense } from 'react';
 import LoginClientPage from './client-page';
-import withGuest from '@/hocs/withGuest';
 
 const LoginPage = () => {
   return (
@@ -68,4 +67,4 @@ const LoginPage = () => {
   );
 };
 
-export default withGuest(LoginPage); 
+export default LoginPage; 

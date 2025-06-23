@@ -5,8 +5,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import LoginForm, { LoginFormData } from '@/components/LoginForm';
 import { authService } from '@/services/api';
 import useAuthStore from '@/store/authStore';
+import withGuest from '@/hocs/withGuest';
 
-const LoginClientPage = () => {
+const LoginClientContent = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
   const [successMessage, setSuccessMessage] = useState<string | undefined>(undefined);
@@ -71,4 +72,8 @@ const LoginClientPage = () => {
   );
 };
 
-export default LoginClientPage; 
+// Export the component wrapped with the HOC
+export default function LoginClientPage() {
+  const WrappedComponent = withGuest(LoginClientContent);
+  return <WrappedComponent />;
+} 
