@@ -8,11 +8,13 @@ from typing import List
 from app.core.database import get_db
 from app.schemas.payment import (
     PaymentInitiationResponse,
+    PaymentInitiationRequest,
     SquadCoWebhookPayload,
     PaymentCreate,
     BulkPaymentInitiationRequest,
 )
 from app.services import payment_service
+from app.services import squad_co
 from app.crud import payment as crud_payment
 from app.crud import premium as crud_premium
 from app.crud import user as crud_user
@@ -32,7 +34,7 @@ async def handle_squad_co_webhook(
     request_body = await request.body()
     
     # Verify the webhook signature
-    if not squad_co_service.verify_webhook_signature(request_body, squad_signature):
+    if not squad_co.verify_webhook_signature(request_body, squad_signature):
         raise HTTPException(status_code=400, detail="Invalid webhook signature")
     
     try:
@@ -94,7 +96,7 @@ async def initiate_payment(
 def initiate_payment(
     *,
     db: Session = Depends(get_db),
-    payment_in: schemas.PaymentInitiationRequest,
+    payment_in: PaymentInitiationRequest,
 ):
     """
     Initiate a payment for a single policy.
@@ -105,7 +107,7 @@ def initiate_payment(
 def initiate_bulk_payment(
     *,
     db: Session = Depends(get_db),
-    bulk_payment_in: schemas.BulkPaymentInitiationRequest,
+    bulk_payment_in: BulkPaymentInitiationRequest,
 ):
     """
     Initiate payment for multiple policies.
