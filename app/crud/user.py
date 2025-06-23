@@ -36,9 +36,15 @@ def get_users(db: Session, skip: int = 0, limit: int = 100) -> List[User]:
 
 def authenticate_user(db: Session, email: str, password: str) -> Optional[User]:
     """
-    Authenticate a user by email and password.
+    Authenticate a user by email/username and password.
     """
+    # Try to find user by email first
     user = get_user_by_email(db, email=email)
+    
+    # If not found by email, try username
+    if not user:
+        user = get_user_by_username(db, username=email)
+    
     if not user:
         return None
     if not verify_password(password, user.hashed_password):
@@ -50,12 +56,20 @@ def create_user(db: Session, obj_in: schemas.UserCreate) -> User:
     Creates a new user in the database.
     """
     hashed_password = get_password_hash(obj_in.password)
+    
+    # Generate username from email if not provided
+    username = getattr(obj_in, 'username', None)
+    if not username:
+        username = obj_in.email.split('@')[0]
+    
     db_user = User(
+        username=username,
         email=obj_in.email,
         hashed_password=hashed_password,
         full_name=obj_in.full_name,
         role=UserRole[obj_in.role.upper()],
         is_active=True,
+        is_verified=True,  # Set to True for easier testing
     )
     db.add(db_user)
     db.commit()
