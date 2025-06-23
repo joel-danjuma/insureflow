@@ -6,6 +6,7 @@ import LoginForm, { LoginFormData } from '@/components/LoginForm';
 import { authService } from '@/services/api';
 import useAuthStore from '@/store/authStore';
 import withGuest from '@/hocs/withGuest';
+import { UserRole } from '@/types/user';
 
 const LoginClientContent = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -24,6 +25,27 @@ const LoginClientContent = () => {
   const handleLogin = async (data: LoginFormData) => {
     setIsLoading(true);
     setError(undefined);
+    
+    // For debugging: bypass API call and redirect directly to dashboard
+    setTimeout(() => {
+      // Set mock auth data
+      setAuth('mock-token', {
+        email: data.email,
+        full_name: 'Admin User',
+        role: UserRole.ADMIN,
+        id: 1,
+        username: 'admin',
+        is_active: true,
+        is_verified: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
+      
+      router.push('/dashboard');
+      setIsLoading(false);
+    }, 1000);
+
+    /* Original API call - commented out for debugging
     try {
       const response = await authService.login(data);
       
@@ -40,6 +62,7 @@ const LoginClientContent = () => {
     } finally {
       setIsLoading(false);
     }
+    */
   };
 
   return (
