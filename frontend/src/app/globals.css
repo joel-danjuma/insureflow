@@ -2,26 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 214, 214;
-  --background-end-rgb: 255, 255, 255;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
+    /* New Dark Theme with Orange Highlights */
+    --bg-primary: #111827;      /* Dark gray background (Tailwind gray-900) */
+    --bg-secondary: #1F2937;    /* Lighter gray for cards (Tailwind gray-800) */
+    --border-color: #374151;    /* Muted border color (Tailwind gray-700) */
+    --text-primary: #F9FAFB;    /* Off-white for main text (Tailwind gray-50) */
+    --text-secondary: #9CA3AF;  /* Lighter gray for secondary text (Tailwind gray-400) */
+    --accent-orange: #F97316;   /* Vibrant orange for highlights (Tailwind orange-500) */
+    --accent-green: #10B981;    /* Green for positive changes (Tailwind green-500) */
+    --accent-red: #EF4444;      /* Red for negative changes (Tailwind red-500) */
   }
-}
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'Public Sans', 'Noto Sans', sans-serif;
+  }
 }
