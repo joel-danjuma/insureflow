@@ -41,22 +41,22 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
   const links = [...commonLinks, ...(roleLinks[userRole] || [])];
 
   return (
-    <aside className="flex flex-col w-64 bg-white p-4 border-r border-gray-200">
+    <aside className="flex flex-col w-64 bg-[#2a2a2a] p-4 border-r border-[#444444]">
       <div className="flex flex-col gap-4">
         <div className="flex flex-col">
-          <h1 className="text-[#101418] text-base font-medium leading-normal">InsureFlow</h1>
-          <p className="text-[#5c738a] text-sm font-normal leading-normal">{userRole === UserRole.INSURANCE_FIRM ? 'Insurance Firm' : 'Broker Team'}</p>
+          <h1 className="text-[#ffffff] text-base font-medium leading-normal">InsureFlow</h1>
+          <p className="text-[#cccccc] text-sm font-normal leading-normal">{userRole === UserRole.INSURANCE_FIRM ? 'Insurance Firm' : 'Broker Team'}</p>
         </div>
         <div className="flex flex-col gap-2">
           {links.map(({ href, label, icon }) => (
             <Link
               key={label}
               href={href}
-              className="flex items-center gap-3 px-3 py-2 rounded-full text-gray-700 hover:bg-gray-100 aria-[current=page]:bg-[#eaedf1]"
+              className="flex items-center gap-3 px-3 py-2 rounded-full text-[#cccccc] hover:bg-[#333333] hover:text-[#ff8c42] transition-colors aria-[current=page]:bg-[#ff8c42] aria-[current=page]:text-[#1a1a1a]"
               aria-current={label === 'Dashboard' ? 'page' : undefined}
             >
-              <div className="text-[#101418]">{icons[icon]}</div>
-              <p className="text-[#101418] text-sm font-medium leading-normal">{label}</p>
+              <div className="text-current">{icons[icon]}</div>
+              <p className="text-current text-sm font-medium leading-normal">{label}</p>
             </Link>
           ))}
         </div>
