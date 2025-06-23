@@ -54,7 +54,7 @@ const Header: React.FC<HeaderProps> = ({ title = 'Dashboard', showUserMenu = tru
   };
 
   return (
-    <header className="bg-gray-900 border-b border-gray-700 px-6 py-4 h-[73px] flex items-center">
+    <header className="bg-gray-900 border-b border-gray-700 px-6 py-4 h-[73px] flex items-center w-full">
       <div className="flex items-center justify-between w-full">
         {/* Title */}
         <div>

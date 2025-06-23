@@ -20,16 +20,20 @@ const Layout: React.FC<LayoutProps> = ({
 }) => {
   return (
     <div className="flex min-h-screen bg-gray-900">
-      {/* Sidebar */}
+      {/* Fixed Sidebar */}
       {showSidebar && <Sidebar userRole={userRole} />}
       
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        {showHeader && <Header title={title} />}
+      {/* Main Content Area */}
+      <div className={`flex-1 flex flex-col ${showSidebar ? 'ml-64' : ''}`}>
+        {/* Fixed Header */}
+        {showHeader && (
+          <div className="fixed top-0 right-0 z-30" style={{ left: showSidebar ? '256px' : '0px' }}>
+            <Header title={title} />
+          </div>
+        )}
         
-        {/* Page Content */}
-        <main className="flex-1 p-6 bg-gray-900">
+        {/* Scrollable Page Content */}
+        <main className={`flex-1 p-6 bg-gray-900 overflow-y-auto ${showHeader ? 'mt-[73px]' : ''}`}>
           {children}
         </main>
       </div>

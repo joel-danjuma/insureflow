@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { UserRole } from '@/types/user';
 import useAuthStore from '@/store/authStore';
-import { authService } from '@/services/api';
 
 const commonLinks = [
   { href: '/dashboard', label: 'Dashboard', icon: 'House' },
@@ -86,7 +85,7 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
   const pathname = usePathname();
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   
   // Use userRole prop or fall back to user from store
   const currentRole = userRole || user?.role || UserRole.BROKER;
@@ -112,19 +111,8 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
     return pathname === href;
   };
 
-  const handleLogout = async () => {
-    try {
-      await authService.logout();
-      logout();
-    } catch (error) {
-      console.error('Logout failed:', error);
-      // Force logout on error
-      logout();
-    }
-  };
-
   return (
-    <aside className="flex flex-col w-64 bg-gray-900 border-r border-gray-700 min-h-screen">
+    <aside className="fixed left-0 top-0 z-40 flex flex-col w-64 bg-gray-900 border-r border-gray-700 h-screen">
       {/* Header */}
       <div className="p-6 border-b border-gray-700 h-[73px] flex flex-col justify-center">
         <h1 className="text-2xl font-bold text-white mb-1">InsureFlow</h1>
@@ -134,7 +122,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4">
+      <nav className="flex-1 p-4 overflow-y-auto">
         <div className="space-y-1">
           {links.map(({ href, label, icon }) => {
             const active = isActive(href);
@@ -157,21 +145,6 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
           })}
         </div>
       </nav>
-
-      {/* User Actions - Only show sign out for non-broker users */}
-      {currentRole !== UserRole.BROKER && (
-        <div className="p-4 border-t border-gray-700">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center space-x-3 px-4 py-3 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-all duration-200 rounded-lg"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256">
-              <path d="M120,216a8,8,0,0,1-8,8H48a16,16,0,0,1-16-16V48A16,16,0,0,1,48,32h64a8,8,0,0,1,0,16H48V208h64A8,8,0,0,1,120,216Zm109.66-93.66-40-40a8,8,0,0,0-11.32,11.32L204.69,120H112a8,8,0,0,0,0,16h92.69l-26.35,26.34a8,8,0,0,0,11.32,11.32l40-40A8,8,0,0,0,229.66,122.34Z"/>
-            </svg>
-            <span>Sign Out</span>
-          </button>
-        </div>
-      )}
     </aside>
   );
 };
