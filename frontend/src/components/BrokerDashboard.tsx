@@ -296,8 +296,8 @@ const BrokerDashboard = () => {
         {/* Header skeleton */}
         <div className="flex flex-wrap justify-between gap-3 pb-4">
           <div className="flex min-w-72 flex-col gap-3">
-            <div className="h-8 bg-gray-200 rounded w-48 animate-pulse"></div>
-            <div className="h-4 bg-gray-200 rounded w-96 animate-pulse"></div>
+            <div className="h-8 bg-gray-700 rounded w-48 animate-pulse"></div>
+            <div className="h-4 bg-gray-700 rounded w-96 animate-pulse"></div>
           </div>
         </div>
         
@@ -310,17 +310,17 @@ const BrokerDashboard = () => {
         
         {/* Charts skeleton */}
         <div className="space-y-6">
-          <div className="h-6 bg-gray-200 rounded w-48 animate-pulse"></div>
+          <div className="h-6 bg-gray-700 rounded w-48 animate-pulse"></div>
           <div className="flex flex-wrap gap-4">
-            <div className="h-32 bg-gray-100 rounded-xl border border-gray-200 animate-pulse flex-1 min-w-72"></div>
-            <div className="h-32 bg-gray-100 rounded-xl border border-gray-200 animate-pulse flex-1 min-w-72"></div>
+            <div className="h-32 bg-gray-800 rounded-xl border border-gray-700 animate-pulse flex-1 min-w-72"></div>
+            <div className="h-32 bg-gray-800 rounded-xl border border-gray-700 animate-pulse flex-1 min-w-72"></div>
           </div>
         </div>
         
         {/* Table skeleton */}
         <div className="space-y-6">
-          <div className="h-6 bg-gray-200 rounded w-48 animate-pulse"></div>
-          <div className="h-64 bg-gray-100 rounded-xl border border-gray-200 animate-pulse"></div>
+          <div className="h-6 bg-gray-700 rounded w-48 animate-pulse"></div>
+          <div className="h-64 bg-gray-800 rounded-xl border border-gray-700 animate-pulse"></div>
         </div>
       </div>
     );
@@ -329,14 +329,14 @@ const BrokerDashboard = () => {
   if (brokerError || policiesError || premiumsError) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center p-8 border border-red-200 rounded-lg bg-red-50">
-          <div className="text-red-600 text-xl font-semibold mb-2">Error Loading Dashboard</div>
-          <p className="text-red-500 mb-4">
-            {(brokerError || policiesError || premiumsError)?.toString()}
+        <div className="text-center p-8 border border-red-500/30 rounded-lg bg-red-900/20">
+          <div className="text-red-400 text-xl font-semibold mb-2">Error Loading Dashboard</div>
+          <p className="text-red-300 mb-4">
+            Error: An unexpected error occurred while fetching broker profile.
           </p>
           <button 
             onClick={() => window.location.reload()} 
-            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
           >
             Retry
           </button>
@@ -361,18 +361,18 @@ const BrokerDashboard = () => {
     <>
       <div className="flex flex-wrap justify-between gap-3 pb-4">
         <div className="flex min-w-72 flex-col gap-3">
-          <p className="text-[#101418] tracking-light text-[32px] font-bold leading-tight">
+          <p className="text-white tracking-light text-[32px] font-bold leading-tight">
             {brokerProfile?.name || 'Broker'} Dashboard
           </p>
-          <p className="text-[#5c738a] text-sm font-normal leading-normal">Overview of your performance and client portfolio</p>
+          <p className="text-gray-400 text-sm font-normal leading-normal">Overview of your performance and client portfolio</p>
         </div>
       </div>
 
       {/* Payment status messages */}
       {paymentError && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+        <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 mb-4">
           <div className="flex">
-            <div className="text-red-600 text-sm">
+            <div className="text-red-400 text-sm">
               <strong>Error:</strong> {paymentError}
             </div>
           </div>
@@ -380,9 +380,9 @@ const BrokerDashboard = () => {
       )}
 
       {paymentSuccess && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+        <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-4 mb-4">
           <div className="flex">
-            <div className="text-green-600 text-sm">
+            <div className="text-green-400 text-sm">
               <strong>Success:</strong> {paymentSuccess}
             </div>
           </div>
@@ -412,40 +412,41 @@ const BrokerDashboard = () => {
         />
       </div>
 
-      <h2 className="text-[#101418] text-[22px] font-bold leading-tight tracking-[-0.015em] pt-5 pb-3">Sales Performance</h2>
+      <h2 className="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pt-5 pb-3">Sales Performance</h2>
       <div className="flex flex-wrap gap-4 mb-6">
-        <div className="flex min-w-72 flex-1 flex-col gap-2 rounded-xl border border-[#d4dbe2] p-6 bg-white">
-            <p className="text-[#101418] text-sm font-medium leading-normal">Total Sales This Month</p>
-            <p className="text-[#101418] text-3xl font-bold leading-tight tracking-[-0.015em]">{formatNaira(metrics.totalSales)}</p>
+        <div className="flex min-w-72 flex-1 flex-col gap-2 rounded-xl border border-gray-700 p-6 bg-gray-800">
+            <p className="text-gray-400 text-sm font-medium leading-normal">Total Sales This Month</p>
+            <p className="text-white text-3xl font-bold leading-tight tracking-[-0.015em]">{formatNaira(metrics.totalSales)}</p>
         </div>
-        <div className="flex min-w-72 flex-1 flex-col gap-2 rounded-xl border border-[#d4dbe2] p-6 bg-white">
-            <p className="text-[#101418] text-sm font-medium leading-normal">Active Clients</p>
-            <p className="text-[#101418] text-3xl font-bold leading-tight tracking-[-0.015em]">{metrics.activeClients}</p>
+        <div className="flex min-w-72 flex-1 flex-col gap-2 rounded-xl border border-gray-700 p-6 bg-gray-800">
+            <p className="text-gray-400 text-sm font-medium leading-normal">Active Clients</p>
+            <p className="text-white text-3xl font-bold leading-tight tracking-[-0.015em]">{metrics.activeClients}</p>
         </div>
       </div>
       
-      <div className="w-full rounded-xl border border-[#d4dbe2] p-6 bg-white mb-6">
-        <h3 className="text-[#101418] text-lg font-semibold mb-4">Monthly Sales Trends</h3>
+      <div className="w-full rounded-xl border border-gray-700 p-6 bg-gray-800 mb-6">
+        <h3 className="text-white text-lg font-semibold mb-4">Monthly Sales Trends</h3>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={salesPerformanceData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis dataKey="month" stroke="#666" />
-            <YAxis stroke="#666" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+            <XAxis dataKey="month" stroke="#9CA3AF" />
+            <YAxis stroke="#9CA3AF" />
             <Tooltip 
               formatter={(value, name) => [
                 name === 'sales' ? formatNaira(Number(value)) : value,
                 name === 'sales' ? 'Sales' : 'Policies Sold'
               ]}
-              labelStyle={{ color: '#101418' }}
+              labelStyle={{ color: '#ffffff' }}
               contentStyle={{ 
-                backgroundColor: 'white', 
-                border: '1px solid #d4dbe2',
-                borderRadius: '8px'
+                backgroundColor: '#1F2937', 
+                border: '1px solid #374151',
+                borderRadius: '8px',
+                color: '#ffffff'
               }}
             />
             <Bar 
               dataKey="sales" 
-              fill="#3f7fbf" 
+              fill="#F97316" 
               radius={[4, 4, 0, 0]}
             />
           </BarChart>
@@ -453,22 +454,22 @@ const BrokerDashboard = () => {
       </div>
       
       <div className="flex justify-between items-center pt-8 pb-3">
-        <h2 className="text-[#101418] text-[22px] font-bold leading-tight tracking-[-0.015em]">Client Portfolio</h2>
+        <h2 className="text-white text-[22px] font-bold leading-tight tracking-[-0.015em]">Client Portfolio</h2>
         
         {/* Pay for Selected Button */}
         {selectedPoliciesData.selectedCount > 0 && (
           <button
             className={`px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
               bulkPaymentLoading
-                ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-700'
+                ? 'bg-gray-600 cursor-not-allowed'
+                : 'bg-orange-500 hover:bg-orange-600'
             } text-white`}
             onClick={handleBulkPayment}
             disabled={bulkPaymentLoading}
           >
             <span>{bulkPaymentLoading ? 'Processing...' : 'Pay for Selected'}</span>
             {!bulkPaymentLoading && (
-              <span className="bg-blue-500 px-2 py-1 rounded text-sm">
+              <span className="bg-orange-600 px-2 py-1 rounded text-sm">
                 {selectedPoliciesData.selectedCount} • {formatNaira(selectedPoliciesData.selectedTotal)}
               </span>
             )}
@@ -476,7 +477,7 @@ const BrokerDashboard = () => {
         )}
       </div>
       
-      <div className="w-full overflow-hidden rounded-xl border border-[#d4dbe2] bg-white">
+      <div className="w-full overflow-hidden rounded-xl border border-gray-700 bg-gray-800">
         <DataTable columns={portfolioColumns} data={clientPortfolio} />
       </div>
     </>
