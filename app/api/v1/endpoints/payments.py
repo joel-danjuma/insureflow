@@ -108,3 +108,61 @@ async def verify_payment(
         "amount": float(payment.amount_paid) if payment.amount_paid else 0,
         "premium_id": payment.premium_id
     }
+
+@router.get("/test-config")
+async def test_payment_config(
+    current_user: User = Depends(get_current_broker_or_admin_user)
+):
+    """
+    Test endpoint to verify Squad Co configuration.
+    Requires authentication.
+    """
+    from app.core.config import settings
+    from app.services.squad_co import squad_co_service
+    
+    return {
+        "squad_configured": bool(settings.SQUAD_SECRET_KEY and settings.SQUAD_SECRET_KEY != ""),
+        "squad_base_url": settings.SQUAD_BASE_URL,
+        "webhook_url": settings.SQUAD_WEBHOOK_URL,
+        "has_secret_key": bool(squad_co_service.secret_key),
+        "environment": "sandbox" if "sandbox" in settings.SQUAD_BASE_URL else "production"
+    }
+
+@router.post("/test-payment")
+async def test_payment_initiation(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_broker_or_admin_user)
+):
+    """
+    Test payment initiation with a small amount.
+    Requires authentication.
+    """
+    # Find any unpaid premium
+    unpaid_premium = crud_premium.get_unpaid_premiums_for_policies(db, policy_ids=[1, 2, 3, 4, 5])
+    
+    if not unpaid_premium:
+        # Get any premium for testing
+        premium = crud_premium.get_premium(db, premium_id=1)
+        if not premium:
+            raise HTTPException(status_code=404, detail="No premiums found in database")
+    else:
+        premium = unpaid_premium[0]
+    
+    try:
+        result = await payment_service.initiate_premium_payment(premium_id=premium.id, db=db)
+        return {
+            "success": True,
+            "premium_id": premium.id,
+            "amount": float(premium.amount),
+            "payment_url": result.get("payment_url"),
+            "transaction_ref": result.get("transaction_ref"),
+            "message": "Payment initiated successfully"
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "premium_id": premium.id,
+            "amount": float(premium.amount) if premium else 0,
+            "message": "Payment initiation failed"
+        }
