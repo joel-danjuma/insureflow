@@ -37,19 +37,38 @@ const LoginClientContent = () => {
     } catch (err) {
       console.warn('Real authentication failed, using mock auth:', err);
       
-      // Fallback to mock authentication for debugging
-      setAuth('mock-token', {
-        email: data.email,
-        full_name: 'Admin User',
-        role: UserRole.ADMIN,
-        id: 1,
-        username: 'admin',
-        is_active: true,
-        is_verified: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      });
+      // Fallback to mock authentication based on email
+      let mockUser;
       
+      if (data.email.includes('admin') || data.email.includes('securelife')) {
+        // Admin user
+        mockUser = {
+          email: data.email,
+          full_name: 'Adebayo Johnson',
+          role: UserRole.ADMIN,
+          id: 1,
+          username: 'admin',
+          is_active: true,
+          is_verified: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+      } else {
+        // Broker user
+        mockUser = {
+          email: data.email,
+          full_name: 'Ethan Carter',
+          role: UserRole.BROKER,
+          id: 2,
+          username: 'broker',
+          is_active: true,
+          is_verified: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+      }
+      
+      setAuth('mock-token', mockUser);
       router.push('/dashboard');
     } finally {
       setIsLoading(false);

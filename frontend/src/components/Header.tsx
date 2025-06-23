@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import useAuthStore from '@/store/authStore';
 import { authService } from '@/services/api';
 import { UserRole } from '@/types/user';
@@ -13,6 +14,7 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ title = 'Dashboard', showUserMenu = true }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const { user, logout } = useAuthStore();
+  const router = useRouter();
 
   const getRoleDisplayName = (role: UserRole) => {
     switch (role) {
@@ -41,11 +43,13 @@ const Header: React.FC<HeaderProps> = ({ title = 'Dashboard', showUserMenu = tru
       await authService.logout();
       logout();
       setShowDropdown(false);
+      router.push('/login');
     } catch (error) {
       console.error('Logout failed:', error);
       // Force logout on error
       logout();
       setShowDropdown(false);
+      router.push('/login');
     }
   };
 
