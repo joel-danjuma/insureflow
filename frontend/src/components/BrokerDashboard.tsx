@@ -48,13 +48,13 @@ const BrokerDashboard = () => {
 
   // Calculate broker metrics from data
   const calculateBrokerMetrics = (policies: Policy[], premiums: Premium[]) => {
-    const totalSales = policies.reduce((sum, policy) => sum + policy.premium_amount, 0);
-    const totalCommission = totalSales * 0.15; // 15% commission rate
+    const totalPremiums = policies.reduce((sum, policy) => sum + policy.premium_amount, 0);
+    const totalCommission = totalPremiums * 0.15; // 15% commission rate
     const activeClients = new Set(policies.map(p => p.customer_id)).size;
     const retentionRate = policies.length > 0 ? Math.round((activeClients / policies.length) * 100) : 0;
     
     return {
-      totalSales,
+      totalPremiums,
       totalCommission,
       retentionRate,
       activeClients,
@@ -209,7 +209,7 @@ const BrokerDashboard = () => {
               if (el) el.indeterminate = isPartiallySelected;
             }}
             onChange={(e) => handleSelectAll(e.target.checked)}
-            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+            className="w-4 h-4 text-orange-500 bg-gray-700 border-gray-600 rounded focus:ring-orange-500 focus:ring-2"
           />
         </div>
       ),
@@ -219,7 +219,7 @@ const BrokerDashboard = () => {
             type="checkbox"
             checked={selectedPolicies.has(row.original.id)}
             onChange={(e) => handleRowSelection(row.original.id, e.target.checked)}
-            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+            className="w-4 h-4 text-orange-500 bg-gray-700 border-gray-600 rounded focus:ring-orange-500 focus:ring-2"
           />
         </div>
       ),
@@ -233,7 +233,7 @@ const BrokerDashboard = () => {
       cell: ({ row }) => {
         const isActive = row.original.policyStatus === 'Active';
         return (
-          <span className={`px-3 py-1 rounded-full text-sm font-medium ${isActive ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-yellow-100 text-yellow-800 border border-yellow-200'}`}>
+          <span className={`px-3 py-1 rounded-full text-sm font-medium ${isActive ? 'bg-green-900/30 text-green-400 border border-green-500/30' : 'bg-yellow-900/30 text-yellow-400 border border-yellow-500/30'}`}>
             {row.original.policyStatus}
           </span>
         )
@@ -245,9 +245,9 @@ const BrokerDashboard = () => {
       cell: ({ row }) => {
         const status = row.original.paymentStatus;
         const statusColors = {
-          'Paid': 'bg-green-100 text-green-800 border-green-200',
-          'Pending': 'bg-yellow-100 text-yellow-800 border-yellow-200',
-          'Overdue': 'bg-red-100 text-red-800 border-red-200'
+          'Paid': 'bg-green-900/30 text-green-400 border-green-500/30',
+          'Pending': 'bg-yellow-900/30 text-yellow-400 border-yellow-500/30',
+          'Overdue': 'bg-red-900/30 text-red-400 border-red-500/30'
         };
         
         return (
@@ -268,7 +268,7 @@ const BrokerDashboard = () => {
         
         if (item.paymentStatus === 'Paid') {
           return (
-            <span className="text-green-600 text-sm font-medium">Paid</span>
+            <span className="text-green-400 text-sm font-medium">Paid</span>
           );
         }
         
@@ -278,8 +278,8 @@ const BrokerDashboard = () => {
             disabled={!item.premiumId || isLoading}
             className={`px-3 py-1 text-sm font-medium rounded transition-colors ${
               !item.premiumId || isLoading
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-blue-600 text-white hover:bg-blue-700'
+                ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                : 'bg-orange-500 text-white hover:bg-orange-600'
             }`}
           >
             {isLoading ? 'Processing...' : 'Pay Now'}
@@ -347,14 +347,14 @@ const BrokerDashboard = () => {
 
   const metrics = calculateBrokerMetrics(policies || [], premiums || []);
 
-  // Mock chart data for sales performance
-  const salesPerformanceData = [
-    { month: 'Jan', sales: 45000000, policies: 12 },
-    { month: 'Feb', sales: 52000000, policies: 14 },
-    { month: 'Mar', sales: 48000000, policies: 13 },
-    { month: 'Apr', sales: 61000000, policies: 16 },
-    { month: 'May', sales: 55000000, policies: 15 },
-    { month: 'Jun', sales: 70000000, policies: 18 },
+  // Mock chart data for premium performance
+  const premiumPerformanceData = [
+    { month: 'Jan', premiums: 45000000, policies: 12 },
+    { month: 'Feb', premiums: 52000000, policies: 14 },
+    { month: 'Mar', premiums: 48000000, policies: 13 },
+    { month: 'Apr', premiums: 61000000, policies: 16 },
+    { month: 'May', premiums: 55000000, policies: 15 },
+    { month: 'Jun', premiums: 70000000, policies: 18 },
   ];
 
   return (
@@ -391,8 +391,8 @@ const BrokerDashboard = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         <MetricCard 
-          title="Total Sales" 
-          value={metrics.totalSales} 
+          title="Total Premiums" 
+          value={metrics.totalPremiums} 
           change={10} 
           changeType="increase" 
           isCurrency={true} 
@@ -412,11 +412,11 @@ const BrokerDashboard = () => {
         />
       </div>
 
-      <h2 className="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pt-5 pb-3">Sales Performance</h2>
+      <h2 className="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pt-5 pb-3">Premium Performance</h2>
       <div className="flex flex-wrap gap-4 mb-6">
         <div className="flex min-w-72 flex-1 flex-col gap-2 rounded-xl border border-gray-700 p-6 bg-gray-800">
-            <p className="text-gray-400 text-sm font-medium leading-normal">Total Sales This Month</p>
-            <p className="text-white text-3xl font-bold leading-tight tracking-[-0.015em]">{formatNaira(metrics.totalSales)}</p>
+            <p className="text-gray-400 text-sm font-medium leading-normal">Total Premiums This Month</p>
+            <p className="text-white text-3xl font-bold leading-tight tracking-[-0.015em]">{formatNaira(metrics.totalPremiums)}</p>
         </div>
         <div className="flex min-w-72 flex-1 flex-col gap-2 rounded-xl border border-gray-700 p-6 bg-gray-800">
             <p className="text-gray-400 text-sm font-medium leading-normal">Active Clients</p>
@@ -425,16 +425,16 @@ const BrokerDashboard = () => {
       </div>
       
       <div className="w-full rounded-xl border border-gray-700 p-6 bg-gray-800 mb-6">
-        <h3 className="text-white text-lg font-semibold mb-4">Monthly Sales Trends</h3>
+        <h3 className="text-white text-lg font-semibold mb-4">Monthly Premium Trends</h3>
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={salesPerformanceData}>
+          <BarChart data={premiumPerformanceData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
             <XAxis dataKey="month" stroke="#9CA3AF" />
             <YAxis stroke="#9CA3AF" />
             <Tooltip 
               formatter={(value, name) => [
-                name === 'sales' ? formatNaira(Number(value)) : value,
-                name === 'sales' ? 'Sales' : 'Policies Sold'
+                name === 'premiums' ? formatNaira(Number(value)) : value,
+                name === 'premiums' ? 'Premiums' : 'Policies Sold'
               ]}
               labelStyle={{ color: '#ffffff' }}
               contentStyle={{ 
@@ -445,7 +445,7 @@ const BrokerDashboard = () => {
               }}
             />
             <Bar 
-              dataKey="sales" 
+              dataKey="premiums" 
               fill="#F97316" 
               radius={[4, 4, 0, 0]}
             />

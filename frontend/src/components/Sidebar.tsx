@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { UserRole } from '@/types/user';
@@ -8,15 +8,16 @@ import useAuthStore from '@/store/authStore';
 
 const commonLinks = [
   { href: '/dashboard', label: 'Dashboard', icon: 'House' },
-  { href: '/policies', label: 'Policies', icon: 'File' },
+  // { href: '/policies', label: 'Policies', icon: 'File' }, // Commented out - not working
 ];
 
 const roleLinks = {
   [UserRole.ADMIN]: [
-    { href: '/brokers', label: 'Brokers', icon: 'Users' },
-    { href: '/claims', label: 'Claims', icon: 'ShieldCheck' },
+    // { href: '/brokers', label: 'Brokers', icon: 'Users' }, // Commented out - not working
+    // { href: '/claims', label: 'Claims', icon: 'ShieldCheck' }, // Commented out - not working
     { href: '/reports', label: 'Reports', icon: 'ChartBar' },
-    { href: '/settings', label: 'Settings', icon: 'Gear' },
+    // { href: '/settings', label: 'Settings', icon: 'Gear' }, // Commented out - not working
+    { href: '/reminders', label: 'Send Reminders', icon: 'Bell' },
   ],
   [UserRole.BROKER]: [
     { href: '/clients', label: 'Clients', icon: 'Users' },
@@ -77,24 +78,42 @@ const icons: { [key: string]: React.ReactNode } = {
       <path d="M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Zm88-29.84q.06-2.16,0-4.32l14.92-18.64a8,8,0,0,0,1.48-7.06,107.6,107.6,0,0,0-10.88-26.25,8,8,0,0,0-6-3.93l-23.72-2.64q-1.48-1.56-3.06-3.05L221.38,40.5a8,8,0,0,0-3.93-6,107.89,107.89,0,0,0-26.25-10.87,8,8,0,0,0-7.06,1.49L165.5,40.05q-2.16-.06-4.32,0L142.54,25.13a8,8,0,0,0-7.06-1.48A107.6,107.6,0,0,0,109.23,34.5a8,8,0,0,0-3.93,6L102.66,64.27q-1.56,1.49-3.05,3.06L75.88,64.69a8,8,0,0,0-6,3.93,107.89,107.89,0,0,0-10.87,26.25,8,8,0,0,0,1.49,7.06L75.41,120.5q-.06,2.16,0,4.32L60.49,143.46a8,8,0,0,0-1.48,7.06,107.6,107.6,0,0,0,10.88,26.25,8,8,0,0,0,6,3.93l23.72,2.64q1.49,1.56,3.06,3.05L34.62,215.5a8,8,0,0,0,3.93,6,107.89,107.89,0,0,0,26.25,10.87,8,8,0,0,0,7.06-1.49L90.5,215.95q2.16.06,4.32,0l18.64,14.92a8,8,0,0,0,7.06,1.48,107.6,107.6,0,0,0,26.25-10.88,8,8,0,0,0,3.93-6l2.64-23.72q1.56-1.48,3.05-3.06l23.72,2.64a8,8,0,0,0,6-3.93,107.89,107.89,0,0,0,10.87-26.25,8,8,0,0,0-1.49-7.06Zm-16.1-6.5a73.93,73.93,0,0,1,0,8.68,8,8,0,0,0,1.74,5.48l14.19,17.73a91.57,91.57,0,0,1-6.23,15L187,173.11a8,8,0,0,0-5.1,2.64,74.11,74.11,0,0,1-6.14,6.14,8,8,0,0,0-2.64,5.1l-2.51,22.58a91.32,91.32,0,0,1-15,6.23l-17.74-14.19a8,8,0,0,0-5.48-1.74,73.93,73.93,0,0,1-8.68,0,8,8,0,0,0-5.48,1.74L109.94,215.8a91.57,91.57,0,0,1-15-6.23L82.89,187a8,8,0,0,0-2.64-5.1,74.11,74.11,0,0,1-6.14-6.14,8,8,0,0,0-5.1-2.64L46.43,170.6a91.32,91.32,0,0,1-6.23-15l14.19-17.74a8,8,0,0,0,1.74-5.48,73.93,73.93,0,0,1,0-8.68,8,8,0,0,0-1.74-5.48L40.2,100.49a91.57,91.57,0,0,1,6.23-15L69,87.89a8,8,0,0,0,5.1-2.64,74.11,74.11,0,0,1,6.14-6.14,8,8,0,0,0,2.64-5.1L85.4,51.43a91.32,91.32,0,0,1,15-6.23L118.2,59.39a8,8,0,0,0,5.48,1.74,73.93,73.93,0,0,1,8.68,0,8,8,0,0,0,5.48-1.74L155.58,45.2a91.57,91.57,0,0,1,15,6.23L173.11,74a8,8,0,0,0,2.64,5.1,74.11,74.11,0,0,1,6.14,6.14,8,8,0,0,0,5.1,2.64l22.58,2.51a91.32,91.32,0,0,1,6.23,15l-14.19,17.74A8,8,0,0,0,199.87,123.66Z"/>
     </svg>
   ),
+  Bell: (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256">
+      <path d="M221.8,175.94C216.25,166.38,208,139.33,208,104a80,80,0,1,0-160,0c0,35.34-8.26,62.38-13.81,71.94A16,16,0,0,0,48,200H88.81a40,40,0,0,0,78.38,0H208a16,16,0,0,0,13.8-24.06ZM128,216a24,24,0,0,1-22.62-16h45.24A24,24,0,0,1,128,216ZM48,184c7.7-13.24,16-43.92,16-80a64,64,0,1,1,128,0c0,36.05,8.28,66.73,16,80Z"/>
+    </svg>
+  ),
 };
 
 interface SidebarProps {
   userRole?: UserRole;
+  isOpen?: boolean;
+  onToggle?: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
+const Sidebar: React.FC<SidebarProps> = ({ userRole, isOpen = true, onToggle }) => {
   const pathname = usePathname();
   const { user } = useAuthStore();
+  const [isMobile, setIsMobile] = useState(false);
   
   // Use userRole prop or fall back to user from store
   const currentRole = userRole || user?.role || UserRole.BROKER;
   const links = [...commonLinks, ...(roleLinks[currentRole] || [])];
 
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const getRoleDisplayName = (role: UserRole) => {
     switch (role) {
       case UserRole.ADMIN:
-        return 'Insurance Firm Admin';
+        return 'Sovereign Trust Insurance';
       case UserRole.BROKER:
         return 'Insurance Broker';
       case UserRole.CUSTOMER:
@@ -111,11 +130,71 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
     return pathname === href;
   };
 
+  const handleLinkClick = () => {
+    if (isMobile && onToggle) {
+      onToggle();
+    }
+  };
+
+  if (isMobile) {
+    return (
+      <>
+        {/* Mobile Overlay */}
+        {isOpen && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+            onClick={onToggle}
+          />
+        )}
+        
+        {/* Mobile Sidebar */}
+        <aside className={`fixed left-0 top-0 z-40 flex flex-col w-64 bg-gray-900 border-r border-gray-700 h-screen transform transition-transform duration-300 ease-in-out lg:hidden ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}>
+          {/* Header */}
+          <div className="p-6 border-b border-gray-700 h-[73px] flex flex-col justify-center">
+            <h1 className="text-2xl font-bold text-white mb-1">Sovereign Trust</h1>
+            <p className="text-sm text-gray-400">
+              {user?.full_name || 'User'} • {getRoleDisplayName(currentRole)}
+            </p>
+          </div>
+
+          {/* Navigation */}
+          <nav className="flex-1 p-4 overflow-y-auto">
+            <div className="space-y-1">
+              {links.map(({ href, label, icon }) => {
+                const active = isActive(href);
+                return (
+                  <Link
+                    key={label}
+                    href={href}
+                    onClick={handleLinkClick}
+                    className={`flex items-center space-x-3 px-4 py-3 text-sm font-medium transition-all duration-200 rounded-lg ${
+                      active
+                        ? 'bg-orange-500 text-white'
+                        : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                    }`}
+                  >
+                    <div className={`${active ? 'text-white' : 'text-gray-400'}`}>
+                      {icons[icon]}
+                    </div>
+                    <span>{label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </nav>
+        </aside>
+      </>
+    );
+  }
+
+  // Desktop Sidebar
   return (
-    <aside className="fixed left-0 top-0 z-40 flex flex-col w-64 bg-gray-900 border-r border-gray-700 h-screen">
+    <aside className="fixed left-0 top-0 z-40 flex flex-col w-64 bg-gray-900 border-r border-gray-700 h-screen lg:block hidden">
       {/* Header */}
       <div className="p-6 border-b border-gray-700 h-[73px] flex flex-col justify-center">
-        <h1 className="text-2xl font-bold text-white mb-1">InsureFlow</h1>
+        <h1 className="text-2xl font-bold text-white mb-1">Sovereign Trust</h1>
         <p className="text-sm text-gray-400">
           {user?.full_name || 'User'} • {getRoleDisplayName(currentRole)}
         </p>

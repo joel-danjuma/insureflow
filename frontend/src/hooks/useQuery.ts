@@ -17,24 +17,24 @@ const mockDashboardData: DashboardData = {
   kpis: {
     new_policies_this_month: 42,
     outstanding_premiums_total: 12500000,
-    broker_count: 5,
+    broker_count: 3,
   },
   recent_policies: [
-    { policy_number: "POL-001-2024-0001", customer_name: "John Adebayo", broker: "Ethan Carter" },
-    { policy_number: "POL-002-2024-0002", customer_name: "Sarah Okafor", broker: "Isabella Rossi" },
-    { policy_number: "POL-001-2024-0003", customer_name: "Michael Johnson", broker: "Ryan Kim" },
-    { policy_number: "POL-003-2024-0001", customer_name: "Grace Emeka", broker: "Sophia Zhang" },
-    { policy_number: "POL-002-2024-0004", customer_name: "David Chen", broker: "Liam Davis" },
+    { policy_number: "POL-001-2024-0001", customer_name: "John Adebayo", broker: "SCIB" },
+    { policy_number: "POL-002-2024-0002", customer_name: "Sarah Okafor", broker: "ARK Insurance" },
+    { policy_number: "POL-001-2024-0003", customer_name: "Michael Johnson", broker: "IBN" },
+    { policy_number: "POL-003-2024-0001", customer_name: "Grace Emeka", broker: "SCIB" },
+    { policy_number: "POL-002-2024-0004", customer_name: "David Chen", broker: "ARK Insurance" },
   ]
 };
 
 const mockBroker: Broker = {
   id: 1,
   user_id: 2,
-  name: "Ethan Carter",
+  name: "SCIB",
   license_number: "BRK-2023-001",
-  agency_name: "Carter Insurance Agency",
-  contact_email: "ethan.carter@brokers.ng",
+  agency_name: "Sovereign Capital Investment Banking",
+  contact_email: "contact@scib.ng",
   contact_phone: "+234-801-234-5678",
   office_address: "Lagos, Nigeria",
   is_active: true
@@ -53,7 +53,7 @@ const mockPolicies: Policy[] = [
     coverage_amount: 5000000,
     premium_amount: 250000,
     customer: { full_name: "John Adebayo", email: "john@example.com" },
-    broker: { name: "Ethan Carter" }
+    broker: { name: "SCIB" }
   },
   {
     id: 2,
@@ -67,7 +67,7 @@ const mockPolicies: Policy[] = [
     coverage_amount: 3000000,
     premium_amount: 180000,
     customer: { full_name: "Sarah Okafor", email: "sarah@example.com" },
-    broker: { name: "Isabella Rossi" }
+    broker: { name: "ARK Insurance" }
   },
   {
     id: 3,
@@ -81,7 +81,35 @@ const mockPolicies: Policy[] = [
     coverage_amount: 2000000,
     premium_amount: 120000,
     customer: { full_name: "Michael Johnson", email: "michael@example.com" },
-    broker: { name: "Ryan Kim" }
+    broker: { name: "IBN" }
+  },
+  {
+    id: 4,
+    policy_number: "POL-004-2024-0001",
+    policy_type: "PROPERTY",
+    customer_id: 4,
+    broker_id: 1,
+    status: "ACTIVE",
+    start_date: "2024-04-05",
+    end_date: "2025-04-05",
+    coverage_amount: 8000000,
+    premium_amount: 320000,
+    customer: { full_name: "Amara Okoye", email: "amara@example.com" },
+    broker: { name: "SCIB" }
+  },
+  {
+    id: 5,
+    policy_number: "POL-005-2024-0001",
+    policy_type: "BUSINESS",
+    customer_id: 5,
+    broker_id: 2,
+    status: "ACTIVE",
+    start_date: "2024-05-12",
+    end_date: "2025-05-12",
+    coverage_amount: 15000000,
+    premium_amount: 600000,
+    customer: { full_name: "Emeka Nwankwo", email: "emeka@example.com" },
+    broker: { name: "ARK Insurance" }
   }
 ];
 
@@ -112,6 +140,24 @@ const mockPremiums: Premium[] = [
     payment_status: "paid",
     billing_period_start: "2024-03-10",
     billing_period_end: "2024-04-10"
+  },
+  {
+    id: 4,
+    policy_id: 4,
+    amount: 320000,
+    due_date: "2024-04-05",
+    payment_status: "pending",
+    billing_period_start: "2024-04-05",
+    billing_period_end: "2024-05-05"
+  },
+  {
+    id: 5,
+    policy_id: 5,
+    amount: 600000,
+    due_date: "2024-05-12",
+    payment_status: "overdue",
+    billing_period_start: "2024-05-12",
+    billing_period_end: "2024-06-12"
   }
 ];
 

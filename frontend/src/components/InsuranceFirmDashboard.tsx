@@ -227,7 +227,7 @@ const InsuranceFirmDashboard = () => {
               if (el) el.indeterminate = isPartiallySelected;
             }}
             onChange={(e) => handleSelectAllPolicies(e.target.checked)}
-            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+            className="w-4 h-4 text-orange-500 bg-gray-700 border-gray-600 rounded focus:ring-orange-500 focus:ring-2"
           />
         </div>
       ),
@@ -237,7 +237,7 @@ const InsuranceFirmDashboard = () => {
             type="checkbox"
             checked={selectedPolicies.has(row.original.id)}
             onChange={(e) => handlePolicySelection(row.original.id, e.target.checked)}
-            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+            className="w-4 h-4 text-orange-500 bg-gray-700 border-gray-600 rounded focus:ring-orange-500 focus:ring-2"
           />
         </div>
       ),
@@ -254,9 +254,9 @@ const InsuranceFirmDashboard = () => {
         const days = row.original.daysOverdue;
         return (
           <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-            days > 30 ? 'bg-red-100 text-red-800 border border-red-200' :
-            days > 7 ? 'bg-orange-100 text-orange-800 border border-orange-200' :
-            'bg-yellow-100 text-yellow-800 border border-yellow-200'
+            days > 30 ? 'bg-red-900/30 text-red-400 border border-red-500/30' :
+            days > 7 ? 'bg-orange-900/30 text-orange-400 border border-orange-500/30' :
+            'bg-yellow-900/30 text-yellow-400 border border-yellow-500/30'
           }`}>
             {days} days
           </span>
