@@ -169,4 +169,4 @@ const InsuranceFirmDashboard = () => {
   );
 };
 
-export default InsuranceFirmDashboard; 
+export default InsuranceFirmDashboard;

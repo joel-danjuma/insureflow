@@ -18,14 +18,8 @@ const config: Config = {
         'accent-green': 'var(--accent-green)',
         'accent-red': 'var(--accent-red)',
       },
-      fontFamily: {
-        'public-sans': ['var(--font-public-sans)', 'Public Sans', 'sans-serif'],
-        'noto-sans': ['var(--font-noto-sans)', 'Noto Sans', 'sans-serif'],
-      },
     },
   },
-  plugins: [
-    require('@tailwindcss/container-queries'),
-  ],
+  plugins: [],
 }
 export default config 
