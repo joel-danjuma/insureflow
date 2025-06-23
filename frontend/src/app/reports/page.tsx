@@ -1,0 +1,61 @@
+'use client';
+
+import React from 'react';
+import Layout from '@/components/Layout';
+import withAuth from '@/hocs/withAuth';
+import withRole from '@/hocs/withRole';
+import useAuthStore from '@/store/authStore';
+import { UserRole } from '@/types/user';
+
+const ReportsPage = () => {
+  const { user } = useAuthStore();
+
+  return (
+    <Layout title="Reports & Analytics">
+      <div className="space-y-6">
+        <div className="bg-white border-2 border-black p-6">
+          <h2 className="text-xl font-bold text-black mb-4">Reports & Analytics</h2>
+          <p className="text-gray-600 mb-4">
+            View reports and analytics data. Accessible to Admin and Broker roles.
+          </p>
+          
+          {/* Role-specific content */}
+          {user?.role === UserRole.ADMIN && (
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200">
+              <h3 className="font-semibold text-blue-800 mb-2">Admin View</h3>
+              <p className="text-sm text-blue-700">
+                As an admin, you can see system-wide reports and all broker performance data.
+              </p>
+            </div>
+          )}
+          
+          {user?.role === UserRole.BROKER && (
+            <div className="mb-6 p-4 bg-green-50 border border-green-200">
+              <h3 className="font-semibold text-green-800 mb-2">Broker View</h3>
+              <p className="text-sm text-green-700">
+                As a broker, you can see your personal performance and commission reports.
+              </p>
+            </div>
+          )}
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="bg-gray-50 border border-gray-200 p-4">
+              <h3 className="font-semibold text-black mb-2">Performance Reports</h3>
+              <p className="text-sm text-gray-600">View performance metrics and KPIs</p>
+            </div>
+            <div className="bg-gray-50 border border-gray-200 p-4">
+              <h3 className="font-semibold text-black mb-2">Financial Reports</h3>
+              <p className="text-sm text-gray-600">Track revenue and commission data</p>
+            </div>
+            <div className="bg-gray-50 border border-gray-200 p-4">
+              <h3 className="font-semibold text-black mb-2">Custom Reports</h3>
+              <p className="text-sm text-gray-600">Generate custom analytics reports</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Layout>
+  );
+};
+
+export default withAuth(withRole([UserRole.ADMIN, UserRole.BROKER])(ReportsPage)); 

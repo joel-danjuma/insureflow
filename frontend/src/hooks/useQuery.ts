@@ -1,45 +1,87 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useQuery as useReactQuery } from '@tanstack/react-query';
+import { dashboardService, brokerService, policyService, premiumService } from '@/services/api';
+import { DashboardData, Broker, Policy, Premium } from '@/types/user';
 
 interface QueryResult<T> {
   data: T | null;
   isLoading: boolean;
-  error: Error | null;
-  refetch: () => void;
+  error: string | null;
+  refetch: () => Promise<void>;
 }
 
-const useQuery = <T,>(queryFn: () => Promise<T>): QueryResult<T> => {
+// Custom hook with fetch function as argument
+const useQuery = <T>(fetchFunction: () => Promise<T>, dependencies: any[] = []): QueryResult<T> => {
   const [data, setData] = useState<T | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<Error | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
     try {
-      const result = await queryFn();
+      setIsLoading(true);
+      setError(null);
+      const result = await fetchFunction();
       setData(result);
     } catch (err) {
-      if (err instanceof Error) {
-        setError(err);
-      } else {
-        setError(new Error('An unexpected error occurred'));
-      }
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
     } finally {
       setIsLoading(false);
     }
-  }, [queryFn]);
+  }, [fetchFunction]);
 
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+  }, [...dependencies, fetchData]);
 
-  const refetch = useCallback(() => {
-    fetchData();
+  const refetch = useCallback(async () => {
+    await fetchData();
   }, [fetchData]);
 
   return { data, isLoading, error, refetch };
 };
 
-export default useQuery; 
+export default useQuery;
+
+// React Query hooks for specific data fetching
+
+// Dashboard data hook for Admin/Insurance Firm dashboard
+export const useDashboardData = () => {
+  return useReactQuery<DashboardData>({
+    queryKey: ['dashboard'],
+    queryFn: dashboardService.getDashboardData,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 2,
+  });
+};
+
+// Broker profile hook for Broker dashboard
+export const useBrokerProfile = () => {
+  return useReactQuery<Broker>({
+    queryKey: ['broker', 'profile'],
+    queryFn: brokerService.getBrokerProfile,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    retry: 2,
+  });
+};
+
+// Policies hook for both dashboards
+export const usePolicies = () => {
+  return useReactQuery<Policy[]>({
+    queryKey: ['policies'],
+    queryFn: policyService.getPolicies,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    retry: 2,
+  });
+};
+
+// Premiums hook for payment tracking
+export const usePremiums = () => {
+  return useReactQuery<Premium[]>({
+    queryKey: ['premiums'],
+    queryFn: premiumService.getPremiums,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    retry: 2,
+  });
+}; 

@@ -9,7 +9,7 @@ from datetime import timedelta
 from app import dependencies
 from app.core.security import create_access_token
 from app.crud import user as crud_user
-from app.schemas.auth import UserCreate, Token
+from app.schemas.auth import UserCreate, Token, UserResponse
 from app.core.config import settings
 
 router = APIRouter()
@@ -37,13 +37,12 @@ def register_user(
     access_token = create_access_token(
         data={"sub": new_user.email}, expires_delta=access_token_expires
     )
-    return {
-        "access_token": access_token, 
-        "token_type": "bearer",
-        "user_id": new_user.id,
-        "email": new_user.email,
-        "role": new_user.role.value
-    }
+    
+    return Token(
+        access_token=access_token,
+        token_type="bearer",
+        user=UserResponse.from_orm(new_user)
+    )
 
 @router.post("/login", response_model=Token)
 def login_for_access_token(
@@ -66,10 +65,9 @@ def login_for_access_token(
     access_token = create_access_token(
         data={"sub": user.email}, expires_delta=access_token_expires
     )
-    return {
-        "access_token": access_token, 
-        "token_type": "bearer",
-        "user_id": user.id,
-        "email": user.email,
-        "role": user.role.value
-    } 
+    
+    return Token(
+        access_token=access_token,
+        token_type="bearer",
+        user=UserResponse.from_orm(user)
+    ) 

@@ -1,0 +1,162 @@
+# InsureFlow Frontend Development - Product Requirements Document
+
+## Overview  
+
+Build a comprehensive Next.js frontend for the InsureFlow insurance premium collection platform, featuring role-based dashboards for insurance firms and brokers, with integrated payment functionality using Squad payment gateway. The frontend must strictly follow the provided design mockups and support Naira currency throughout.
+
+## Project Goals
+
+**Primary Objective**: Create a modern, responsive web application that enables:
+- Insurance firms to monitor premiums, broker performance, and send payment reminders
+- Brokers to manage policies, make single/bulk payments, and track commissions
+- Seamless payment processing using Squad Co payment gateway
+- Professional UI matching the provided design specifications
+
+## Core Features & Requirements
+
+### 1. **Authentication System Integration**
+- Login/Signup pages with form validation
+- JWT token management with secure storage
+- Role-based routing (Insurance Firm vs Broker)
+- Session persistence and automatic logout
+
+### 2. **Insurance Firm Dashboard**
+- Overview metrics cards (New Policies, Outstanding Premiums, Claims Processed)
+- Broker performance table with commission tracking
+- Claims data visualization with charts
+- Payment reminder system to notify brokers
+- Currency formatting in Naira (₦) throughout
+
+### 3. **Broker Dashboard**  
+- Performance metrics (Total Sales, Client Retention, Average Commission)
+- Sales performance charts (line chart, bar chart)
+- Client Portfolio Table with Payment Functionality:
+  - Selectable rows with checkboxes
+  - "Select All" functionality
+  - Premium amounts displayed in Naira
+  - Payment status indicators
+- Bulk Payment System:
+  - "Pay for Selected" button showing count and total amount
+  - Single policy payment option
+  - Squad Co payment integration
+  - Payment loading states and success/error feedback
+
+### 4. **UI/UX Requirements**
+- Design Theme: High-contrast black-on-white theme
+- Primary text: Black (#000000 or #101418)
+- Backgrounds: White (#FFFFFF) or light gray (#F9FAFB)
+- Responsive Design: Mobile-first approach
+- Navigation: Sidebar navigation with proper user context
+
+### 5. **Payment Integration**
+- Squad Co payment gateway integration
+- Support for both single and bulk payments
+- Payment status tracking and updates
+- Error handling and retry mechanisms
+
+### 6. **Payment Reminder System**
+- Insurance firm can send payment reminders to brokers
+- Email/notification integration
+- Reminder scheduling and tracking
+
+## Technical Architecture
+
+### Frontend Stack
+- Framework: Next.js 14+ with TypeScript
+- Styling: Tailwind CSS
+- State Management: Zustand + React Query for server state
+- UI Components: Custom components matching design
+- Charts: Chart.js or Recharts
+- Forms: React Hook Form with Zod validation
+
+### API Integration Points
+
+Authentication Endpoints:
+- POST /api/v1/auth/login - User login
+- POST /api/v1/auth/register - User registration
+
+Dashboard Endpoints:
+- GET /api/v1/dashboard/ - Dashboard KPIs and data
+
+Broker Endpoints:
+- GET /api/v1/brokers/me - Get broker profile
+- PUT /api/v1/brokers/me - Update broker profile
+
+Policy & Premium Endpoints:
+- GET /api/v1/policies/ - List policies
+- GET /api/v1/policies/{id} - Get policy details
+- POST /api/v1/policies/ - Create policy
+- GET /api/v1/premiums/by-policy/{policy_id} - Get premiums for policy
+- POST /api/v1/premiums/{premium_id}/pay - Pay single premium
+
+Payment Endpoints:
+- POST /api/v1/payments/bulk-initiate - Initiate bulk payment
+- POST /api/v1/payments/webhook - Squad webhook handler
+- GET /api/v1/payments/verify/{transaction_ref} - Verify payment
+
+## Development Phases
+
+### Phase 1: Foundation & Authentication
+- Set up Next.js project structure
+- Implement authentication pages (login/signup)
+- Create layout components (Header, Sidebar, Layout)
+- Set up API client with authentication
+- Implement route protection and role-based routing
+
+### Phase 2: Dashboard Layouts
+- Build Insurance Firm Dashboard layout
+- Create Broker Dashboard layout
+- Implement metric cards and basic data display
+- Add responsive navigation
+- Apply black-on-white theme styling
+
+### Phase 3: Data Integration
+- Connect dashboards to backend APIs
+- Implement data fetching with React Query
+- Add loading states and error handling
+- Create data visualization components
+- Format all currency displays in Naira
+
+### Phase 4: Payment System
+- Build selectable data table for broker policies
+- Implement checkbox selection logic
+- Create "Pay for Selected" functionality
+- Integrate Squad Co payment gateway
+- Add payment status tracking and updates
+
+### Phase 5: Advanced Features
+- Implement payment reminder system
+- Add advanced filtering and sorting
+- Create payment history views
+- Add bulk operations
+- Implement real-time updates
+
+## Success Criteria
+
+### Functional Requirements
+- User can login as Insurance Firm or Broker
+- Insurance Firm sees comprehensive dashboard with metrics
+- Broker sees portfolio with selectable payment options
+- Bulk payment functionality works with Squad integration
+- Payment reminders can be sent to brokers
+- All currency displays show Naira formatting
+- Mobile responsive on all screen sizes
+
+### Technical Requirements
+- Type-safe TypeScript implementation
+- Proper error handling and loading states
+- Optimized performance with code splitting
+- Secure authentication and API integration
+- Consistent UI following design specifications
+
+## Design Requirements
+- Follow provided mockup designs exactly
+- High-contrast black-on-white theme
+- Professional, clean appearance
+- Consistent spacing and typography
+
+## Currency Formatting
+All monetary values must be displayed as:
+- Format: ₦1,234,567.89
+- No decimal places for whole numbers: ₦1,234,567
+- Consistent formatting across all components

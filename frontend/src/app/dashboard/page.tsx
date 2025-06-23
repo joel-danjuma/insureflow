@@ -1,45 +1,43 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Layout from '@/components/Layout';
-// import withAuth from '@/hocs/withAuth'; // Auth is temporarily suspended for testing
+import withAuth from '@/hocs/withAuth';
 import InsuranceFirmDashboard from '@/components/InsuranceFirmDashboard';
 import BrokerDashboard from '@/components/BrokerDashboard';
+import useAuthStore from '@/store/authStore';
 import { UserRole } from '@/types/user';
 
 const DashboardPage = () => {
-  const [mockRole, setMockRole] = useState<UserRole>(UserRole.INSURANCE_FIRM);
+  const { user } = useAuthStore();
+
+  // If no user data, show loading (withAuth should handle this, but extra safety)
+  if (!user) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin h-12 w-12 border-4 border-black border-t-transparent rounded-full mx-auto mb-4"></div>
+            <p className="text-lg font-medium text-black">Loading dashboard...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
-    <Layout userRole={mockRole}>
-      {/* --- MOCK ROLE SWITCHER FOR TESTING --- */}
-      <div className="absolute top-4 right-4 bg-yellow-200 p-2 rounded shadow-lg text-sm z-50">
-        <h4 className="font-bold mb-2">Testing Controls</h4>
-        <p className="mb-2">Viewing as: <strong>{mockRole.replace('-', ' ').toUpperCase()}</strong></p>
-        <div className="flex space-x-2">
-          <button 
-            onClick={() => setMockRole(UserRole.INSURANCE_FIRM)}
-            className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400"
-            disabled={mockRole === UserRole.INSURANCE_FIRM}
-          >
-            Insurance Firm
-          </button>
-          <button 
-            onClick={() => setMockRole(UserRole.BROKER)}
-            className="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-400"
-            disabled={mockRole === UserRole.BROKER}
-          >
-            Broker
-          </button>
+    <Layout userRole={user.role} title="Dashboard">
+      {/* Render appropriate dashboard based on user role */}
+      {user.role === UserRole.ADMIN && <InsuranceFirmDashboard />}
+      {user.role === UserRole.BROKER && <BrokerDashboard />}
+      {user.role === UserRole.CUSTOMER && (
+        <div className="text-center py-12">
+          <h2 className="text-2xl font-bold text-black mb-4">Customer Dashboard</h2>
+          <p className="text-gray-600">Customer dashboard coming soon...</p>
         </div>
-      </div>
-      {/* --- END OF MOCK ROLE SWITCHER --- */}
-
-      {mockRole === UserRole.INSURANCE_FIRM && <InsuranceFirmDashboard />}
-      {mockRole === UserRole.BROKER && <BrokerDashboard />}
+      )}
     </Layout>
   );
 };
 
-// export default withAuth(DashboardPage); // Auth is temporarily suspended
-export default DashboardPage; 
+export default withAuth(DashboardPage); 

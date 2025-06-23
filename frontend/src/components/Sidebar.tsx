@@ -2,63 +2,174 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { UserRole } from '@/types/user'; // We'll create this type file next
+import { usePathname } from 'next/navigation';
+import { UserRole } from '@/types/user';
+import useAuthStore from '@/store/authStore';
+import { authService } from '@/services/api';
 
 const commonLinks = [
   { href: '/dashboard', label: 'Dashboard', icon: 'House' },
-  { href: '#', label: 'Policies', icon: 'File' },
+  { href: '/policies', label: 'Policies', icon: 'File' },
 ];
 
 const roleLinks = {
-  [UserRole.INSURANCE_FIRM]: [
-    { href: '#', label: 'Brokers', icon: 'Users' },
-    { href: '#', label: 'Claims', icon: 'ShieldCheck' },
-    { href: '#', label: 'Reports', icon: 'ChartBar' },
+  [UserRole.ADMIN]: [
+    { href: '/brokers', label: 'Brokers', icon: 'Users' },
+    { href: '/claims', label: 'Claims', icon: 'ShieldCheck' },
+    { href: '/reports', label: 'Reports', icon: 'ChartBar' },
+    { href: '/settings', label: 'Settings', icon: 'Gear' },
   ],
   [UserRole.BROKER]: [
-    { href: '#', label: 'Clients', icon: 'Users' },
-    { href: '#', label: 'Commissions', icon: 'CurrencyDollar' },
-    { href: '#', label: 'Support', icon: 'Question' },
+    { href: '/clients', label: 'Clients', icon: 'Users' },
+    { href: '/payments', label: 'Payments', icon: 'CurrencyDollar' },
+    { href: '/commissions', label: 'Commissions', icon: 'Wallet' },
+    { href: '/support', label: 'Support', icon: 'Question' },
   ],
-  [UserRole.CUSTOMER]: [],
+  [UserRole.CUSTOMER]: [
+    { href: '/my-policies', label: 'My Policies', icon: 'File' },
+    { href: '/payments', label: 'Payments', icon: 'CurrencyDollar' },
+    { href: '/support', label: 'Support', icon: 'Question' },
+  ],
 };
 
 const icons: { [key: string]: React.ReactNode } = {
-    House: <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256"><path d="M224,115.55V208a16,16,0,0,1-16,16H168a16,16,0,0,1-16-16V168a8,8,0,0,0-8-8H112a8,8,0,0,0-8,8v40a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V115.55a16,16,0,0,1,5.17-11.78l80-75.48.11-.11a16,16,0,0,1,21.53,0,1.14,1.14,0,0,0,.11.11l80,75.48A16,16,0,0,1,224,115.55Z"></path></svg>,
-    Users: <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256"><path d="M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.53,195.63a8,8,0,1,0,13.4,8.74,80,80,0,0,1,134.14,0,8,8,0,0,0,13.4-8.74A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Zm210.14,98.7a8,8,0,0,1-11.07-2.33A79.83,79.83,0,0,0,172,168a8,8,0,0,1,0-16,44,44,0,1,0-16.34-84.87,8,8,0,1,1-5.94-14.85,60,60,0,0,1,55.53,105.64,95.83,95.83,0,0,1,47.22,37.71A8,8,0,0,1,250.14,206.7Z"></path></svg>,
-    File: <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256"><path d="M213.66,82.34l-56-56A8,8,0,0,0,152,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V88A8,8,0,0,0,213.66,82.34ZM160,51.31,188.69,80H160ZM200,216H56V40h88V88a8,8,0,0,0,8,8h48V216Z"></path></svg>,
-    CurrencyDollar: <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256"><path d="M152,120H136V56h8a32,32,0,0,1,32,32,8,8,0,0,0,16,0,48.05,48.05,0,0,0-48-48h-8V24a8,8,0,0,0-16,0V40h-8a48,48,0,0,0,0,96h8v64H104a32,32,0,0,1-32-32,8,8,0,0,0-16,0,48.05,48.05,0,0,0,48,48h16v16a8,8,0,0,0,16,0V216h16a48,48,0,0,0,0-96Zm-40,0a32,32,0,0,1,0-64h8v64Zm40,80H136V136h16a32,32,0,0,1,0,64Z"></path></svg>,
-    Question: <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256"><path d="M140,180a12,12,0,1,1-12-12A12,12,0,0,1,140,180ZM128,72c-22.06,0-40,16.15-40,36v4a8,8,0,0,0,16,0v-4c0-11,10.77-20,24-20s24,9,24,20-10.77,20-24,20a8,8,0,0,0-8,8v8a8,8,0,0,0,16,0v-.72c18.24-3.35,32-17.9,32-35.28C168,88.15,150.06,72,128,72Zm104,56A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128Z"></path></svg>,
-    ShieldCheck: <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256"><path d="M213,42.23a15.8,15.8,0,0,0-11.23-4.57c-29-3.2-61.5,0-83.77,0s-54.74-3.2-83.77,0A15.8,15.8,0,0,0,23,42.23V120c0,73.1,82.4,102.32,98.11,108.66a15.9,15.9,0,0,0,13.78,0C150.6,222.32,232,193.1,232,120V42.23ZM117.37,162.63l-32-32a8,8,0,0,1,11.32-11.32L112,135.31l58.63-58.62a8,8,0,0,1,11.32,11.32Z"></path></svg>,
-    ChartBar: <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256"><path d="M240,208a8,8,0,0,1-8,8H32a8,8,0,0,1-8-8V48a8,8,0,0,1,16,0v32h64V48a8,8,0,0,1,16,0v56h64V48a8,8,0,0,1,16,0v80h32V48a8,8,0,0,1,16,0ZM112,96H48v96h64Zm80,40H128V48h64Z"></path></svg>,
+  House: (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256">
+      <path d="M224,115.55V208a16,16,0,0,1-16,16H168a16,16,0,0,1-16-16V168a8,8,0,0,0-8-8H112a8,8,0,0,0-8,8v40a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V115.55a16,16,0,0,1,5.17-11.78l80-75.48.11-.11a16,16,0,0,1,21.53,0,1.14,1.14,0,0,0,.11.11l80,75.48A16,16,0,0,1,224,115.55Z"/>
+    </svg>
+  ),
+  Users: (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256">
+      <path d="M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.53,195.63a8,8,0,1,0,13.4,8.74,80,80,0,0,1,134.14,0,8,8,0,0,0,13.4-8.74A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Zm210.14,98.7a8,8,0,0,1-11.07-2.33A79.83,79.83,0,0,0,172,168a8,8,0,0,1,0-16,44,44,0,1,0-16.34-84.87,8,8,0,1,1-5.94-14.85,60,60,0,0,1,55.53,105.64,95.83,95.83,0,0,1,47.22,37.71A8,8,0,0,1,250.14,206.7Z"/>
+    </svg>
+  ),
+  File: (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256">
+      <path d="M213.66,82.34l-56-56A8,8,0,0,0,152,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V88A8,8,0,0,0,213.66,82.34ZM160,51.31,188.69,80H160ZM200,216H56V40h88V88a8,8,0,0,0,8,8h48V216Z"/>
+    </svg>
+  ),
+  CurrencyDollar: (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256">
+      <path d="M152,120H136V56h8a32,32,0,0,1,32,32,8,8,0,0,0,16,0,48.05,48.05,0,0,0-48-48h-8V24a8,8,0,0,0-16,0V40h-8a48,48,0,0,0,0,96h8v64H104a32,32,0,0,1-32-32,8,8,0,0,0-16,0,48.05,48.05,0,0,0,48,48h16v16a8,8,0,0,0,16,0V216h16a48,48,0,0,0,0-96Zm-40,0a32,32,0,0,1,0-64h8v64Zm40,80H136V136h16a32,32,0,0,1,0,64Z"/>
+    </svg>
+  ),
+  Wallet: (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256">
+      <path d="M216,64H56a8,8,0,0,1,0-16H192a8,8,0,0,0,0-16H56A24,24,0,0,0,32,56V184a24,24,0,0,0,24,24H216a16,16,0,0,0,16-16V80A16,16,0,0,0,216,64Zm-36,80a12,12,0,1,1,12-12A12,12,0,0,1,180,144Z"/>
+    </svg>
+  ),
+  Question: (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256">
+      <path d="M140,180a12,12,0,1,1-12-12A12,12,0,0,1,140,180ZM128,72c-22.06,0-40,16.15-40,36v4a8,8,0,0,0,16,0v-4c0-11,10.77-20,24-20s24,9,24,20-10.77,20-24,20a8,8,0,0,0-8,8v8a8,8,0,0,0,16,0v-.72c18.24-3.35,32-17.9,32-35.28C168,88.15,150.06,72,128,72Zm104,56A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128Z"/>
+    </svg>
+  ),
+  ShieldCheck: (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256">
+      <path d="M208,40H48A16,16,0,0,0,32,56V200a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V56A16,16,0,0,0,208,40ZM172.24,99.76l-48,48a8,8,0,0,1-11.31,0l-24-24a8,8,0,0,1,11.31-11.31L118.69,130.9l42.35-42.35a8,8,0,0,1,11.31,11.31Z"/>
+    </svg>
+  ),
+  ChartBar: (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256">
+      <path d="M224,200h-8V40a8,8,0,0,0-16,0V200H184V88a8,8,0,0,0-16,0V200H152V120a8,8,0,0,0-16,0v80H120V160a8,8,0,0,0-16,0v40H88V72a8,8,0,0,0-16,0V200H64V104a8,8,0,0,0-16,0v96H32a8,8,0,0,0,0,16H224a8,8,0,0,0,0-16Z"/>
+    </svg>
+  ),
+  Gear: (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256">
+      <path d="M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Zm88-29.84q.06-2.16,0-4.32l14.92-18.64a8,8,0,0,0,1.48-7.06,107.6,107.6,0,0,0-10.88-26.25,8,8,0,0,0-6-3.93l-23.72-2.64q-1.48-1.56-3.06-3.05L221.38,40.5a8,8,0,0,0-3.93-6,107.89,107.89,0,0,0-26.25-10.87,8,8,0,0,0-7.06,1.49L165.5,40.05q-2.16-.06-4.32,0L142.54,25.13a8,8,0,0,0-7.06-1.48A107.6,107.6,0,0,0,109.23,34.5a8,8,0,0,0-3.93,6L102.66,64.27q-1.56,1.49-3.05,3.06L75.88,64.69a8,8,0,0,0-6,3.93,107.89,107.89,0,0,0-10.87,26.25,8,8,0,0,0,1.49,7.06L75.41,120.5q-.06,2.16,0,4.32L60.49,143.46a8,8,0,0,0-1.48,7.06,107.6,107.6,0,0,0,10.88,26.25,8,8,0,0,0,6,3.93l23.72,2.64q1.49,1.56,3.06,3.05L34.62,215.5a8,8,0,0,0,3.93,6,107.89,107.89,0,0,0,26.25,10.87,8,8,0,0,0,7.06-1.49L90.5,215.95q2.16.06,4.32,0l18.64,14.92a8,8,0,0,0,7.06,1.48,107.6,107.6,0,0,0,26.25-10.88,8,8,0,0,0,3.93-6l2.64-23.72q1.56-1.48,3.05-3.06l23.72,2.64a8,8,0,0,0,6-3.93,107.89,107.89,0,0,0,10.87-26.25,8,8,0,0,0-1.49-7.06Zm-16.1-6.5a73.93,73.93,0,0,1,0,8.68,8,8,0,0,0,1.74,5.48l14.19,17.73a91.57,91.57,0,0,1-6.23,15L187,173.11a8,8,0,0,0-5.1,2.64,74.11,74.11,0,0,1-6.14,6.14,8,8,0,0,0-2.64,5.1l-2.51,22.58a91.32,91.32,0,0,1-15,6.23l-17.74-14.19a8,8,0,0,0-5.48-1.74,73.93,73.93,0,0,1-8.68,0,8,8,0,0,0-5.48,1.74L109.94,215.8a91.57,91.57,0,0,1-15-6.23L82.89,187a8,8,0,0,0-2.64-5.1,74.11,74.11,0,0,1-6.14-6.14,8,8,0,0,0-5.1-2.64L46.43,170.6a91.32,91.32,0,0,1-6.23-15l14.19-17.74a8,8,0,0,0,1.74-5.48,73.93,73.93,0,0,1,0-8.68,8,8,0,0,0-1.74-5.48L40.2,100.49a91.57,91.57,0,0,1,6.23-15L69,87.89a8,8,0,0,0,5.1-2.64,74.11,74.11,0,0,1,6.14-6.14,8,8,0,0,0,2.64-5.1L85.4,51.43a91.32,91.32,0,0,1,15-6.23L118.2,59.39a8,8,0,0,0,5.48,1.74,73.93,73.93,0,0,1,8.68,0,8,8,0,0,0,5.48-1.74L155.58,45.2a91.57,91.57,0,0,1,15,6.23L173.11,74a8,8,0,0,0,2.64,5.1,74.11,74.11,0,0,1,6.14,6.14,8,8,0,0,0,5.1,2.64l22.58,2.51a91.32,91.32,0,0,1,6.23,15l-14.19,17.74A8,8,0,0,0,199.87,123.66Z"/>
+    </svg>
+  ),
 };
 
 interface SidebarProps {
-  userRole: UserRole;
+  userRole?: UserRole;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
-  const links = [...commonLinks, ...(roleLinks[userRole] || [])];
+  const pathname = usePathname();
+  const { user, logout } = useAuthStore();
+  
+  // Use userRole prop or fall back to user from store
+  const currentRole = userRole || user?.role || UserRole.BROKER;
+  const links = [...commonLinks, ...(roleLinks[currentRole] || [])];
+
+  const getRoleDisplayName = (role: UserRole) => {
+    switch (role) {
+      case UserRole.ADMIN:
+        return 'Insurance Firm Admin';
+      case UserRole.BROKER:
+        return 'Insurance Broker';
+      case UserRole.CUSTOMER:
+        return 'Customer';
+      default:
+        return 'User';
+    }
+  };
+
+  const isActive = (href: string) => {
+    if (href === '/dashboard') {
+      return pathname === '/' || pathname === '/dashboard';
+    }
+    return pathname === href;
+  };
+
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+      logout();
+    } catch (error) {
+      console.error('Logout failed:', error);
+      // Force logout on error
+      logout();
+    }
+  };
 
   return (
-    <aside className="flex flex-col w-64 bg-white p-4 border-r border-gray-200">
-      <div className="flex flex-col mb-8">
-        <h1 className="text-[#101418] text-base font-medium leading-normal">Acme Co</h1>
-        <p className="text-[#5c738a] text-sm font-normal leading-normal">{userRole === UserRole.INSURANCE_FIRM ? 'Insurance Firm' : 'Broker Team'}</p>
+    <aside className="flex flex-col w-64 bg-white border-r-2 border-black min-h-screen">
+      {/* Header */}
+      <div className="p-6 border-b-2 border-black">
+        <h1 className="text-2xl font-bold text-black mb-1">InsureFlow</h1>
+        <p className="text-sm text-gray-600">
+          {user?.full_name || 'User'} • {getRoleDisplayName(currentRole)}
+        </p>
       </div>
-      <nav className="flex flex-col gap-2">
-        {links.map(({ href, label, icon }) => (
-          <Link
-            key={label}
-            href={href}
-            className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 aria-[current=page]:bg-gray-200 aria-[current=page]:text-gray-900"
-            aria-current={label === 'Dashboard' ? 'page' : undefined}
-          >
-            <div className="text-[#101418]">{icons[icon]}</div>
-            <p className="text-[#101418] text-sm font-medium leading-normal">{label}</p>
-          </Link>
-        ))}
+
+      {/* Navigation */}
+      <nav className="flex-1 p-4">
+        <div className="space-y-1">
+          {links.map(({ href, label, icon }) => {
+            const active = isActive(href);
+            return (
+              <Link
+                key={label}
+                href={href}
+                className={`flex items-center space-x-3 px-4 py-3 text-sm font-medium transition-all duration-200 border-2 ${
+                  active
+                    ? 'bg-black text-white border-black'
+                    : 'text-black border-transparent hover:border-black hover:bg-gray-50'
+                }`}
+              >
+                <div className={`${active ? 'text-white' : 'text-black'}`}>
+                  {icons[icon]}
+                </div>
+                <span>{label}</span>
+              </Link>
+            );
+          })}
+        </div>
       </nav>
+
+      {/* User Actions */}
+      <div className="p-4 border-t-2 border-black">
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center space-x-3 px-4 py-3 text-sm font-medium text-black border-2 border-transparent hover:border-black hover:bg-gray-50 transition-all duration-200"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256">
+            <path d="M120,216a8,8,0,0,1-8,8H48a16,16,0,0,1-16-16V48A16,16,0,0,1,48,32h64a8,8,0,0,1,0,16H48V208h64A8,8,0,0,1,120,216Zm109.66-93.66-40-40a8,8,0,0,0-11.32,11.32L204.69,120H112a8,8,0,0,0,0,16h92.69l-26.35,26.34a8,8,0,0,0,11.32,11.32l40-40A8,8,0,0,0,229.66,122.34Z"/>
+          </svg>
+          <span>Sign Out</span>
+        </button>
+      </div>
     </aside>
   );
 };

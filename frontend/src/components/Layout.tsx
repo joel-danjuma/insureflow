@@ -1,19 +1,36 @@
 import React from 'react';
 import Sidebar from './Sidebar';
+import Header from './Header';
 import { UserRole } from '@/types/user';
 
 interface LayoutProps {
   children: React.ReactNode;
-  userRole: UserRole;
+  userRole?: UserRole;
+  title?: string;
+  showSidebar?: boolean;
+  showHeader?: boolean;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, userRole }) => {
+const Layout: React.FC<LayoutProps> = ({ 
+  children, 
+  userRole, 
+  title = 'Dashboard',
+  showSidebar = true,
+  showHeader = true 
+}) => {
   return (
-    <div className="relative flex size-full min-h-screen flex-col bg-gray-50 group/design-root overflow-x-hidden">
-      <div className="flex flex-1">
-        <Sidebar userRole={userRole} />
-        <main className="flex flex-1 flex-col px-6 py-5 bg-bg-primary">
-            {children}
+    <div className="flex min-h-screen bg-white">
+      {/* Sidebar */}
+      {showSidebar && <Sidebar userRole={userRole} />}
+      
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
+        {/* Header */}
+        {showHeader && <Header title={title} />}
+        
+        {/* Page Content */}
+        <main className="flex-1 p-6 bg-white">
+          {children}
         </main>
       </div>
     </div>

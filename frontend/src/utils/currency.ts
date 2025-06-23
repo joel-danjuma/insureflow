@@ -2,11 +2,24 @@ const USD_TO_NAIRA_RATE = 1500;
 
 export const convertUSDToNaira = (usdAmount: number): string => {
   const nairaAmount = usdAmount * USD_TO_NAIRA_RATE;
-  return `₦${nairaAmount.toLocaleString()}`;
+  return formatNaira(nairaAmount);
 };
 
 export const formatNaira = (amount: number): string => {
-  return `₦${amount.toLocaleString()}`;
+  const options: Intl.NumberFormatOptions = { 
+    style: 'currency', 
+    currency: 'NGN',
+    minimumFractionDigits: 2, 
+    maximumFractionDigits: 2 
+  };
+  
+  if (Number.isInteger(amount)) {
+    options.minimumFractionDigits = 0;
+    options.maximumFractionDigits = 0;
+  }
+  
+  const formatter = new Intl.NumberFormat('en-NG', options);
+  return formatter.format(amount).replace('NGN', '₦');
 };
 
 export const parseCurrencyString = (currencyStr: string): number => {
