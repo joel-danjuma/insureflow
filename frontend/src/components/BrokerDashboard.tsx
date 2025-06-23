@@ -17,7 +17,7 @@ const BrokerDashboard = () => {
       <div className="flex flex-wrap gap-4 p-4">
         <div className="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 bg-[#eaedf1]">
           <p className="text-[#101418] text-base font-medium leading-normal">Total Sales</p>
-          <p className="text-[#101418] tracking-light text-2xl font-bold leading-tight">$250,000</p>
+          <p className="text-[#101418] tracking-light text-2xl font-bold leading-tight">{convertUSDToNaira(250000)}</p>
           <p className="text-[#078838] text-base font-medium leading-normal">+10%</p>
         </div>
         <div className="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 bg-[#eaedf1]">
@@ -27,7 +27,7 @@ const BrokerDashboard = () => {
         </div>
         <div className="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 bg-[#eaedf1]">
           <p className="text-[#101418] text-base font-medium leading-normal">Average Commission</p>
-          <p className="text-[#101418] tracking-light text-2xl font-bold leading-tight">$5,000</p>
+          <p className="text-[#101418] tracking-light text-2xl font-bold leading-tight">{convertUSDToNaira(5000)}</p>
           <p className="text-[#078838] text-base font-medium leading-normal">+5%</p>
         </div>
       </div>
@@ -38,7 +38,7 @@ const BrokerDashboard = () => {
         {/* Sales Over Time Chart */}
         <div className="flex min-w-72 flex-1 flex-col gap-2 rounded-xl border border-[#d4dbe2] p-6">
           <p className="text-[#101418] text-base font-medium leading-normal">Sales Over Time</p>
-          <p className="text-[#101418] tracking-light text-[32px] font-bold leading-tight truncate">$250,000</p>
+          <p className="text-[#101418] tracking-light text-[32px] font-bold leading-tight truncate">{convertUSDToNaira(250000)}</p>
           <div className="flex gap-1">
             <p className="text-[#5c738a] text-base font-normal leading-normal">Last 12 Months</p>
             <p className="text-[#078838] text-base font-medium leading-normal">+10%</p>
@@ -82,7 +82,7 @@ const BrokerDashboard = () => {
         {/* Sales by Product Chart */}
         <div className="flex min-w-72 flex-1 flex-col gap-2 rounded-xl border border-[#d4dbe2] p-6">
           <p className="text-[#101418] text-base font-medium leading-normal">Sales by Product</p>
-          <p className="text-[#101418] tracking-light text-[32px] font-bold leading-tight truncate">$100,000</p>
+          <p className="text-[#101418] tracking-light text-[32px] font-bold leading-tight truncate">{convertUSDToNaira(100000)}</p>
           <div className="flex gap-1">
             <p className="text-[#5c738a] text-base font-normal leading-normal">This Year</p>
             <p className="text-[#078838] text-base font-medium leading-normal">+5%</p>
@@ -121,7 +121,7 @@ const BrokerDashboard = () => {
                     <span className="truncate">Active</span>
                   </button>
                 </td>
-                <td className="h-[72px] px-4 py-2 w-[400px] text-[#5c738a] text-sm font-normal leading-normal">$1,200</td>
+                <td className="h-[72px] px-4 py-2 w-[400px] text-[#5c738a] text-sm font-normal leading-normal">{convertUSDToNaira(1200)}</td>
                 <td className="h-[72px] px-4 py-2 w-[400px] text-[#5c738a] text-sm font-normal leading-normal">2024-08-15</td>
               </tr>
               <tr className="border-t border-t-[#d4dbe2]">
@@ -132,7 +132,7 @@ const BrokerDashboard = () => {
                     <span className="truncate">Active</span>
                   </button>
                 </td>
-                <td className="h-[72px] px-4 py-2 w-[400px] text-[#5c738a] text-sm font-normal leading-normal">$1,500</td>
+                <td className="h-[72px] px-4 py-2 w-[400px] text-[#5c738a] text-sm font-normal leading-normal">{convertUSDToNaira(1500)}</td>
                 <td className="h-[72px] px-4 py-2 w-[400px] text-[#5c738a] text-sm font-normal leading-normal">2024-09-01</td>
               </tr>
               <tr className="border-t border-t-[#d4dbe2]">
@@ -143,7 +143,7 @@ const BrokerDashboard = () => {
                     <span className="truncate">Pending</span>
                   </button>
                 </td>
-                <td className="h-[72px] px-4 py-2 w-[400px] text-[#5c738a] text-sm font-normal leading-normal">$2,000</td>
+                <td className="h-[72px] px-4 py-2 w-[400px] text-[#5c738a] text-sm font-normal leading-normal">{convertUSDToNaira(2000)}</td>
                 <td className="h-[72px] px-4 py-2 w-[400px] text-[#5c738a] text-sm font-normal leading-normal">2024-07-20</td>
               </tr>
               <tr className="border-t border-t-[#d4dbe2]">
@@ -154,7 +154,7 @@ const BrokerDashboard = () => {
                     <span className="truncate">Active</span>
                   </button>
                 </td>
-                <td className="h-[72px] px-4 py-2 w-[400px] text-[#5c738a] text-sm font-normal leading-normal">$1,800</td>
+                <td className="h-[72px] px-4 py-2 w-[400px] text-[#5c738a] text-sm font-normal leading-normal">{convertUSDToNaira(1800)}</td>
                 <td className="h-[72px] px-4 py-2 w-[400px] text-[#5c738a] text-sm font-normal leading-normal">2024-08-05</td>
               </tr>
               <tr className="border-t border-t-[#d4dbe2]">
@@ -165,7 +165,7 @@ const BrokerDashboard = () => {
                     <span className="truncate">Active</span>
                   </button>
                 </td>
-                <td className="h-[72px] px-4 py-2 w-[400px] text-[#5c738a] text-sm font-normal leading-normal">$2,500</td>
+                <td className="h-[72px] px-4 py-2 w-[400px] text-[#5c738a] text-sm font-normal leading-normal">{convertUSDToNaira(2500)}</td>
                 <td className="h-[72px] px-4 py-2 w-[400px] text-[#5c738a] text-sm font-normal leading-normal">2024-09-10</td>
               </tr>
             </tbody>
