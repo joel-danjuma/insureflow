@@ -1,0 +1,301 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 22,
+        "title": "Project Setup & Core Dependencies Configuration",
+        "description": "Successfully initialized Next.js 15.3.4 project with TypeScript. Configured Tailwind CSS v4 for styling. Installed and set up Zustand for global state management, React Query for server state, Recharts for data visualization, and React Hook Form with Zod for form validation. Established a standard project structure, created comprehensive API services, and implemented axios interceptors for token management. The project is now ready for component development.",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "details": "Completed project setup includes:\n*   Next.js 15.3.4 initialized with TypeScript.\n*   Tailwind CSS v4 configured for utility-first styling.\n*   Zustand installed and configured for global state management.\n*   React Query installed and set up for server state management, including provider configuration.\n*   Recharts integrated for data visualization capabilities.\n*   React Hook Form with Zod validation set up for robust form handling.\n*   Standard project structure established (e.g., `components/`, `app/` for App Router, `hooks/`, `lib/` for utilities and API client, `store/` for Zustand stores, `services/` for API service logic).\n*   Comprehensive API services implemented for: authentication, dashboard, broker, policy, premium, and payment management.\n*   Axios interceptors configured for automatic token injection in API requests and 401 error handling (e.g., redirect to login).\nThe frontend application is fully initialized, configured, and ready for further component and feature development.",
+        "testStrategy": "Verified that the Next.js 15.3.4 application runs successfully (`npm run dev`). Confirmed Tailwind CSS v4 styles apply correctly to basic elements. Validated setup of Zustand (simple store test), React Query (with a test server state fetch), Recharts (rendering a sample chart), and React Hook Form with Zod (basic form validation). API services tested for basic connectivity and expected responses for core functionalities. Axios interceptors for token injection and 401 error handling confirmed to be working as expected during API calls. The project foundation is stable and ready for feature development.",
+        "subtasks": [
+          {
+            "id": "subtask-22-1",
+            "title": "Initialize Next.js 15.3.4 project with TypeScript",
+            "status": "done"
+          },
+          {
+            "id": "subtask-22-2",
+            "title": "Configure Tailwind CSS v4 for styling",
+            "status": "done"
+          },
+          {
+            "id": "subtask-22-3",
+            "title": "Set up Zustand for global state management",
+            "status": "done"
+          },
+          {
+            "id": "subtask-22-4",
+            "title": "Set up React Query for server state management",
+            "status": "done"
+          },
+          {
+            "id": "subtask-22-5",
+            "title": "Set up Recharts for data visualization",
+            "status": "done"
+          },
+          {
+            "id": "subtask-22-6",
+            "title": "Set up React Hook Form with Zod for form validation",
+            "status": "done"
+          },
+          {
+            "id": "subtask-22-7",
+            "title": "Establish standard project structure",
+            "status": "done"
+          },
+          {
+            "id": "subtask-22-8",
+            "title": "Create comprehensive API services (auth, dashboard, broker, policy, premium, payment)",
+            "status": "done"
+          },
+          {
+            "id": "subtask-22-9",
+            "title": "Implement axios interceptors for token injection and 401 error handling",
+            "status": "done"
+          }
+        ]
+      },
+      {
+        "id": 23,
+        "title": "Authentication UI & Form Logic Implementation",
+        "description": "Develop Login and Signup pages with comprehensive form validation using React Hook Form and Zod. Ensure UI elements strictly follow the provided design mockups and the high-contrast black-on-white theme.",
+        "details": "Create `pages/auth/login.tsx` and `pages/auth/signup.tsx`. Utilize `useForm` from React Hook Form for managing form state, inputs, and submission. Define Zod schemas for login (e.g., email, password) and signup (e.g., name, email, password, role selection if applicable) to enforce validation rules (required fields, email format, password complexity). Style forms and elements using Tailwind CSS to match the specified theme (Primary text: #000000 or #101418, Backgrounds: #FFFFFF or #F9FAFB). Implement user-friendly error messages for validation failures.",
+        "testStrategy": "Unit test Zod schemas and validation logic. Conduct UI testing to ensure forms render correctly, validation messages appear as expected for invalid inputs, and forms adhere to the design mockups and theme. Test form submission behavior (e.g., disabled state during submission).",
+        "priority": "high",
+        "dependencies": [
+          22
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 24,
+        "title": "Authentication Backend Integration & JWT Management",
+        "description": "Integrate frontend authentication pages with backend API endpoints: `POST /api/v1/auth/login` and `POST /api/v1/auth/register`. Implement secure JWT token management (storage and retrieval) and configure an API client (e.g., Axios instance) to automatically include the JWT in authorization headers for subsequent requests.",
+        "details": "Use `fetch` API or an Axios instance to make POST requests to authentication endpoints. Upon successful login/registration, securely store the received JWT. For web applications, HttpOnly cookies set by a Backend-For-Frontend (BFF) are preferred; if not feasible, use secure browser storage mechanisms with appropriate XSS mitigation. Create an API client utility (e.g., `lib/apiClient.ts`) that intercepts requests to add the `Authorization: Bearer <token>` header. Implement robust error handling for API responses (e.g., 401, 403, 400, 500).",
+        "testStrategy": "Mock backend authentication endpoints. Test successful login and registration flows, ensuring JWT is stored correctly. Verify that subsequent API calls made through the configured client include the JWT. Test error handling for invalid credentials, server errors, and token expiry scenarios. Check secure storage of token.",
+        "priority": "high",
+        "dependencies": [
+          23
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 25,
+        "title": "Role-Based Routing, Protected Routes & Session Management",
+        "description": "Implement session persistence to keep users logged in across browser sessions/reloads. Add automatic logout functionality on session expiry or explicit user action. Create role-based routing logic to direct users (Insurance Firm vs. Broker) to their respective dashboards upon successful authentication and protect dashboard routes from unauthenticated access.",
+        "details": "Utilize Next.js middleware or a Higher-Order Component (HOC) for route protection. Check for a valid JWT and user role (decoded from JWT or fetched from a user profile endpoint) before allowing access to protected routes. Redirect unauthenticated users to the login page. Store user role in Zustand or React Context. Implement logic to clear JWT and user state on logout. For session persistence, rely on the JWT's expiry and refresh token mechanism if available.",
+        "testStrategy": "Test that unauthenticated users are redirected from protected routes to login. Verify that authenticated users are correctly routed to their specific dashboards based on their role (Insurance Firm, Broker). Test session persistence by reloading the page or closing/reopening the browser (if token storage allows). Test logout functionality.",
+        "priority": "high",
+        "dependencies": [
+          24
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 26,
+        "title": "Core Layout Components & Theming Implementation",
+        "description": "Develop core reusable layout components including a Sidebar for navigation, a Header, and a main content area. These components must strictly adhere to the specified high-contrast black-on-white theme (Primary text: #000000 or #101418, Backgrounds: #FFFFFF or #F9FAFB) and be fully responsive using a mobile-first approach with Tailwind CSS. Sidebar navigation should adapt to user context/role.",
+        "details": "Create `components/layout/Sidebar.tsx`, `components/layout/Header.tsx`, and a main `components/layout/Layout.tsx` that orchestrates them. Use Tailwind CSS utility classes for styling, ensuring responsiveness across various screen sizes (mobile, tablet, desktop). Implement theme colors as specified. The Sidebar should display navigation links relevant to the logged-in user's role (data for this can come from a config file or be passed as props). Ensure consistent spacing and typography as per design mockups.",
+        "testStrategy": "Visually inspect layout components on multiple devices/screen sizes (using browser dev tools). Verify correct application of the black-on-white theme. Test navigation links in the sidebar for different user roles (mocked). Ensure layout integrity and usability on small screens.",
+        "priority": "medium",
+        "dependencies": [
+          22
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 27,
+        "title": "Insurance Firm Dashboard UI Shell & Basic Metrics Display",
+        "description": "Build the static UI structure for the Insurance Firm Dashboard. This includes overview metrics cards (e.g., New Policies, Outstanding Premiums, Claims Processed), and placeholders for dynamic content like the broker performance table and claims data visualizations. Ensure all monetary values are prepared for Naira (₦) currency formatting.",
+        "details": "Create the page component `pages/firm/dashboard.tsx`. Utilize the `Layout` component. Implement UI for metric cards using Tailwind CSS, matching design specifications. Prepare designated areas for the broker performance table and claims charts. Implement a utility function for Naira currency formatting: `function formatNaira(amount) { const options = { style: 'currency', currency: 'NGN', minimumFractionDigits: 2, maximumFractionDigits: 2 }; if (Number.isInteger(amount)) { options.minimumFractionDigits = 0; options.maximumFractionDigits = 0; } const formatter = new Intl.NumberFormat('en-NG', options); return formatter.format(amount).replace('NGN', '₦'); }`. Apply this to any placeholder monetary values.",
+        "testStrategy": "Verify the dashboard UI matches the provided mockups. Check for responsiveness. Confirm that the Naira currency formatting utility function works correctly and is applied to any static monetary values displayed. Ensure placeholders for dynamic content are clearly marked.",
+        "priority": "medium",
+        "dependencies": [
+          25,
+          26
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Dashboard Page Structure (UI Shell)",
+            "description": "Set up the basic layout and structure for the dashboard page, including header, sidebar (if applicable), and main content area.",
+            "dependencies": [],
+            "details": "Focus on the overall page container and layout components.",
+            "status": "done"
+          },
+          {
+            "id": 2,
+            "title": "Implement Basic Metric Cards UI",
+            "description": "Develop the user interface components for displaying key metrics (e.g., total policies, claims processed) using card-like elements.",
+            "dependencies": [
+              1
+            ],
+            "details": "Design and implement the visual representation of individual metric cards.",
+            "status": "done"
+          },
+          {
+            "id": 3,
+            "title": "Add Placeholders for Table and Charts",
+            "description": "Include placeholder elements or sections within the dashboard layout to reserve space for future table and chart components.",
+            "dependencies": [
+              1
+            ],
+            "details": "Use simple divs or placeholder components to indicate where larger data visualizations will go.",
+            "status": "done"
+          },
+          {
+            "id": 4,
+            "title": "Implement Naira Currency Formatting Utility",
+            "description": "Create a reusable utility function to format numerical values into the Naira currency format (₦).",
+            "dependencies": [],
+            "details": "The function should handle formatting numbers with commas and the Naira symbol.",
+            "status": "done"
+          }
+        ]
+      },
+      {
+        "id": 28,
+        "title": "Broker Dashboard UI Shell & Basic Metrics Display",
+        "description": "Construct the static UI structure for the Broker Dashboard. This includes performance metrics cards (e.g., Total Sales, Client Retention, Average Commission), placeholders for sales performance charts, and the initial structure for the Client Portfolio Table. Ensure all monetary values are prepared for Naira (₦) currency formatting.",
+        "details": "Create the page component `pages/broker/dashboard.tsx`. Utilize the `Layout` component. Implement UI for metric cards and the basic structure of the Client Portfolio Table (columns like Policy ID, Client Name, Premium Amount, Status) using Tailwind CSS, matching design specifications. Prepare areas for sales performance charts. Use the `formatNaira` utility function (from Task 27) for any placeholder monetary values.",
+        "testStrategy": "Verify the dashboard UI matches the provided mockups. Check for responsiveness. Confirm that the Naira currency formatting utility function is applied correctly to any static monetary values. Ensure the Client Portfolio Table structure is in place.",
+        "priority": "medium",
+        "dependencies": [
+          25,
+          26
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 29,
+        "title": "Dashboard Data Integration for Firm & Broker (KPIs, Tables, Charts)",
+        "description": "Integrate both Insurance Firm and Broker dashboards with their respective backend API endpoints (e.g., `/api/v1/dashboard/`, `/api/v1/brokers/me`, `/api/v1/policies/`) using React Query for efficient data fetching, caching, and server state management. Implement loading states (e.g., skeletons, spinners) and user-friendly error handling. Display dynamic data in metric cards, tables, and charts (using Chart.js or Recharts). Ensure all currency is displayed in Naira.",
+        "details": "For both dashboards, use `useQuery` hooks from React Query to fetch data from the specified API endpoints. Implement loading indicators while data is being fetched. Display appropriate error messages if API calls fail. Populate metric cards with fetched data. For the Insurance Firm, populate the broker performance table and claims data charts. For the Broker, populate sales performance charts and the Client Portfolio Table (initially without payment actions). Ensure the `formatNaira` utility is used for all monetary data fetched from the API. Choose Chart.js or Recharts for visualizations and implement them according to design mockups.",
+        "testStrategy": "Mock API endpoints to return sample data. Verify that data is fetched and correctly displayed in all relevant sections of both dashboards. Test loading states by simulating network latency. Test error handling by simulating API errors. Validate chart rendering and data accuracy. Confirm all monetary values are formatted in Naira.",
+        "priority": "high",
+        "dependencies": [
+          24,
+          27,
+          28
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 30,
+        "title": "Broker Client Portfolio Table Enhancements & Payment Preparation",
+        "description": "Enhance the Broker's Client Portfolio Table with interactive features: selectable rows using checkboxes, a 'Select All' checkbox functionality, dynamic display of premium amounts in Naira, and visual payment status indicators for each policy. Implement the 'Pay for Selected' button to show the count of selected policies and their total premium amount.",
+        "details": "In `pages/broker/dashboard.tsx`, manage the state of selected policies (e.g., using component state or Zustand). Add checkboxes to each row and a master checkbox in the table header for 'Select All'. Implement logic to update the selected policies state. Dynamically calculate and display the total premium amount of selected policies next to or on the 'Pay for Selected' button, along with the count of selected items. Ensure premium amounts and total are formatted in Naira. Display payment status indicators (e.g., 'Paid', 'Pending', 'Overdue') based on policy data.",
+        "testStrategy": "Test row selection individually and using 'Select All'. Verify the count of selected policies and the total premium amount update correctly and are displayed in Naira. Check that payment status indicators render correctly based on mock data. Test edge cases like no policies selected.",
+        "priority": "medium",
+        "dependencies": [
+          29
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 31,
+        "title": "Squad Co Payment Gateway Integration for Single & Bulk Payments",
+        "description": "Integrate the Squad Co payment gateway to enable single and bulk premium payments. The 'Pay for Selected' button on the Broker dashboard should initiate bulk payment via `POST /api/v1/payments/bulk-initiate`. Implement an option for single policy payment via `POST /api/v1/premiums/{premium_id}/pay`. Handle payment loading states, success/error feedback, and update UI based on payment status from Squad Co (via webhook `POST /api/v1/payments/webhook` or verification `GET /api/v1/payments/verify/{transaction_ref}`).",
+        "details": "Research and implement Squad Co's recommended frontend integration method (e.g., SDK, redirect, popup/modal). For bulk payments, when 'Pay for Selected' is clicked, gather IDs of selected policies and call `/api/v1/payments/bulk-initiate`. For single payments, provide a 'Pay Now' button per policy row calling `/api/v1/premiums/{premium_id}/pay`. Display loading indicators during payment processing. On Squad's response (success/failure/pending), provide clear feedback to the user. Update the payment status of policies in the UI, potentially by re-fetching data or using optimistic updates after successful payment verification (via webhook or polling the verification endpoint). Pseudo-code for bulk payment: `async function initiateBulkPayment(policyIds) { setLoading(true); try { const { data } = await apiClient.post('/api/v1/payments/bulk-initiate', { policyIds }); // Use data.checkoutUrl or similar to proceed with Squad payment flow } catch (err) { setError('Payment initiation failed.'); } finally { setLoading(false); } }`",
+        "testStrategy": "Utilize Squad Co's sandbox/test environment. Test the entire single payment flow for a policy. Test the bulk payment flow for multiple selected policies. Verify correct API calls are made. Confirm loading states and user feedback (success/error messages) are displayed appropriately. Test how payment status updates are reflected in the UI (e.g., policy status changes to 'Paid').",
+        "priority": "high",
+        "dependencies": [
+          30
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 32,
+        "title": "Payment Reminder System Frontend Implementation",
+        "description": "Implement the frontend components for the Payment Reminder System. This allows Insurance Firms to select brokers or policies from their dashboard and trigger payment reminders. This task focuses on the UI for selection and the API call to a backend endpoint responsible for dispatching notifications.",
+        "details": "In the Insurance Firm dashboard (`pages/firm/dashboard.tsx`), add a UI section (e.g., modal or dedicated panel) that allows the firm to view policies with outstanding premiums and select specific brokers or policies for reminders. Implement a 'Send Reminders' button. On click, this button should make an API call (e.g., `POST /api/v1/reminders/send` as a placeholder, actual endpoint TBD by backend) with the selected items. Display success or error feedback to the firm after the API call. The actual sending of emails/notifications is assumed to be handled by the backend.",
+        "testStrategy": "Mock the backend API endpoint for sending reminders. Test the UI for selecting brokers/policies. Verify that the 'Send Reminders' button triggers the correct API call with the selected data. Test the display of success and error messages based on the mocked API response.",
+        "priority": "medium",
+        "dependencies": [
+          29
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 33,
+        "title": "Diagnose Payment Reminders System Issues",
+        "description": "Systematically test and diagnose the /api/v1/reminders/send endpoint to identify specific failure points in the payment reminder workflow.",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "details": "Test the payment reminders endpoint by:\n1. Checking if the /api/v1/reminders/send endpoint is properly registered and accessible\n2. Verifying authentication requirements and admin-only access\n3. Testing with sample policy IDs and broker IDs to identify specific error responses\n4. Checking database connections and CRUD function availability\n5. Validating request/response schemas and data flow\n6. Examining server logs for detailed error information\n7. Verifying proper integration with the frontend reminder UI",
+        "testStrategy": "Use API testing tools (Postman/curl) to test the endpoint directly. Check backend logs during testing. Verify database queries are working correctly. Test both individual policy reminders and bulk broker reminders.",
+        "subtasks": []
+      },
+      {
+        "id": 34,
+        "title": "Diagnose Squad Payment Integration Issues",
+        "description": "Systematically test Squad Co payment gateway integration to identify specific failure points in both single and bulk payment workflows.",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "details": "Test the Squad payment integration by:\n1. Verifying Squad API credentials and configuration\n2. Testing /api/v1/premiums/{id}/pay endpoint for single payments\n3. Testing /api/v1/payments/bulk-initiate endpoint for bulk payments\n4. Checking payment service logic and amount conversion to kobo\n5. Validating webhook handling at /api/v1/payments/webhook\n6. Testing payment verification endpoint\n7. Examining Squad API response handling and error processing\n8. Verifying database payment record creation and updates",
+        "testStrategy": "Use Squad's sandbox environment for testing. Test with real payment flows. Check API request/response logs. Verify webhook processing with test data. Validate payment status updates in database.",
+        "subtasks": []
+      },
+      {
+        "id": 35,
+        "title": "Fix Payment Reminders Backend Implementation",
+        "description": "Fix identified issues in the payment reminders system backend implementation based on diagnostic findings.",
+        "status": "done",
+        "dependencies": [
+          33
+        ],
+        "priority": "high",
+        "details": "Based on diagnostic results, implement fixes for:\n1. Missing or incorrectly configured API endpoints\n2. Authentication and authorization issues\n3. Database connection and CRUD function problems\n4. Request/response schema validation errors\n5. Server error handling and logging improvements\n6. Integration issues with frontend reminder UI\n7. Any missing dependencies or imports",
+        "testStrategy": "Re-test all payment reminder functionality after fixes. Verify successful reminder sending for both individual policies and bulk broker notifications. Confirm proper error handling and user feedback.",
+        "subtasks": []
+      },
+      {
+        "id": 36,
+        "title": "Fix Squad Payment Gateway Integration",
+        "description": "Fix identified issues in the Squad Co payment gateway integration based on diagnostic findings.",
+        "status": "done",
+        "dependencies": [
+          34
+        ],
+        "priority": "high",
+        "details": "Based on diagnostic results, implement fixes for:\n1. Squad API configuration and credential issues\n2. Payment endpoint implementation problems\n3. Amount conversion and currency handling errors\n4. Webhook processing and signature verification issues\n5. Payment verification and status update problems\n6. Database payment record management issues\n7. Frontend payment flow integration problems",
+        "testStrategy": "Test complete payment flows in Squad sandbox environment. Verify single and bulk payments work correctly. Test webhook processing and payment status updates. Confirm database payment records are properly created and updated.",
+        "subtasks": []
+      },
+      {
+        "id": 37,
+        "title": "Commit and Deploy Payment System Fixes",
+        "description": "Commit all payment system fixes to GitHub and deploy to production environment.",
+        "status": "done",
+        "dependencies": [
+          35,
+          36
+        ],
+        "priority": "medium",
+        "details": "1. Commit all code changes with comprehensive commit message\n2. Push changes to GitHub repository\n3. Deploy changes to VPS production environment\n4. Verify deployment success and functionality\n5. Test payment systems in production environment\n6. Update documentation if needed",
+        "testStrategy": "Verify successful deployment by testing both payment reminders and Squad payment integration in the live environment. Confirm no regression in existing functionality.",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-06-17T03:16:31.664Z",
+      "updated": "2025-06-23T10:29:59.044Z",
+      "description": "Tasks for master context"
+    }
+  }
+}
