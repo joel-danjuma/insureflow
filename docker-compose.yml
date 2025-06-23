@@ -44,11 +44,11 @@ services:
     volumes:
       - .:/app
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/docs')"]
-      interval: 30s
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8000/docs"]
+      interval: 15s
       timeout: 10s
-      retries: 3
-      start_period: 40s
+      retries: 5
+      start_period: 60s
 
   frontend:
     build:
