@@ -2,10 +2,14 @@ version: '3.8'
 
 services:
   db:
-    image: postgres:14-alpine
+    image: postgres:13-alpine
     container_name: insureflow_db
     env_file:
       - .env
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data/
       - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -33,10 +37,16 @@ services:
     restart: unless-stopped
 
   backend:
-    build: .
-    container_name: insureflow_backend
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: insureflow_app
     env_file:
       - .env
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
     ports:
       - "8000:8000"
     depends_on:
@@ -46,7 +56,14 @@ services:
         condition: service_healthy
     volumes:
       - .:/app
+    working_dir: /app
     command: ["/app/scripts/start.sh"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     restart: unless-stopped
   
   frontend:
@@ -54,10 +71,13 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: insureflow_frontend
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:8000/api/v1
     ports:
       - "3000:3000"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:
