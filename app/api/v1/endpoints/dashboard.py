@@ -19,13 +19,28 @@ def get_dashboard_data(
     kpis = crud_dashboard.get_dashboard_kpis(db, current_user=current_user)
     recent_policies_db = crud_dashboard.get_recent_policies(db, current_user=current_user)
     
-    recent_policies = [
-        schemas_dashboard.RecentPolicy(
-            policy_number=p.policy_number,
-            customer_name=p.customer.full_name,
-            broker=p.broker.name if p.broker else "N/A"
-        ) for p in recent_policies_db
-    ]
+    recent_policies = []
+    for p in recent_policies_db:
+        # Calculate premium amount from related premiums or use coverage amount
+        premium_amount = 0
+        if p.premiums:
+            # Use the first premium amount or sum of all premiums
+            premium_amount = float(p.premiums[0].amount) if p.premiums else 0
+        elif p.coverage_amount:
+            # Fallback to coverage amount if no premiums
+            try:
+                premium_amount = float(p.coverage_amount.replace(',', '').replace('₦', '').replace('NGN', '').strip())
+            except (ValueError, AttributeError):
+                premium_amount = 0
+        
+        recent_policies.append(
+            schemas_dashboard.RecentPolicy(
+                policy_number=p.policy_number,
+                customer_name=p.user.full_name if p.user else "Unknown",
+                broker=p.broker.name if p.broker else "N/A",
+                premium_amount=premium_amount
+            )
+        )
 
     return {
         "kpis": kpis,

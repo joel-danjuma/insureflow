@@ -32,6 +32,7 @@ export interface RecentPolicy {
   policy_number: string;
   customer_name: string;
   broker: string;
+  premium_amount?: number;
 }
 
 export interface DashboardData {

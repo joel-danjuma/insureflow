@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import Link from 'next/link';
 
 const signUpSchema = z.object({
   full_name: z.string().min(1, { message: 'Full name is required' }),
@@ -30,52 +31,52 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSubmit, isLoading, error }) =
   } = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
-      role: 'broker' // Default to broker since that's the main user type
+      role: 'broker'
     }
   });
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <div className="bg-white border-2 border-black rounded-none shadow-lg">
+      <div className="bg-gray-800 border-2 border-gray-700 rounded-none shadow-lg">
         <div className="px-8 py-8">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Full Name Field */}
             <div>
-              <label htmlFor="full_name" className="block text-sm font-bold text-black mb-2">
+              <label htmlFor="full_name" className="block text-sm font-medium text-gray-300 mb-2">
                 Full Name
               </label>
               <input
                 id="full_name"
                 type="text"
                 {...register('full_name')}
-                className="w-full px-4 py-3 text-black bg-white border-2 border-gray-300 rounded-none focus:outline-none focus:border-black focus:ring-0 transition-colors duration-200"
+                className="w-full px-4 py-3 text-white bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200"
                 placeholder="Enter your full name"
               />
               {errors.full_name && (
-                <p className="mt-2 text-sm text-red-700 font-medium">{errors.full_name.message}</p>
+                <p className="mt-2 text-sm text-red-400">{errors.full_name.message}</p>
               )}
             </div>
 
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-bold text-black mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
                 Email Address
               </label>
               <input
                 id="email"
                 type="email"
                 {...register('email')}
-                className="w-full px-4 py-3 text-black bg-white border-2 border-gray-300 rounded-none focus:outline-none focus:border-black focus:ring-0 transition-colors duration-200"
+                className="w-full px-4 py-3 text-white bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200"
                 placeholder="Enter your email"
               />
               {errors.email && (
-                <p className="mt-2 text-sm text-red-700 font-medium">{errors.email.message}</p>
+                <p className="mt-2 text-sm text-red-400">{errors.email.message}</p>
               )}
             </div>
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-bold text-black mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
                 Password
               </label>
               <div className="relative">
@@ -83,20 +84,20 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSubmit, isLoading, error }) =
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   {...register('password')}
-                  className="w-full px-4 py-3 text-black bg-white border-2 border-gray-300 rounded-none focus:outline-none focus:border-black focus:ring-0 transition-colors duration-200 pr-12"
+                  className="w-full px-4 py-3 text-white bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200 pr-12"
                   placeholder="Enter your password (min. 6 characters)"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-600 hover:text-black transition-colors duration-200"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white transition-colors duration-200"
                 >
                   {showPassword ? (
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L8.465 8.465m1.413 1.413L5.636 5.636m14.142 14.142L4.222 4.222" />
                     </svg>
                   ) : (
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                     </svg>
@@ -104,38 +105,38 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSubmit, isLoading, error }) =
                 </button>
               </div>
               {errors.password && (
-                <p className="mt-2 text-sm text-red-700 font-medium">{errors.password.message}</p>
+                <p className="mt-2 text-sm text-red-400">{errors.password.message}</p>
               )}
             </div>
             
             {/* Role Selection */}
             <div>
-              <label htmlFor="role" className="block text-sm font-bold text-black mb-2">
+              <label htmlFor="role" className="block text-sm font-medium text-gray-300 mb-2">
                 I am a
               </label>
               <select
                 id="role"
                 {...register('role')}
-                className="w-full px-4 py-3 text-black bg-white border-2 border-gray-300 rounded-none focus:outline-none focus:border-black focus:ring-0 transition-colors duration-200 appearance-none cursor-pointer"
+                className="w-full px-4 py-3 text-white bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200 appearance-none cursor-pointer"
                 style={{
-                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239CA3AF' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                   backgroundPosition: 'right 0.75rem center',
                   backgroundRepeat: 'no-repeat',
                   backgroundSize: '1.5em 1.5em'
                 }}
               >
-                <option value="broker">Insurance Broker</option>
-                <option value="customer">Customer</option>
+                <option value="broker" className="bg-gray-800 text-white">Insurance Broker</option>
+                <option value="customer" className="bg-gray-800 text-white">Customer</option>
               </select>
               {errors.role && (
-                <p className="mt-2 text-sm text-red-700 font-medium">{errors.role.message}</p>
+                <p className="mt-2 text-sm text-red-400">{errors.role.message}</p>
               )}
             </div>
 
             {/* Error Message */}
             {error && (
-              <div className="p-4 bg-red-50 border-2 border-red-200 rounded-none">
-                <p className="text-sm text-red-700 font-medium">{error}</p>
+              <div className="p-4 bg-red-900/20 border border-red-500/30 rounded-lg">
+                <p className="text-sm text-red-400 font-medium">{error}</p>
               </div>
             )}
 
@@ -143,7 +144,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSubmit, isLoading, error }) =
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 px-4 bg-black text-white font-bold text-sm uppercase tracking-wide border-2 border-black hover:bg-white hover:text-black transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-black disabled:hover:text-white"
+              className="w-full py-3 px-4 bg-orange-600 text-white font-bold rounded-lg hover:bg-orange-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <div className="flex items-center justify-center">

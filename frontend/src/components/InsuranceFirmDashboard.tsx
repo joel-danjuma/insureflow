@@ -54,6 +54,14 @@ const recentPoliciesColumns: ColumnDef<RecentPolicy>[] = [
     { accessorKey: 'policy_number', header: 'Policy Number' },
     { accessorKey: 'customer_name', header: 'Customer Name' },
     { accessorKey: 'broker', header: 'Broker' },
+    { 
+      accessorKey: 'premium_amount', 
+      header: 'Policy Amount',
+      cell: ({ row }) => {
+        const amount = row.original.premium_amount;
+        return amount ? formatNaira(Number(amount)) : 'N/A';
+      }
+    },
 ];
 
 const InsuranceFirmDashboard = () => {

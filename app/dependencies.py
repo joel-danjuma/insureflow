@@ -9,7 +9,7 @@ from jose import JWTError
 from app.core.database import get_db
 from app.core.security import decode_access_token
 from app.crud import user as user_crud
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.schemas.auth import TokenData
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
@@ -49,10 +49,10 @@ def get_current_admin_user(current_user: User = Depends(get_current_active_user)
     Dependency to get the current user if they are an admin.
     Raises HTTP 403 if the user is not an admin.
     """
-    if current_user.role != "Admin":
+    if current_user.role != UserRole.ADMIN:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions"
+            detail=f"Not enough permissions. User role: {current_user.role.value}, Required: admin"
         )
     return current_user
 
@@ -61,9 +61,9 @@ def get_current_broker_or_admin_user(current_user: User = Depends(get_current_ac
     Dependency to get the current user if they are a broker or admin.
     Raises HTTP 403 if the user is neither a broker nor an admin.
     """
-    if current_user.role not in ["Admin", "Broker"]:
+    if current_user.role not in [UserRole.ADMIN, UserRole.BROKER]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions"
+            detail=f"Not enough permissions. User role: {current_user.role.value}, Required: admin or broker"
         )
     return current_user 
