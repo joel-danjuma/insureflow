@@ -23,7 +23,7 @@ def get_dashboard_data(
     recent_policies = []
     for p in recent_policies_db:
         # Generate a random premium amount for display purposes
-        premium_amount = random.randint(50000, 500000)
+        premium_amount = random.randint(500000, 2000000)
         
         recent_policies.append(
             schemas_dashboard.RecentPolicy(
