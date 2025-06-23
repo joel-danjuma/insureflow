@@ -25,11 +25,20 @@ class Settings(BaseSettings):
         # Get values from the validator info
         data = info.data if hasattr(info, 'data') else {}
         return f"postgresql://{data.get('POSTGRES_USER', 'insureflow')}:{data.get('POSTGRES_PASSWORD', 'password')}@{data.get('POSTGRES_SERVER', 'localhost')}/{data.get('POSTGRES_DB', 'insureflow')}"
+    
+    @property
+    def jwt_secret(self) -> str:
+        """Get JWT secret key, preferring JWT_SECRET_KEY over SECRET_KEY"""
+        return self.JWT_SECRET_KEY or self.SECRET_KEY
 
     # JWT settings
     SECRET_KEY: str = "your-secret-key-change-this-in-production"
+    JWT_SECRET_KEY: Optional[str] = None  # Alternative JWT key name
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
     JWT_ALGORITHM: str = "HS256"
+    
+    # Redis settings
+    REDIS_URL: Optional[str] = None
 
     # CORS
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = [
@@ -46,6 +55,8 @@ class Settings(BaseSettings):
     # API Keys for AI features
     OPENAI_API_KEY: Optional[str] = None
     GOOGLE_API_KEY: Optional[str] = None
+    ANTHROPIC_API_KEY: Optional[str] = None
+    PERPLEXITY_API_KEY: Optional[str] = None
 
     model_config = {
         "case_sensitive": True,
