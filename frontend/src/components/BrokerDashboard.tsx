@@ -62,7 +62,7 @@ const BrokerDashboard = () => {
   };
 
   // Transform policies into client portfolio with payment status
-  const transformToClientPortfolio = (policies: Policy[]): ClientPortfolioItem[] => {
+  const transformToClientPortfolio = React.useCallback((policies: Policy[]): ClientPortfolioItem[] => {
     return policies.map(policy => {
       const nextPaymentDate = new Date(policy.end_date);
       const today = new Date();
@@ -91,11 +91,11 @@ const BrokerDashboard = () => {
         nextPaymentDate: nextPaymentDate.toLocaleDateString('en-GB'),
       };
     });
-  };
+  }, [premiums]);
 
   const clientPortfolio = useMemo(() => 
     transformToClientPortfolio(policies || []), 
-    [policies, premiums]
+    [policies, transformToClientPortfolio]
   );
 
   // Handle individual row selection
@@ -200,7 +200,7 @@ const BrokerDashboard = () => {
   const portfolioColumns: ColumnDef<ClientPortfolioItem>[] = [
     {
       id: 'select',
-      header: ({ table }) => (
+      header: () => (
         <div className="flex items-center">
           <input
             type="checkbox"

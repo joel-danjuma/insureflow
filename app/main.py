@@ -21,4 +21,9 @@ if settings.BACKEND_CORS_ORIGINS:
         allow_headers=["*"],
     )
 
+# Health check endpoint
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "service": "InsureFlow API"}
+
 app.include_router(api_router, prefix=settings.API_V1_STR) 

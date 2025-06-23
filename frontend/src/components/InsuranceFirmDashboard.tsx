@@ -125,7 +125,6 @@ const InsuranceFirmDashboard = () => {
       );
       
       if (unpaidPremiums.length > 0) {
-        const oldestPremium = unpaidPremiums[0]; // Assuming first is oldest
         const dueDate = new Date(policy.end_date);
         const today = new Date();
         const daysOverdue = Math.max(0, Math.ceil((today.getTime() - dueDate.getTime()) / (1000 * 3600 * 24)));
@@ -135,7 +134,7 @@ const InsuranceFirmDashboard = () => {
           outstandingPolicies.push({
             id: policy.id.toString(),
             policyId: policy.id,
-            brokerId: (policy.broker as any)?.id || policy.id, // Fallback to policy id if broker id doesn't exist
+            brokerId: (policy.broker as { id?: number })?.id || policy.id, // Fallback to policy id if broker id doesn't exist
             policyNumber: policy.policy_number,
             customerName: policy.customer?.full_name || 'Unknown Customer',
             brokerName: policy.broker?.name || 'Unassigned',
@@ -219,7 +218,7 @@ const InsuranceFirmDashboard = () => {
   const outstandingPoliciesColumns: ColumnDef<OutstandingPolicy>[] = [
     {
       id: 'select',
-      header: ({ table }) => (
+      header: () => (
         <div className="flex items-center">
           <input
             type="checkbox"

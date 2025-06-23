@@ -13,7 +13,7 @@ interface QueryResult<T> {
 }
 
 // Custom hook with fetch function as argument
-const useQuery = <T>(fetchFunction: () => Promise<T>, dependencies: any[] = []): QueryResult<T> => {
+const useQuery = <T>(fetchFunction: () => Promise<T>, dependencies: unknown[] = []): QueryResult<T> => {
   const [data, setData] = useState<T | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +33,8 @@ const useQuery = <T>(fetchFunction: () => Promise<T>, dependencies: any[] = []):
 
   useEffect(() => {
     fetchData();
-  }, [...dependencies, fetchData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchData, ...dependencies]);
 
   const refetch = useCallback(async () => {
     await fetchData();
