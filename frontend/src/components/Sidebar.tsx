@@ -41,18 +41,18 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
   const links = [...commonLinks, ...(roleLinks[userRole] || [])];
 
   return (
-    <aside className="flex flex-col w-64 bg-[#2a2a2a] p-4 border-r border-[#444444]">
+    <aside className="flex flex-col w-64 bg-bg-secondary p-4 border-r border-border-color">
       <div className="flex flex-col gap-4">
         <div className="flex flex-col">
-          <h1 className="text-[#ffffff] text-base font-medium leading-normal">InsureFlow</h1>
-          <p className="text-[#cccccc] text-sm font-normal leading-normal">{userRole === UserRole.INSURANCE_FIRM ? 'Insurance Firm' : 'Broker Team'}</p>
+          <h1 className="text-text-primary text-base font-medium leading-normal">InsureFlow</h1>
+          <p className="text-text-secondary text-sm font-normal leading-normal">{userRole === UserRole.INSURANCE_FIRM ? 'Insurance Firm' : 'Broker Team'}</p>
         </div>
         <div className="flex flex-col gap-2">
           {links.map(({ href, label, icon }) => (
             <Link
               key={label}
               href={href}
-              className="flex items-center gap-3 px-3 py-2 rounded-full text-[#cccccc] hover:bg-[#333333] hover:text-[#ff8c42] transition-colors aria-[current=page]:bg-[#ff8c42] aria-[current=page]:text-[#1a1a1a]"
+              className="flex items-center gap-3 px-3 py-2 rounded-full text-text-secondary hover:bg-bg-tertiary hover:text-accent-orange transition-colors aria-[current=page]:bg-accent-orange aria-[current=page]:text-bg-primary"
               aria-current={label === 'Dashboard' ? 'page' : undefined}
             >
               <div className="text-current">{icons[icon]}</div>

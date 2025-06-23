@@ -9,18 +9,15 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-          800: '#1e40af',
-          900: '#1e3a8a',
-        },
+        'bg-primary': 'var(--bg-primary)',
+        'bg-secondary': 'var(--bg-secondary)',
+        'bg-tertiary': 'var(--bg-tertiary)',
+        'text-primary': 'var(--text-primary)',
+        'text-secondary': 'var(--text-secondary)',
+        'text-muted': 'var(--text-muted)',
+        'accent-orange': 'var(--accent-orange)',
+        'accent-orange-hover': 'var(--accent-orange-hover)',
+        'border-color': 'var(--border-color)',
       },
       fontFamily: {
         'public-sans': ['var(--font-public-sans)', 'Public Sans', 'sans-serif'],
