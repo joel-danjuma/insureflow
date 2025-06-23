@@ -51,6 +51,7 @@ class Settings(BaseSettings):
     SQUAD_SECRET_KEY: str = ""  # Will be read from environment
     SQUAD_PUBLIC_KEY: str = ""  # Will be read from environment
     SQUAD_BASE_URL: str = "https://sandbox-api-d.squadco.com"  # Default to sandbox
+    SQUAD_WEBHOOK_URL: Optional[str] = None  # Webhook URL for Squad Co payments
     
     # API Keys for AI features
     OPENAI_API_KEY: Optional[str] = None
