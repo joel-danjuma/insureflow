@@ -44,8 +44,7 @@ def create_test_data(db: Session):
     else:
         print(f"ℹ️  Company already exists: {company.name}")
 
-    print("
-Creating customer...")
+    print("\nCreating customer...")
     # Create a test customer
     customer = db.query(User).filter(User.email == "customer@test.com").first()
     if not customer:
@@ -66,8 +65,7 @@ Creating customer...")
     else:
         print(f"ℹ️  Customer already exists: {customer.email}")
 
-    print("
-Creating broker...")
+    print("\nCreating broker...")
     # Get or create a broker user
     broker_user = db.query(User).filter(User.email == "broker@test.com").first()
     if not broker_user:
@@ -105,8 +103,7 @@ Creating broker...")
         db.commit()
         print(f"✅ Created broker profile: {broker.name}")
 
-    print("
-Creating policies...")
+    print("\nCreating policies...")
     # Create a few test policies
     policy_types = [PolicyType.LIFE, PolicyType.HEALTH, PolicyType.AUTO]
     policies = []
@@ -139,8 +136,7 @@ Creating policies...")
     
     db.commit()
 
-    print("
-Creating premiums...")
+    print("\nCreating premiums...")
     # Create premiums for each policy
     premium_count = 0
     for policy in policies:
@@ -186,8 +182,7 @@ Creating premiums...")
                 print(f"✅ Created premium: {premium_ref} ({payment_status.value})")
     
     db.commit()
-    print(f"
-✅ Total premiums created: {premium_count}")
+    print(f"\n✅ Total premiums created: {premium_count}")
 
 def main():
     """Main function."""
@@ -200,20 +195,17 @@ def main():
         create_test_data(db)
         
         # Show summary
-        print("
-📊 Database Summary:")
+        print("\n📊 Database Summary:")
         print(f"  - Companies: {db.query(InsuranceCompany).count()}")
         print(f"  - Users: {db.query(User).count()}")
         print(f"  - Policies: {db.query(Policy).count()}")
         print(f"  - Premiums: {db.query(Premium).count()}")
         print(f"  - Unpaid Premiums: {db.query(Premium).filter(Premium.payment_status != PaymentStatus.PAID).count()}")
         
-        print("
-✅ Database population completed!")
+        print("\n✅ Database population completed!")
         
     except Exception as e:
-        print(f"
-❌ Error: {str(e)}")
+        print(f"\n❌ Error: {str(e)}")
         import traceback
         traceback.print_exc()
         db.rollback()
