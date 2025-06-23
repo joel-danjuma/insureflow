@@ -94,8 +94,7 @@ def test_authentication(db: Session):
 
 def check_squad_config():
     """Check Squad Co configuration."""
-    print("
-🔧 Squad Co Configuration:")
+    print("\n🔧 Squad Co Configuration:")
     print(f"  - Secret Key Set: {bool(settings.SQUAD_SECRET_KEY and settings.SQUAD_SECRET_KEY != '')}")
     print(f"  - Public Key Set: {bool(settings.SQUAD_PUBLIC_KEY and settings.SQUAD_PUBLIC_KEY != '')}")
     print(f"  - Base URL: {settings.SQUAD_BASE_URL}")
@@ -109,8 +108,7 @@ def check_squad_config():
 
 async def test_payment_system(db: Session):
     """Test the payment system."""
-    print("
-💳 Testing Payment System:")
+    print("\n💳 Testing Payment System:")
     
     # Find an unpaid premium
     unpaid_premium = db.query(Premium).filter(
@@ -162,13 +160,11 @@ def main():
     
     try:
         # Step 1: Ensure users exist
-        print("
-👥 Step 1: Ensuring test users exist...")
+        print("\n👥 Step 1: Ensuring test users exist...")
         ensure_test_users(db)
         
         # Step 2: Test authentication
-        print("
-🔐 Step 2: Testing authentication...")
+        print("\n🔐 Step 2: Testing authentication...")
         auth_result = test_authentication(db)
         
         if not auth_result:
@@ -178,31 +174,25 @@ def main():
         token, user = auth_result
         
         # Step 3: Check Squad configuration
-        print("
-💰 Step 3: Checking payment configuration...")
+        print("\n💰 Step 3: Checking payment configuration...")
         if not check_squad_config():
-            print("
-⚠️  Squad Co is not properly configured.")
+            print("\n⚠️  Squad Co is not properly configured.")
             print("Payment testing skipped. Configure Squad keys first.")
             return
         
         # Step 4: Test payment system
-        print("
-💸 Step 4: Testing payment system...")
+        print("\n💸 Step 4: Testing payment system...")
         asyncio.run(test_payment_system(db))
         
-        print("
-✅ All tests completed!")
-        print("
-📝 Summary:")
+        print("\n✅ All tests completed!")
+        print("\n📝 Summary:")
         print(f"  - Authentication: ✅ Working")
         print(f"  - Test User: {user.email}")
         print(f"  - Password: password123")
         print(f"  - Token (first 50 chars): {token[:50]}...")
         
     except Exception as e:
-        print(f"
-❌ Error: {str(e)}")
+        print(f"\n❌ Error: {str(e)}")
         import traceback
         traceback.print_exc()
     finally:
