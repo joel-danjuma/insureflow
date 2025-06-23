@@ -155,7 +155,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole, isOpen = true, onToggle }) 
           <div className="p-6 border-b border-gray-700 h-[73px] flex flex-col justify-center">
             <h1 className="text-2xl font-bold text-white mb-1">Sovereign Trust</h1>
             <p className="text-sm text-gray-400">
-              {user?.full_name || 'User'} • {getRoleDisplayName(currentRole)}
+              {getRoleDisplayName(currentRole)}
             </p>
           </div>
 
@@ -196,7 +196,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole, isOpen = true, onToggle }) 
       <div className="p-6 border-b border-gray-700 h-[73px] flex flex-col justify-center">
         <h1 className="text-2xl font-bold text-white mb-1">Sovereign Trust</h1>
         <p className="text-sm text-gray-400">
-          {user?.full_name || 'User'} • {getRoleDisplayName(currentRole)}
+          {getRoleDisplayName(currentRole)}
         </p>
       </div>
 
