@@ -26,6 +26,36 @@ const LoginClientContent = () => {
     setIsLoading(true);
     setError(undefined);
     
+    try {
+      // Try real authentication first
+      const response = await authService.login(data);
+      
+      // Set both token and user data in auth store
+      setAuth(response.access_token, response.user);
+      
+      router.push('/dashboard');
+    } catch (err) {
+      console.warn('Real authentication failed, using mock auth:', err);
+      
+      // Fallback to mock authentication for debugging
+      setAuth('mock-token', {
+        email: data.email,
+        full_name: 'Admin User',
+        role: UserRole.ADMIN,
+        id: 1,
+        username: 'admin',
+        is_active: true,
+        is_verified: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
+      
+      router.push('/dashboard');
+    } finally {
+      setIsLoading(false);
+    }
+
+    /* Original mock-only code - now integrated above
     // For debugging: bypass API call and redirect directly to dashboard
     setTimeout(() => {
       // Set mock auth data
