@@ -3,7 +3,7 @@ CRUD operations for the Premium model.
 """
 from typing import List, Optional
 from sqlalchemy.orm import Session
-from app.models.premium import Premium
+from app.models.premium import Premium, PaymentStatus
 from app.schemas.premium import PremiumCreate, PremiumUpdate
 
 
@@ -19,6 +19,15 @@ def get_premiums_by_policy(db: Session, policy_id: int, skip: int = 0, limit: in
     """
     return db.query(Premium).filter(Premium.policy_id == policy_id).offset(skip).limit(limit).all()
 
+def get_unpaid_premiums_by_policy(db: Session, policy_id: int) -> List[Premium]:
+    """
+    Retrieves all unpaid premiums for a single policy.
+    """
+    return db.query(Premium).filter(
+        Premium.policy_id == policy_id,
+        Premium.payment_status != PaymentStatus.PAID
+    ).all()
+
 def get_premiums_by_ids(db: Session, premium_ids: List[int]) -> List[Premium]:
     """
     Retrieves a list of premiums by their IDs.
@@ -31,7 +40,7 @@ def get_unpaid_premiums_for_policies(db: Session, policy_ids: List[int]) -> List
     """
     return db.query(Premium).filter(
         Premium.policy_id.in_(policy_ids),
-        Premium.status != 'paid'
+        Premium.payment_status != PaymentStatus.PAID
     ).all()
 
 def create_premium(db: Session, premium: PremiumCreate) -> Premium:
@@ -75,7 +84,7 @@ def update_premium_status_to_paid(db: Session, premium_id: int) -> Premium | Non
     """
     premium = db.query(Premium).filter(Premium.id == premium_id).first()
     if premium:
-        premium.status = "paid"
+        premium.payment_status = PaymentStatus.PAID
         db.add(premium)
         db.commit()
         db.refresh(premium)

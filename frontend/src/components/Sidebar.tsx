@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { UserRole } from '@/types/user';
 import useAuthStore from '@/store/authStore';
+import { useBrokerProfile } from '@/hooks/useQuery';
 
 const commonLinks = [
   { href: '/dashboard', label: 'Dashboard', icon: 'House' },
@@ -100,6 +101,9 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole, isOpen = true, onToggle }) 
   const currentRole = userRole || user?.role || UserRole.BROKER;
   const links = [...commonLinks, ...(roleLinks[currentRole] || [])];
 
+  // Get broker profile data only if user is a broker
+  const { data: brokerProfile } = useBrokerProfile();
+
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -110,10 +114,30 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole, isOpen = true, onToggle }) 
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const getRoleDisplayName = (role: UserRole) => {
+  // Get company name based on user role and data
+  const getCompanyName = (role: UserRole) => {
     switch (role) {
       case UserRole.ADMIN:
         return 'Sovereign Trust Insurance';
+      case UserRole.BROKER:
+        // Use broker's agency name if available, otherwise fallback to broker name or default
+        if (brokerProfile?.agency_name) {
+          return brokerProfile.agency_name;
+        } else if (brokerProfile?.name) {
+          return brokerProfile.name;
+        }
+        return 'Insurance Broker';
+      case UserRole.CUSTOMER:
+        return 'Customer Portal';
+      default:
+        return 'InsureFlow';
+    }
+  };
+
+  const getRoleDisplayName = (role: UserRole) => {
+    switch (role) {
+      case UserRole.ADMIN:
+        return 'Administrator';
       case UserRole.BROKER:
         return 'Insurance Broker';
       case UserRole.CUSTOMER:
@@ -136,6 +160,9 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole, isOpen = true, onToggle }) 
     }
   };
 
+  const companyName = getCompanyName(currentRole);
+  const companyDisplayName = companyName.length > 20 ? companyName.substring(0, 20) + '...' : companyName;
+
   if (isMobile) {
     return (
       <>
@@ -153,7 +180,9 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole, isOpen = true, onToggle }) 
         }`}>
           {/* Header */}
           <div className="p-6 border-b border-gray-700 h-[73px] flex flex-col justify-center">
-            <h1 className="text-2xl font-bold text-white mb-1">Sovereign Trust</h1>
+            <h1 className="text-2xl font-bold text-white mb-1" title={companyName}>
+              {companyDisplayName}
+            </h1>
             <p className="text-sm text-gray-400">
               {getRoleDisplayName(currentRole)}
             </p>
@@ -194,7 +223,9 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole, isOpen = true, onToggle }) 
     <aside className="fixed left-0 top-0 z-40 flex flex-col w-64 bg-gray-900 border-r border-gray-700 h-screen lg:block hidden">
       {/* Header */}
       <div className="p-6 border-b border-gray-700 h-[73px] flex flex-col justify-center">
-        <h1 className="text-2xl font-bold text-white mb-1">Sovereign Trust</h1>
+        <h1 className="text-2xl font-bold text-white mb-1" title={companyName}>
+          {companyDisplayName}
+        </h1>
         <p className="text-sm text-gray-400">
           {getRoleDisplayName(currentRole)}
         </p>

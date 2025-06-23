@@ -1,6 +1,7 @@
 """
 Service layer for payment-related operations.
 """
+from decimal import Decimal
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 
@@ -9,6 +10,7 @@ from app.crud import policy as crud_policy
 from app.crud import user as crud_user
 from app.crud import payment as crud_payment
 from app.schemas.payment import PaymentCreate
+from app.models.payment import PaymentMethod
 from app.services.squad_co import squad_co_service
 
 async def initiate_premium_payment(premium_id: int, db: Session):
@@ -19,7 +21,7 @@ async def initiate_premium_payment(premium_id: int, db: Session):
     premium = crud_premium.get_premium(db, premium_id=premium_id)
     if not premium:
         raise HTTPException(status_code=404, detail="Premium not found")
-    if premium.status == 'paid':
+    if premium.payment_status.value == 'paid':
         raise HTTPException(status_code=400, detail="Premium has already been paid")
 
     # 2. Fetch the policy and user to get the email
@@ -27,15 +29,15 @@ async def initiate_premium_payment(premium_id: int, db: Session):
     if not policy:
         raise HTTPException(status_code=404, detail="Policy not found for this premium")
     
-    customer = crud_user.get_user_by_id(db, user_id=policy.customer_id)
+    customer = crud_user.get_user_by_id(db, user_id=policy.user_id)
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found for this policy")
 
     # 3. Initiate payment with Squad Co
     payment_data = await squad_co_service.initiate_payment(
-        amount=int(premium.amount), # Ensure amount is integer (kobo/cents)
+        amount=float(premium.amount),  # Pass amount in Naira, squad service will convert to kobo
         email=customer.email,
-        currency="NGN", # Or get from config/policy
+        currency="NGN",
         metadata={"premium_id": premium_id, "policy_id": policy.id}
     )
 
@@ -47,7 +49,7 @@ async def initiate_premium_payment(premium_id: int, db: Session):
 
     data = payment_data.get("data", {})
     checkout_url = data.get("checkout_url")
-    transaction_ref = data.get("transaction_reference")
+    transaction_ref = data.get("transaction_ref")  # Fixed: was transaction_reference
 
     if not checkout_url or not transaction_ref:
         raise HTTPException(status_code=500, detail="Could not retrieve checkout URL or transaction reference from Squad Co.")
@@ -55,8 +57,8 @@ async def initiate_premium_payment(premium_id: int, db: Session):
     # 4. Create a payment record in our database
     payment_create = PaymentCreate(
         premium_id=premium_id,
-        amount_paid=premium.amount,
-        payment_method="card", # Or determine from request/gateway
+        amount_paid=Decimal(str(premium.amount)),  # Convert to Decimal
+        payment_method=PaymentMethod.CARD,  # Use proper enum
         transaction_reference=transaction_ref,
         payer_email=customer.email
     )
@@ -79,24 +81,28 @@ async def initiate_bulk_premium_payment(premium_ids: list[int], db: Session):
     if len(premiums) != len(premium_ids):
         raise HTTPException(status_code=404, detail="One or more premiums not found.")
 
-    total_amount = 0
+    total_amount = Decimal('0')
     customer_email = None
     policy_ids = set()
 
     for premium in premiums:
-        if premium.status == 'paid':
+        if premium.payment_status.value == 'paid':
             raise HTTPException(status_code=400, detail=f"Premium {premium.id} has already been paid.")
         total_amount += premium.amount
         policy_ids.add(premium.policy_id)
 
     # Assume all premiums in a bulk payment belong to the same customer
     first_policy = crud_policy.get_policy(db, policy_id=list(policy_ids)[0])
-    if not first_policy or not first_policy.customer:
+    if not first_policy:
+        raise HTTPException(status_code=404, detail="Policy not found")
+    
+    customer = crud_user.get_user_by_id(db, user_id=first_policy.user_id)
+    if not customer:
         raise HTTPException(status_code=404, detail="Customer not found for this policy")
-    customer_email = first_policy.customer.email
+    customer_email = customer.email
 
     payment_data = await squad_co_service.initiate_payment(
-        amount=int(total_amount),
+        amount=float(total_amount),  # Pass amount in Naira
         email=customer_email,
         currency="NGN",
         metadata={"premium_ids": premium_ids, "type": "bulk_payment"}
@@ -107,7 +113,7 @@ async def initiate_bulk_premium_payment(premium_ids: list[int], db: Session):
 
     data = payment_data.get("data", {})
     checkout_url = data.get("checkout_url")
-    transaction_ref = data.get("transaction_reference")
+    transaction_ref = data.get("transaction_ref")  # Fixed: was transaction_reference
 
     if not checkout_url or not transaction_ref:
         raise HTTPException(status_code=500, detail="Could not retrieve checkout URL from Squad Co.")
@@ -115,8 +121,8 @@ async def initiate_bulk_premium_payment(premium_ids: list[int], db: Session):
     for premium_id in premium_ids:
         payment_create = PaymentCreate(
             premium_id=premium_id,
-            amount_paid=0, # Will be updated by webhook
-            payment_method="card", 
+            amount_paid=Decimal('0'),  # Will be updated by webhook
+            payment_method=PaymentMethod.CARD,  # Use proper enum
             transaction_reference=transaction_ref, # Use the same ref for all
             payer_email=customer_email
         )

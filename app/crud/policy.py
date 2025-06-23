@@ -18,6 +18,12 @@ def get_policies(db: Session, skip: int = 0, limit: int = 100) -> List[Policy]:
     """
     return db.query(Policy).offset(skip).limit(limit).all()
 
+def get_policies_by_broker(db: Session, broker_id: int, skip: int = 0, limit: int = 100) -> List[Policy]:
+    """
+    Retrieves a list of policies for a specific broker from the database.
+    """
+    return db.query(Policy).filter(Policy.broker_id == broker_id).offset(skip).limit(limit).all()
+
 def create_policy(db: Session, policy: PolicyCreate) -> Policy:
     """
     Creates a new policy in the database.

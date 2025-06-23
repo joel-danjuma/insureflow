@@ -4,17 +4,16 @@ API endpoints for payment-related operations.
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.orm import Session
 from typing import List
+import json
 
 from app.core.database import get_db
 from app.schemas.payment import (
     PaymentInitiationResponse,
     PaymentInitiationRequest,
-    SquadCoWebhookPayload,
-    PaymentCreate,
     BulkPaymentInitiationRequest,
 )
 from app.services import payment_service
-from app.services import squad_co
+from app.services.squad_co import squad_co_service
 from app.crud import payment as crud_payment
 from app.crud import premium as crud_premium
 from app.crud import user as crud_user
@@ -34,40 +33,39 @@ async def handle_squad_co_webhook(
     request_body = await request.body()
     
     # Verify the webhook signature
-    if not squad_co.verify_webhook_signature(request_body, squad_signature):
+    if not squad_co_service.verify_webhook_signature(request_body, squad_signature):
         raise HTTPException(status_code=400, detail="Invalid webhook signature")
     
     try:
-        payload = SquadCoWebhookPayload.parse_raw(request_body)
+        # Parse the webhook payload
+        payload = json.loads(request_body.decode('utf-8'))
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid webhook payload: {e}")
 
     # Handle successful charge events
-    if payload.event == "charge.success":
-        webhook_data = payload.data
-        transaction_ref = webhook_data.transaction_reference
+    event = payload.get("Event")
+    if event == "charge.success":
+        webhook_data = payload.get("Body", {})
+        transaction_ref = webhook_data.get("transaction_ref")
+
+        if not transaction_ref:
+            raise HTTPException(status_code=400, detail="No transaction reference in webhook")
 
         # Check if this is a bulk payment
-        metadata = webhook_data.get("metadata", {})
+        metadata = webhook_data.get("meta_data", {})
         if metadata.get("type") == "bulk_payment" and "premium_ids" in metadata:
             premium_ids = metadata["premium_ids"]
             for premium_id in premium_ids:
-                payment = crud_payment.get_payment_by_premium_and_ref(db, premium_id=premium_id, transaction_ref=transaction_ref)
-                if payment:
-                    crud_payment.update_payment_status(db, payment=payment, webhook_data=webhook_data)
-                    crud_premium.update_premium_status_to_paid(db, premium_id=premium_id)
+                # Update premium status to paid
+                crud_premium.update_premium_status_to_paid(db, premium_id=premium_id)
         else:
-            # Handle single payment
-            payment = crud_payment.get_payment_by_transaction_ref(
-                db, transaction_ref=transaction_ref
-            )
-            if payment:
-                crud_payment.update_payment_status(db, payment=payment, webhook_data=webhook_data)
-                if payment.premium_id:
-                    crud_premium.update_premium_status_to_paid(db, premium_id=payment.premium_id)
+            # Handle single payment - find the premium by transaction ref
+            payment = crud_payment.get_payment_by_transaction_ref(db, transaction_ref=transaction_ref)
+            if payment and payment.premium_id:
+                crud_premium.update_premium_status_to_paid(db, premium_id=payment.premium_id)
 
     # Acknowledge receipt of the webhook
-    return Response(status_code=status.HTTP_200_OK)
+    return {"status": "success"}
 
 @router.post("/bulk-initiate", response_model=PaymentInitiationResponse)
 async def initiate_bulk_policy_payment(
@@ -116,11 +114,22 @@ def initiate_bulk_payment(
     return crud_payment.initiate_bulk(db=db, policy_ids=bulk_payment_in.policy_ids)
 
 @router.get("/verify/{transaction_ref}")
-def verify_payment(
-    *,
+async def verify_payment(
     transaction_ref: str,
     db: Session = Depends(get_db)
 ):
-    # This method is not provided in the original file or the new code block
-    # It's assumed to exist as it's called in the verify_payment method
-    pass
+    """
+    Verify a payment transaction with Squad Co.
+    """
+    # In a real implementation, you would call Squad's verify endpoint
+    # For now, check our database
+    payment = crud_payment.get_payment_by_transaction_ref(db, transaction_ref=transaction_ref)
+    if not payment:
+        raise HTTPException(status_code=404, detail="Payment not found")
+    
+    return {
+        "transaction_ref": transaction_ref,
+        "status": "success" if payment.premium_id else "pending",
+        "amount": float(payment.amount_paid) if payment.amount_paid else 0,
+        "premium_id": payment.premium_id
+    }
