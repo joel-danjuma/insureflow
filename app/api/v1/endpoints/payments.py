@@ -7,6 +7,7 @@ from typing import List
 import json
 
 from app.core.database import get_db
+from app.dependencies import get_current_broker_or_admin_user
 from app.schemas.payment import (
     PaymentInitiationResponse,
     PaymentInitiationRequest,
@@ -18,6 +19,7 @@ from app.crud import payment as crud_payment
 from app.crud import premium as crud_premium
 from app.crud import user as crud_user
 from app.crud import policy as crud_policy
+from app.models.user import User
 
 router = APIRouter()
 
@@ -70,56 +72,29 @@ async def handle_squad_co_webhook(
 @router.post("/bulk-initiate", response_model=PaymentInitiationResponse)
 async def initiate_bulk_policy_payment(
     request: BulkPaymentInitiationRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_broker_or_admin_user)
 ):
     """
     Initiates a bulk payment for multiple policies.
+    Requires broker or admin authentication.
     """
     return await payment_service.initiate_bulk_policy_payment(
         policy_ids=request.policy_ids, db=db
     )
 
-@router.post("/initiate/{premium_id}", response_model=PaymentInitiationResponse)
-async def initiate_payment(
-    premium_id: int,
-    db: Session = Depends(get_db)
-):
-    """
-    Initiates a payment for a premium.
-    This endpoint is deprecated in favor of POST /premiums/{premium_id}/pay
-    """
-    return await payment_service.initiate_premium_payment(premium_id=premium_id, db=db)
-
-@router.post("/initiate")
-def initiate_payment(
-    *,
-    db: Session = Depends(get_db),
-    payment_in: PaymentInitiationRequest,
-):
-    """
-    Initiate a payment for a single policy.
-    """
-    return crud_payment.initiate(db=db, payment_in=payment_in)
-
-@router.post("/bulk-initiate")
-def initiate_bulk_payment(
-    *,
-    db: Session = Depends(get_db),
-    bulk_payment_in: BulkPaymentInitiationRequest,
-):
-    """
-    Initiate payment for multiple policies.
-    """
-    # This will be implemented in the crud layer
-    return crud_payment.initiate_bulk(db=db, policy_ids=bulk_payment_in.policy_ids)
+# Single payment endpoint removed - use POST /premiums/{premium_id}/pay instead
+# Duplicate endpoints removed - use the authenticated versions above
 
 @router.get("/verify/{transaction_ref}")
 async def verify_payment(
     transaction_ref: str,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_broker_or_admin_user)
 ):
     """
     Verify a payment transaction with Squad Co.
+    Requires broker or admin authentication.
     """
     # In a real implementation, you would call Squad's verify endpoint
     # For now, check our database

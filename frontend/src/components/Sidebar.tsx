@@ -118,15 +118,15 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole, isOpen = true, onToggle }) 
   const getCompanyName = (role: UserRole) => {
     switch (role) {
       case UserRole.ADMIN:
-        return 'Sovereign Trust Insurance';
+        return 'Sovereign Trust';
       case UserRole.BROKER:
-        // Use broker's agency name if available, otherwise fallback to broker name or default
-        if (brokerProfile?.agency_name) {
-          return brokerProfile.agency_name;
-        } else if (brokerProfile?.name) {
+        // Use broker's name (like "SCIB") first, then agency name if available
+        if (brokerProfile?.name) {
           return brokerProfile.name;
+        } else if (brokerProfile?.agency_name) {
+          return brokerProfile.agency_name;
         }
-        return 'Insurance Broker';
+        return 'Broker';
       case UserRole.CUSTOMER:
         return 'Customer Portal';
       default:
@@ -161,7 +161,8 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole, isOpen = true, onToggle }) 
   };
 
   const companyName = getCompanyName(currentRole);
-  const companyDisplayName = companyName.length > 20 ? companyName.substring(0, 20) + '...' : companyName;
+  // Better truncation for sidebar space
+  const companyDisplayName = companyName.length > 16 ? companyName.substring(0, 16) + '...' : companyName;
 
   if (isMobile) {
     return (
@@ -180,7 +181,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole, isOpen = true, onToggle }) 
         }`}>
           {/* Header */}
           <div className="p-6 border-b border-gray-700 h-[73px] flex flex-col justify-center">
-            <h1 className="text-2xl font-bold text-white mb-1" title={companyName}>
+            <h1 className="text-xl font-bold text-white mb-1 leading-tight" title={companyName}>
               {companyDisplayName}
             </h1>
             <p className="text-sm text-gray-400">
@@ -223,7 +224,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole, isOpen = true, onToggle }) 
     <aside className="fixed left-0 top-0 z-40 flex flex-col w-64 bg-gray-900 border-r border-gray-700 h-screen lg:block hidden">
       {/* Header */}
       <div className="p-6 border-b border-gray-700 h-[73px] flex flex-col justify-center">
-        <h1 className="text-2xl font-bold text-white mb-1" title={companyName}>
+        <h1 className="text-xl font-bold text-white mb-1 leading-tight" title={companyName}>
           {companyDisplayName}
         </h1>
         <p className="text-sm text-gray-400">

@@ -47,10 +47,10 @@ class Settings(BaseSettings):
         "http://localhost:8000",
     ]
 
-    # Squad Co Payment Gateway
-    SQUAD_SECRET_KEY: str = "test_secret_key"
-    SQUAD_PUBLIC_KEY: str = "test_public_key"
-    SQUAD_BASE_URL: str = "https://sandbox-api-d.squadco.com"
+    # Squad Co Payment Gateway  
+    SQUAD_SECRET_KEY: str = ""  # Will be read from environment
+    SQUAD_PUBLIC_KEY: str = ""  # Will be read from environment
+    SQUAD_BASE_URL: str = "https://sandbox-api-d.squadco.com"  # Default to sandbox
     
     # API Keys for AI features
     OPENAI_API_KEY: Optional[str] = None
