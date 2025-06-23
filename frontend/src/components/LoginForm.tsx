@@ -112,16 +112,6 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, isLoading, error }) => 
               )}
             </button>
           </form>
-          
-          {/* Demo Credentials */}
-          <div className="mt-6 p-4 bg-gray-50 border border-gray-200">
-            <p className="text-xs font-bold text-gray-700 mb-2">Demo Credentials:</p>
-            <div className="text-xs text-gray-600 space-y-1">
-              <p><span className="font-medium">Admin:</span> admin@securelife.ng</p>
-              <p><span className="font-medium">Broker:</span> ethan.carter@brokers.ng</p>
-              <p><span className="font-medium">Password:</span> password123</p>
-            </div>
-          </div>
         </div>
       </div>
     </div>
