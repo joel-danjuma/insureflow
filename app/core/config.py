@@ -10,6 +10,14 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "InsureFlow"
     API_V1_STR: str = "/api/v1"
 
+    # App Environment settings
+    APP_ENV: str = "development"
+    APP_DEBUG: str = "true"
+    APP_HOST: str = "0.0.0.0"
+    APP_PORT: str = "8000"
+    LOG_LEVEL: str = "INFO"
+    ALLOWED_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000"
+
     # Database settings
     POSTGRES_SERVER: str = "localhost"
     POSTGRES_USER: str = "insureflow"
@@ -61,7 +69,8 @@ class Settings(BaseSettings):
 
     model_config = {
         "case_sensitive": True,
-        "env_file": ".env"
+        "env_file": ".env",
+        "extra": "ignore"  # Allow extra fields from environment
     }
 
 
