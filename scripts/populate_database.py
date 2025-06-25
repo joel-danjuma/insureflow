@@ -253,8 +253,8 @@ def create_premiums_and_payments(db: Session, policies):
     """Create premiums and payment records for policies. This function is idempotent."""
     print("Checking for missing premiums and payments...")
     for policy in policies:
-        existing_premiums = db.query(Premium).filter_by(policy_id=policy.id).count()
-        if existing_premiums > 0:
+        existing_premiums_count = db.query(Premium).filter_by(policy_id=policy.id).count()
+        if existing_premiums_count > 0:
             continue
 
         coverage_amount = int(policy.coverage_amount)
@@ -298,16 +298,27 @@ def create_premiums_and_payments(db: Session, policies):
                 premium.payment_date = premium_due_date + timedelta(days=random.randint(1, 20))
                 premium.payment_reference = f"PAY-{premium_ref}-PARTIAL"
             
+            # Add the premium to the session first
             db.add(premium)
-            
+            # VERY IMPORTANT: Flush the session to get the premium.id from the database
+            db.flush()
+
+            # If a payment was made, create the payment record and link it
             if payment_status in [PaymentStatus.PAID, PaymentStatus.OVERDUE] and premium.paid_amount and premium.paid_amount > 0:
                 payment = Payment(
-                    premium_id=premium.id, amount_paid=premium.paid_amount, currency="NGN",
-                    payment_method=random.choice(list(PaymentMethod)), payment_date=premium.payment_date or datetime.now(),
-                    status=PaymentTransactionStatus.SUCCESS, transaction_reference=f"TXN-{fake.uuid4()[:8].upper()}",
-                    external_reference=f"SQ-{fake.uuid4()[:12].upper()}", squad_transaction_id=fake.uuid4(),
-                    payer_name=policy.user.full_name, payer_email=policy.user.email,
-                    processing_fee=premium.paid_amount * Decimal("0.015"), net_amount=premium.paid_amount * Decimal("0.985"),
+                    premium_id=premium.id, # Now premium.id is available
+                    amount_paid=premium.paid_amount,
+                    currency="NGN",
+                    payment_method=random.choice(list(PaymentMethod)),
+                    payment_date=premium.payment_date or datetime.now(),
+                    status=PaymentTransactionStatus.SUCCESS,
+                    transaction_reference=f"TXN-{fake.uuid4()[:8].upper()}",
+                    external_reference=f"SQ-{fake.uuid4()[:12].upper()}",
+                    squad_transaction_id=fake.uuid4(),
+                    payer_name=policy.user.full_name,
+                    payer_email=policy.user.email,
+                    processing_fee=premium.paid_amount * Decimal("0.015"),
+                    net_amount=premium.paid_amount * Decimal("0.985"),
                     processed_at=premium.payment_date or datetime.now()
                 )
                 db.add(payment)
