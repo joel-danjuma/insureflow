@@ -19,7 +19,7 @@ from sqlalchemy.orm import Session
 from app.core.database import SessionLocal, engine
 from app.core.security import get_password_hash
 from app.models.user import User, UserRole
-from app.models.company import Company
+from app.models.company import InsuranceCompany as Company
 from app.models.broker import Broker
 from app.models.policy import Policy, PolicyType, PolicyStatus
 from app.models.premium import Premium, PaymentStatus, BillingCycle
