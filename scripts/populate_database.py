@@ -75,22 +75,19 @@ def create_admin_users(db: Session, companies):
             "username": "admin_secure",
             "email": "admin@securelife.ng",
             "full_name": "Adebayo Johnson",
-            "role": UserRole.ADMIN,
-            "company_id": companies[0].id
+            "role": UserRole.ADMIN
         },
         {
             "username": "admin_guardian",
             "email": "admin@guardianshield.ng",
             "full_name": "Fatima Mohammed",
-            "role": UserRole.ADMIN,
-            "company_id": companies[1].id
+            "role": UserRole.ADMIN
         },
         {
             "username": "admin_prestige",
             "email": "admin@prestigeinsurance.ng",
             "full_name": "Chinedu Okafor",
-            "role": UserRole.ADMIN,
-            "company_id": companies[2].id
+            "role": UserRole.ADMIN
         }
     ]
     
