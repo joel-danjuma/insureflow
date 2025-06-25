@@ -38,7 +38,6 @@ def create_insurance_companies(db: Session):
             "contact_phone": "+234-1-234-5678",
             "website": "https://securelife.ng",
             "registration_number": "RC123456",
-            "license_number": "NAICOM/LIC/2020/001",
             "is_active": True
         },
         {
@@ -49,7 +48,6 @@ def create_insurance_companies(db: Session):
             "contact_phone": "+234-9-876-5432",
             "website": "https://guardianshield.ng",
             "registration_number": "RC234567",
-            "license_number": "NAICOM/LIC/2020/002",
             "is_active": True
         },
         {
@@ -60,7 +58,6 @@ def create_insurance_companies(db: Session):
             "contact_phone": "+234-1-555-0123",
             "website": "https://prestigeinsurance.ng",
             "registration_number": "RC345678",
-            "license_number": "NAICOM/LIC/2020/003",
             "is_active": True
         }
     ]
