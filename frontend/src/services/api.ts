@@ -1,6 +1,41 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { LoginFormData } from '@/components/LoginForm';
 import { SignUpFormData } from '@/components/SignUpForm';
+
+// Centralized error handler
+const errorHandler = (error: any, context: string): never => {
+  if (axios.isAxiosError(error)) {
+    const axiosError = error as AxiosError<any>;
+    // Check for a detailed error message from the backend
+    if (axiosError.response?.data?.detail) {
+      // Handle cases where the detail might be a JSON string
+      try {
+        const detail = JSON.parse(axiosError.response.data.detail);
+        if (Array.isArray(detail) && detail[0]?.msg) {
+          throw new Error(detail[0].msg);
+        }
+      } catch (e) {
+        // Not a JSON string, throw as is
+        throw new Error(axiosError.response.data.detail);
+      }
+      throw new Error(axiosError.response.data.detail);
+    }
+    // Handle specific HTTP status codes
+    if (axiosError.response?.status === 404) {
+      throw new Error(`Not Found: The requested resource for ${context} was not found.`);
+    }
+    if (axiosError.response?.status === 401) {
+      throw new Error('Unauthorized: Please check your login credentials.');
+    }
+    // Generic network error
+    if (axiosError.message.includes('Network Error')) {
+      throw new Error('Network Error: Could not connect to the server. Please check your connection and the server status.');
+    }
+  }
+  // Fallback for non-Axios errors or other issues
+  console.error(`An unexpected error occurred in ${context}:`, error);
+  throw new Error(`An unexpected error occurred while ${context}.`);
+};
 
 // This will be the base URL for our backend
 // For VPS deployment, use the current hostname with port 8000
@@ -78,10 +113,7 @@ export const authService = {
       });
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.detail || 'Login failed');
-      }
-      throw new Error('An unexpected error occurred during login.');
+      errorHandler(error, 'logging in');
     }
   },
 
@@ -90,10 +122,7 @@ export const authService = {
       const response = await api.post('/auth/register', data);
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.detail || 'Registration failed');
-      }
-      throw new Error('An unexpected error occurred during registration.');
+      errorHandler(error, 'registering');
     }
   },
 
@@ -106,10 +135,7 @@ export const authService = {
         });
         return response.data;
     } catch (error) {
-        if (axios.isAxiosError(error) && error.response) {
-            throw new Error(error.response.data.detail || 'Failed to fetch user');
-        }
-        throw new Error('An unexpected error occurred while fetching user data.');
+        errorHandler(error, 'fetching user data');
     }
   },
 
@@ -133,10 +159,7 @@ export const dashboardService = {
       const response = await api.get('/dashboard/');
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.detail || 'Failed to fetch dashboard data');
-      }
-      throw new Error('An unexpected error occurred while fetching dashboard data.');
+      errorHandler(error, 'fetching dashboard data');
     }
   },
 };
@@ -147,10 +170,7 @@ export const brokerService = {
       const response = await api.get('/brokers/me');
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.detail || 'Failed to fetch broker profile');
-      }
-      throw new Error('An unexpected error occurred while fetching broker profile.');
+      errorHandler(error, 'fetching broker profile');
     }
   },
 };
@@ -161,10 +181,7 @@ export const policyService = {
       const response = await api.get('/policies/');
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.detail || 'Failed to fetch policies');
-      }
-      throw new Error('An unexpected error occurred while fetching policies.');
+      errorHandler(error, 'fetching policies');
     }
   },
 };
@@ -175,10 +192,7 @@ export const premiumService = {
       const response = await api.get('/premiums/');
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.detail || 'Failed to fetch premiums');
-      }
-      throw new Error('An unexpected error occurred while fetching premiums.');
+      errorHandler(error, 'fetching premiums');
     }
   },
 
@@ -187,10 +201,7 @@ export const premiumService = {
       const response = await api.post(`/premiums/${premiumId}/pay`);
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.detail || 'Failed to pay premium');
-      }
-      throw new Error('An unexpected error occurred while processing payment.');
+      errorHandler(error, 'processing payment');
     }
   },
 };
@@ -203,10 +214,7 @@ export const paymentService = {
       });
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.detail || 'Failed to initiate bulk payment');
-      }
-      throw new Error('An unexpected error occurred while initiating bulk payment.');
+      errorHandler(error, 'initiating bulk payment');
     }
   },
 
@@ -215,10 +223,7 @@ export const paymentService = {
       const response = await api.get(`/payments/verify/${transactionRef}`);
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.detail || 'Failed to verify payment');
-      }
-      throw new Error('An unexpected error occurred while verifying payment.');
+      errorHandler(error, 'verifying payment');
     }
   },
 };
@@ -229,10 +234,7 @@ export const reminderService = {
       const response = await api.post('/reminders/send', data);
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.detail || 'Failed to send reminders');
-      }
-      throw new Error('An unexpected error occurred while sending reminders.');
+      errorHandler(error, 'sending reminders');
     }
   },
 
@@ -241,10 +243,7 @@ export const reminderService = {
       const response = await api.get('/policies/outstanding');
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        throw new Error(error.response.data.detail || 'Failed to fetch outstanding policies');
-      }
-      throw new Error('An unexpected error occurred while fetching outstanding policies.');
+      errorHandler(error, 'fetching outstanding policies');
     }
   },
 };
