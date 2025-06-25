@@ -37,8 +37,7 @@ def create_insurance_companies(db: Session):
             "contact_email": "info@securelife.ng",
             "contact_phone": "+234-1-234-5678",
             "website": "https://securelife.ng",
-            "registration_number": "RC123456",
-            "is_active": True
+            "registration_number": "RC123456"
         },
         {
             "name": "Guardian Shield Insurance",
@@ -47,8 +46,7 @@ def create_insurance_companies(db: Session):
             "contact_email": "contact@guardianshield.ng",
             "contact_phone": "+234-9-876-5432",
             "website": "https://guardianshield.ng",
-            "registration_number": "RC234567",
-            "is_active": True
+            "registration_number": "RC234567"
         },
         {
             "name": "Prestige Insurance Limited",
@@ -57,8 +55,7 @@ def create_insurance_companies(db: Session):
             "contact_email": "info@prestigeinsurance.ng",
             "contact_phone": "+234-1-555-0123",
             "website": "https://prestigeinsurance.ng",
-            "registration_number": "RC345678",
-            "is_active": True
+            "registration_number": "RC345678"
         }
     ]
     
