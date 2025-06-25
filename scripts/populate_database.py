@@ -32,7 +32,6 @@ def create_insurance_companies(db: Session):
     companies_data = [
         {
             "name": "Secure Life Insurance Nigeria",
-            "code": "SECURE_LIFE",
             "description": "Leading life insurance provider in Nigeria with over 30 years of experience.",
             "address": "14B Adeola Odeku Street, Victoria Island, Lagos",
             "contact_email": "info@securelife.ng",
@@ -44,7 +43,6 @@ def create_insurance_companies(db: Session):
         },
         {
             "name": "Guardian Shield Insurance",
-            "code": "GUARDIAN_SHIELD",
             "description": "Comprehensive insurance solutions for individuals and businesses.",
             "address": "Plot 1234, Central Business District, Abuja",
             "contact_email": "contact@guardianshield.ng",
@@ -56,7 +54,6 @@ def create_insurance_companies(db: Session):
         },
         {
             "name": "Prestige Insurance Limited",
-            "code": "PRESTIGE_INS",
             "description": "Premium insurance services with focus on high-value clients.",
             "address": "5 Broad Street, Lagos Island, Lagos",
             "contact_email": "info@prestigeinsurance.ng",
