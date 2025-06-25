@@ -193,9 +193,12 @@ class PaymentSystemTester:
         overdue_premiums = self.db.query(Premium).filter(Premium.payment_status == PaymentStatus.OVERDUE).count()
         
         print(f"  - Total Premiums: {total_premiums}")
-        print(f"  - Paid: {paid_premiums} ({(paid_premiums/total_premiums*100):.1f}%)")
-        print(f"  - Pending: {pending_premiums} ({(pending_premiums/total_premiums*100):.1f}%)")
-        print(f"  - Overdue: {overdue_premiums} ({(overdue_premiums/total_premiums*100):.1f}%)")
+        if total_premiums > 0:
+            print(f"  - Paid: {paid_premiums} ({(paid_premiums/total_premiums*100):.1f}%)")
+            print(f"  - Pending: {pending_premiums} ({(pending_premiums/total_premiums*100):.1f}%)")
+            print(f"  - Overdue: {overdue_premiums} ({(overdue_premiums/total_premiums*100):.1f}%)")
+        else:
+            print("  - No premium data to calculate statistics.")
         
         # Total amounts
         from sqlalchemy import func
