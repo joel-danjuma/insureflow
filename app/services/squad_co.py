@@ -6,6 +6,7 @@ import hmac
 import httpx
 import logging
 from app.core.config import settings
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -66,14 +67,21 @@ class SquadCoService:
             "email": email,
             "currency": currency,
             "initiate_type": "inline",  # Required field according to Squad docs
+            "transaction_ref": f"INSURE_{int(datetime.now().timestamp())}_{amount_in_kobo}",  # Generate unique ref
+            "callback_url": f"{settings.SQUAD_WEBHOOK_URL or 'http://localhost:8000/api/v1/payments/webhook'}",
             "metadata": metadata or {},
         }
         
-        logger.info(f"Initiating Squad payment: amount={amount_in_kobo} kobo, email={email}")
+        logger.info(f"Initiating Squad payment: amount={amount_in_kobo} kobo, email={email}, ref={payload['transaction_ref']}")
         
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=30.0) as client:  # Increased timeout
             try:
                 response = await client.post(url, json=payload, headers=self.headers)
+                
+                # Log the response for debugging
+                logger.info(f"Squad API response status: {response.status_code}")
+                logger.info(f"Squad API response body: {response.text}")
+                
                 response.raise_for_status()
                 
                 result = response.json()
@@ -89,6 +97,8 @@ class SquadCoService:
                         error_detail = error_data['message']
                     elif 'errors' in error_data:
                         error_detail = str(error_data['errors'])
+                    elif 'data' in error_data and 'message' in error_data['data']:
+                        error_detail = error_data['data']['message']
                 except:
                     error_detail = e.response.text
                 
@@ -102,6 +112,47 @@ class SquadCoService:
                 
             except Exception as e:
                 logger.error(f"Unexpected error in Squad payment initiation: {str(e)}")
+                return {"error": f"Unexpected error: {str(e)}"}
+
+    async def verify_payment(self, transaction_ref: str):
+        """
+        Verify a payment transaction with Squad Co.
+        """
+        if not self.secret_key or self.secret_key == "":
+            logger.error("Squad secret key not configured - cannot verify payment")
+            return {"error": "Payment gateway not configured. Please contact support."}
+        
+        url = f"{self.base_url}/transaction/verify/{transaction_ref}"
+        
+        logger.info(f"Verifying Squad payment: {transaction_ref}")
+        
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            try:
+                response = await client.get(url, headers=self.headers)
+                
+                logger.info(f"Squad verify response status: {response.status_code}")
+                logger.info(f"Squad verify response body: {response.text}")
+                
+                response.raise_for_status()
+                
+                result = response.json()
+                logger.info(f"Squad payment verification result: {result.get('data', {}).get('transaction_status', 'Unknown')}")
+                return result
+                
+            except httpx.HTTPStatusError as e:
+                error_detail = f"HTTP {e.response.status_code}"
+                try:
+                    error_data = e.response.json()
+                    if 'message' in error_data:
+                        error_detail = error_data['message']
+                except:
+                    error_detail = e.response.text
+                
+                logger.error(f"Squad API verification error: {error_detail}")
+                return {"error": f"Squad API verification error: {error_detail}"}
+                
+            except Exception as e:
+                logger.error(f"Unexpected error in Squad payment verification: {str(e)}")
                 return {"error": f"Unexpected error: {str(e)}"}
 
 # Create a single instance of the service to be used across the application

@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from datetime import datetime
 
 from app.core.database import get_db
-from app.dependencies import get_current_admin_user
+from app.dependencies import get_current_broker_or_admin_user
 from app.models.user import User
 from app.crud import policy as crud_policy
 from app.crud import premium as crud_premium
@@ -31,23 +31,42 @@ class ReminderResponse(BaseModel):
 def send_payment_reminders(
     reminder_request: ReminderRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin_user)
+    current_user: User = Depends(get_current_broker_or_admin_user)
 ):
     """
     Send payment reminders to brokers for outstanding premiums.
-    Admin only.
+    Brokers can only send reminders for their own policies.
+    Admins can send reminders for any policies.
     """
     try:
         policy_ids = reminder_request.policy_ids or []
         broker_ids = reminder_request.broker_ids or []
+        
+        # If user is a broker, restrict to their own policies only
+        if current_user.role == "broker":
+            # Get broker's own policies
+            broker_policies = crud_policy.get_policies_by_broker(db, broker_id=current_user.id)
+            broker_policy_ids = [p.id for p in broker_policies]
+            
+            # Filter policy_ids to only include broker's own policies
+            if policy_ids:
+                policy_ids = [pid for pid in policy_ids if pid in broker_policy_ids]
+            else:
+                policy_ids = broker_policy_ids
+            
+            # For brokers, ignore broker_ids parameter and only use their own ID
+            broker_ids = [current_user.id]
+            
+            logger.info(f"Broker {current_user.email} sending reminders for {len(policy_ids)} of their own policies")
+        else:
+            # Admin user - can send reminders for any policies
+            logger.info(f"Admin {current_user.email} initiating reminders for policies: {policy_ids}, brokers: {broker_ids}")
         
         if not policy_ids and not broker_ids:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Either policy_ids or broker_ids must be provided"
             )
-        
-        logger.info(f"Admin {current_user.email} initiating reminders for policies: {policy_ids}, brokers: {broker_ids}")
         
         # Get policies that need reminders
         outstanding_policies = []
