@@ -6,6 +6,7 @@ from .premium import Premium, PaymentStatus, BillingCycle
 from .payment import Payment, PaymentMethod, PaymentTransactionStatus
 from .broker import Broker
 from .transaction import Transaction, TransactionType, TransactionStatus
+from .notification import Notification, NotificationType
 
 __all__ = [
     "User", "UserRole", 
@@ -14,5 +15,6 @@ __all__ = [
     "Premium", "PaymentStatus", "BillingCycle",
     "Payment", "PaymentMethod", "PaymentTransactionStatus",
     "Broker",
-    "Transaction", "TransactionType", "TransactionStatus"
+    "Transaction", "TransactionType", "TransactionStatus",
+    "Notification", "NotificationType"
 ] 

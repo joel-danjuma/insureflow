@@ -66,4 +66,16 @@ def get_current_broker_or_admin_user(current_user: User = Depends(get_current_ac
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"Not enough permissions. User role: {current_user.role.value}, Required: admin or broker"
         )
+    return current_user
+
+def get_current_broker_user(current_user: User = Depends(get_current_active_user)) -> User:
+    """
+    Dependency to get the current user if they are a broker.
+    Raises HTTP 403 if the user is not a broker.
+    """
+    if current_user.role != UserRole.BROKER:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Not enough permissions. User role: {current_user.role.value}, Required: broker"
+        )
     return current_user 

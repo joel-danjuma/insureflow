@@ -45,6 +45,7 @@ class User(Base):
     # Relationships
     policies = relationship("Policy", back_populates="user")
     broker_profile = relationship("Broker", back_populates="user", uselist=False)
+    notifications = relationship("Notification", back_populates="broker", foreign_keys="Notification.broker_id")
     
     def __repr__(self):
         return f"<User(id={self.id}, username='{self.username}', role='{self.role.value}')>" 

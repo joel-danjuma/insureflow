@@ -68,6 +68,7 @@ class Policy(Base):
     company = relationship("InsuranceCompany", back_populates="policies")
     broker = relationship("Broker", back_populates="policies")
     premiums = relationship("Premium", back_populates="policy", cascade="all, delete-orphan")
+    notifications = relationship("Notification", back_populates="policy")
     
     def __repr__(self):
         return f"<Policy(id={self.id}, number='{self.policy_number}', type='{self.policy_type.value}', status='{self.status.value}')>" 

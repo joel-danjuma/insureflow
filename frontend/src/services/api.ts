@@ -227,8 +227,21 @@ export const paymentService = {
 };
 
 export const reminderService = {
+  sendAutomaticReminders: async (maxDaysOverdue: number = 30, reminderCooldownHours: number = 24) => {
+    try {
+      const response = await api.post('/reminders/send-auto', {
+        max_days_overdue: maxDaysOverdue,
+        reminder_cooldown_hours: reminderCooldownHours
+      });
+      return response.data;
+    } catch (error) {
+      errorHandler(error, 'sending automatic reminders');
+    }
+  },
+
   sendReminders: async (data: { broker_ids?: number[], policy_ids?: number[] }) => {
     try {
+      // Use the legacy endpoint for backward compatibility
       const response = await api.post('/reminders/send', data);
       return response.data;
     } catch (error) {

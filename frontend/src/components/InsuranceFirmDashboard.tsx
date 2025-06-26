@@ -183,37 +183,28 @@ const InsuranceFirmDashboard = () => {
     }
   };
 
-  // Handle sending reminders
-  const handleSendReminders = async () => {
-    const selectedPolicyIds = Array.from(selectedPolicies).map(id => parseInt(id));
-    const selectedBrokerIds = outstandingPolicies
-      .filter(policy => selectedPolicies.has(policy.id))
-      .map(policy => policy.brokerId)
-      .filter((id, index, self) => self.indexOf(id) === index); // Remove duplicates
-    
-    if (selectedPolicyIds.length === 0) {
-      setReminderError('No policies selected for reminders');
-      return;
-    }
-
+  // Handle sending automatic reminders
+  const handleSendAutomaticReminders = async () => {
     setReminderLoading(true);
     setReminderError(null);
     setReminderSuccess(null);
 
     try {
-      await reminderService.sendReminders({
-        policy_ids: selectedPolicyIds,
-        broker_ids: selectedBrokerIds,
-      });
+      // Use the new automatic reminder system (max 30 days overdue, 24h cooldown)
+      const response = await reminderService.sendAutomaticReminders(30, 24);
       
-      setReminderSuccess(
-        `Reminders sent successfully for ${selectedPolicyIds.length} policies to ${selectedBrokerIds.length} brokers.`
-      );
+      if (response.notifications_created === 0) {
+        setReminderSuccess('No overdue policies found that need reminders at this time.');
+      } else {
+        setReminderSuccess(
+          `✅ Payment reminders sent successfully! Created ${response.notifications_created} notifications for ${response.brokers_notified} brokers across ${response.policies_processed} overdue policies. Brokers will see these reminders in their dashboards.`
+        );
+      }
       
-      // Clear selection after successful sending
+      // Clear any selections since we're using automatic detection now
       setSelectedPolicies(new Set());
     } catch (error) {
-      setReminderError(error instanceof Error ? error.message : 'Failed to send reminders');
+      setReminderError(error instanceof Error ? error.message : 'Failed to send automatic reminders');
     } finally {
       setReminderLoading(false);
     }
@@ -405,19 +396,17 @@ const InsuranceFirmDashboard = () => {
           >
             {showReminderSection ? 'Hide Reminders' : `View Outstanding (${outstandingPolicies.length})`}
           </button>
-          {selectedPolicies.size > 0 && (
-            <button
-              onClick={handleSendReminders}
-              disabled={reminderLoading}
-              className={`px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
-                reminderLoading
-                  ? 'bg-gray-600 cursor-not-allowed'
-                  : 'bg-orange-500 hover:bg-orange-600'
-              } text-white`}
-            >
-              {reminderLoading ? 'Sending...' : `Send Reminders (${selectedPolicies.size})`}
-            </button>
-          )}
+          <button
+            onClick={handleSendAutomaticReminders}
+            disabled={reminderLoading}
+            className={`px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
+              reminderLoading
+                ? 'bg-gray-600 cursor-not-allowed'
+                : 'bg-orange-500 hover:bg-orange-600'
+            } text-white`}
+          >
+            {reminderLoading ? 'Sending Reminders...' : 'Send Payment Reminders'}
+          </button>
         </div>
       </div>
 
