@@ -50,13 +50,11 @@ const getApiUrl = () => {
   return 'http://localhost:8000/api/v1';
 };
 
-const API_URL = getApiUrl();
+const API_URL = process.env.NEXT_PUBLIC_API_URL || getApiUrl();
 
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: process.env.NODE_ENV === 'production' 
-    ? `http://${typeof window !== 'undefined' ? window.location.hostname : 'localhost'}:8000/api/v1`
-    : 'http://localhost:8000/api/v1',
+  baseURL: API_URL,
   timeout: 3000, // 3 second timeout for faster fallback
   headers: {
     'Content-Type': 'application/json',
