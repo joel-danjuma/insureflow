@@ -259,4 +259,44 @@ export const reminderService = {
   },
 };
 
+export const notificationService = {
+  getNotifications: async (unreadOnly: boolean = false) => {
+    try {
+      const response = await api.get('/notifications/', {
+        params: { unread_only: unreadOnly }
+      });
+      return response.data;
+    } catch (error) {
+      errorHandler(error, 'fetching notifications');
+    }
+  },
+
+  markAsRead: async (notificationId: number) => {
+    try {
+      const response = await api.post(`/notifications/${notificationId}/read`);
+      return response.data;
+    } catch (error) {
+      errorHandler(error, 'marking notification as read');
+    }
+  },
+
+  dismissNotification: async (notificationId: number) => {
+    try {
+      const response = await api.post(`/notifications/${notificationId}/dismiss`);
+      return response.data;
+    } catch (error) {
+      errorHandler(error, 'dismissing notification');
+    }
+  },
+
+  getUnreadCount: async () => {
+    try {
+      const response = await api.get('/notifications/unread-count');
+      return response.data;
+    } catch (error) {
+      errorHandler(error, 'fetching unread count');
+    }
+  },
+};
+
 export default api; 

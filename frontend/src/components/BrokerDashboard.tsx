@@ -8,7 +8,7 @@ import { formatNaira } from '@/utils/currency';
 import { useBrokerProfile, usePolicies, usePremiums } from '@/hooks/useQuery';
 import { Policy, Premium } from '@/types/user';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { paymentService, premiumService } from '@/services/api';
+import { paymentService, premiumService, notificationService } from '@/services/api';
 
 type ClientPortfolioItem = {
     id: string;
