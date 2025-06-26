@@ -37,8 +37,9 @@ def create_payment_reminder_notification(
     )
     
     db.add(notification)
-    db.commit()
-    db.refresh(notification)
+    # The commit will be handled by the calling API endpoint to ensure atomicity
+    # db.commit()
+    # db.refresh(notification)
     return notification
 
 
