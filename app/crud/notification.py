@@ -4,10 +4,13 @@ CRUD operations for the Notification model.
 from typing import List, Optional
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
+from sqlalchemy import func, and_
 
 from app.models.notification import Notification, NotificationType
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.models.policy import Policy
+from app.models.broker import Broker
+from app.models.premium import Premium, PremiumPaymentStatus
 
 
 def create_payment_reminder_notification(
@@ -113,46 +116,53 @@ def get_overdue_policies_without_recent_reminders(
 ) -> List[tuple]:
     """
     Get policies that are overdue but haven't had reminders sent recently.
+    This is an optimized query that performs calculations in the database.
     Returns tuples of (policy, broker, customer, days_overdue, outstanding_amount).
     """
-    cutoff_date = datetime.utcnow() - timedelta(hours=reminder_cooldown_hours)
+    now = datetime.utcnow()
+    reminder_cooldown_date = now - timedelta(hours=reminder_cooldown_hours)
     
-    # This is a simplified query - in practice, you'd want to join with premiums
-    # to calculate actual outstanding amounts and overdue status
-    overdue_policies = []
-    
-    # Get all policies with brokers
-    policies = db.query(Policy).filter(
+    # Subquery to calculate outstanding amounts and filter for unpaid premiums
+    outstanding_subquery = db.query(
+        Premium.policy_id,
+        func.sum(Premium.outstanding_amount).label("total_outstanding")
+    ).filter(
+        Premium.payment_status != PremiumPaymentStatus.PAID
+    ).group_by(Premium.policy_id).subquery()
+
+    # Main query to get overdue policies
+    query = db.query(
+        Policy,
+        Broker,
+        User,
+        # Calculate days overdue directly in the database
+        (func.julianday(now) - func.julianday(Policy.end_date)).label("days_overdue"),
+        outstanding_subquery.c.total_outstanding
+    ).join(
+        Broker, Policy.broker_id == Broker.id
+    ).join(
+        User, Policy.user_id == User.id
+    ).join(
+        outstanding_subquery, Policy.id == outstanding_subquery.c.policy_id
+    ).filter(
+        # Policy is active
+        Policy.status == "active",
+        # Policy is associated with a broker
         Policy.broker_id.isnot(None),
-        Policy.status == "active"
-    ).all()
+        # User is a customer (not an admin or broker policy)
+        User.role == UserRole.CUSTOMER,
+        # Outstanding amount is greater than 0
+        outstanding_subquery.c.total_outstanding > 0,
+        # Policy is overdue but not more than max_days_overdue
+        and_(
+            (func.julianday(now) - func.julianday(Policy.end_date)) > 0,
+            (func.julianday(now) - func.julianday(Policy.end_date)) <= max_days_overdue
+        ),
+        # Reminder has not been sent recently (or ever)
+        (Policy.reminder_sent_at.is_(None) | (Policy.reminder_sent_at < reminder_cooldown_date))
+    )
     
-    for policy in policies:
-        # Check if reminder was sent recently
-        if policy.reminder_sent_at and policy.reminder_sent_at > cutoff_date:
-            continue
-        
-        # Calculate if overdue (simplified - you might want more complex logic)
-        days_past_end = (datetime.utcnow().date() - policy.end_date).days
-        
-        if 0 < days_past_end <= max_days_overdue:
-            # Get outstanding amount from premiums
-            outstanding_amount = 0
-            if policy.premiums:
-                for premium in policy.premiums:
-                    if premium.payment_status.value != 'paid':
-                        outstanding_amount += float(premium.outstanding_amount)
-            
-            if outstanding_amount > 0:
-                overdue_policies.append((
-                    policy,
-                    policy.broker,
-                    policy.user,
-                    days_past_end,
-                    outstanding_amount
-                ))
-    
-    return overdue_policies
+    return query.all()
 
 
 def cleanup_old_notifications(db: Session, days_old: int = 30) -> int:
