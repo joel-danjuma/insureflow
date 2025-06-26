@@ -168,6 +168,27 @@ def send_manual_payment_reminders(
         )
 
 
+@router.post("/test-notifications")
+def test_notification_system(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user)
+):
+    """
+    Test endpoint to verify the notification system is working.
+    Admin only. Creates a test notification for debugging.
+    """
+    try:
+        from app.services.notification_service import test_notification_system
+        result = test_notification_system(db)
+        return result
+    except Exception as e:
+        logger.error(f"Error in test endpoint: {str(e)}")
+        return {
+            "success": False,
+            "message": f"Test endpoint failed: {str(e)}"
+        }
+
+
 # Keep the old endpoint for backward compatibility but make it redirect to auto
 @router.post("/send", response_model=ReminderResponse)
 def send_payment_reminders_legacy(
