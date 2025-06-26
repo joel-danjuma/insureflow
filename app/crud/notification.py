@@ -117,6 +117,7 @@ def get_overdue_policies_without_recent_reminders(
     """
     Get policies that are overdue but haven't had reminders sent recently.
     This is an optimized query that performs calculations in the database.
+    Uses PostgreSQL-compatible date functions.
     Returns tuples of (policy, broker, customer, days_overdue, outstanding_amount).
     """
     now = datetime.utcnow()
@@ -130,13 +131,15 @@ def get_overdue_policies_without_recent_reminders(
         Premium.payment_status != PremiumPaymentStatus.PAID
     ).group_by(Premium.policy_id).subquery()
 
+    # Calculate days overdue using PostgreSQL-compatible functions
+    days_overdue_expr = func.current_date() - Policy.end_date
+
     # Main query to get overdue policies
     query = db.query(
         Policy,
         Broker,
         User,
-        # Calculate days overdue directly in the database
-        (func.julianday(now) - func.julianday(Policy.end_date)).label("days_overdue"),
+        days_overdue_expr.label("days_overdue"),
         outstanding_subquery.c.total_outstanding
     ).join(
         Broker, Policy.broker_id == Broker.id
@@ -155,8 +158,8 @@ def get_overdue_policies_without_recent_reminders(
         outstanding_subquery.c.total_outstanding > 0,
         # Policy is overdue but not more than max_days_overdue
         and_(
-            (func.julianday(now) - func.julianday(Policy.end_date)) > 0,
-            (func.julianday(now) - func.julianday(Policy.end_date)) <= max_days_overdue
+            days_overdue_expr > 0,
+            days_overdue_expr <= max_days_overdue
         ),
         # Reminder has not been sent recently (or ever)
         (Policy.reminder_sent_at.is_(None) | (Policy.reminder_sent_at < reminder_cooldown_date))
