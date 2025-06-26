@@ -11,9 +11,9 @@ from app.core.database import Base
 
 class UserRole(enum.Enum):
     """User role enumeration."""
-    ADMIN = "admin"
-    BROKER = "broker"
-    CUSTOMER = "customer"
+    ADMIN = "ADMIN"
+    BROKER = "BROKER"
+    CUSTOMER = "CUSTOMER"
 
 
 class User(Base):
