@@ -85,7 +85,7 @@ class VirtualAccountTransaction(Base):
     notification_sent = Column(Boolean, default=False, nullable=False)
     
     # Additional metadata
-    metadata = Column(Text, nullable=True)  # JSON string for additional data
+    transaction_metadata = Column(Text, nullable=True)  # JSON string for additional data
     
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

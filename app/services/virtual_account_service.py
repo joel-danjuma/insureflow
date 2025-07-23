@@ -283,7 +283,7 @@ class VirtualAccountService:
                     webhook_data.get("transaction_date", "").replace("+01:00", "+00:00")
                 ) if webhook_data.get("transaction_date") else datetime.utcnow(),
                 webhook_received_at=datetime.utcnow(),
-                metadata=json.dumps(webhook_data)
+                transaction_metadata=json.dumps(webhook_data)
             )
             
             db.add(transaction)
