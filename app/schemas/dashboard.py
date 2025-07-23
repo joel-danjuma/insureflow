@@ -35,6 +35,7 @@ class ChartDataPoint(BaseModel):
     label: str
     value: float
     percentage: Optional[float] = None
+    date: Optional[date] = None
 
 
 class LineChartData(BaseModel):
@@ -54,6 +55,33 @@ class PolicyTrend(BaseModel):
     date: date
     count: int
     premium_amount: float
+
+
+class TimeSeriesData(BaseModel):
+    """Time series data for charts."""
+    period: str
+    data_points: List[ChartDataPoint]
+    total: float
+    growth_rate: float
+
+
+class BarChartData(BaseModel):
+    """Bar chart data structure."""
+    labels: List[str]
+    datasets: List[Dict[str, Any]]
+
+
+class RecentPolicy(BaseModel):
+    """Recent policy for dashboard display."""
+    id: int
+    policy_number: str
+    policy_name: str
+    policy_type: str
+    company_name: str
+    premium_amount: Decimal
+    due_date: date
+    status: str
+    days_until_due: int
 
 
 class BrokerPerformance(BaseModel):
