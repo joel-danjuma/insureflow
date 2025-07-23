@@ -10,7 +10,7 @@ from app.models.notification import Notification, NotificationType
 from app.models.user import User, UserRole
 from app.models.policy import Policy
 from app.models.broker import Broker
-from app.models.premium import Premium, PremiumPaymentStatus
+from app.models.premium import Premium, PaymentStatus
 
 
 def create_payment_reminder_notification(
@@ -129,7 +129,7 @@ def get_overdue_policies_without_recent_reminders(
         Premium.policy_id,
         func.sum(Premium.outstanding_amount).label("total_outstanding")
     ).filter(
-        Premium.payment_status != PremiumPaymentStatus.PAID
+        Premium.payment_status != PaymentStatus.PAID
     ).group_by(Premium.policy_id).subquery()
 
     # Calculate days overdue using PostgreSQL-compatible functions
