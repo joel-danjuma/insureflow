@@ -9,12 +9,21 @@ from decimal import Decimal
 
 class DashboardKPIS(BaseModel):
     """Base KPI metrics for dashboard."""
+    new_policies_this_month: int
+    outstanding_premiums_total: float
+    broker_count: int
     total_policies: int
     total_premium_collected: float
     average_policy_value: float
     policies_due_this_week: int
     overdue_payments: int
     conversion_rate: float
+
+
+class DashboardData(BaseModel):
+    """Legacy dashboard data structure for backward compatibility."""
+    kpis: DashboardKPIS
+    recent_policies: List[Dict[str, Any]]
 
 
 class EnhancedDashboardKPIS(DashboardKPIS):
