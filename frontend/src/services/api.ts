@@ -43,8 +43,11 @@ const errorHandler = (error: any, context: string): never => {
 const getApiUrl = () => {
   if (typeof window !== 'undefined') {
     // Browser environment - use current hostname with backend port
-    const { protocol, hostname } = window.location;
-    return `${protocol}//${hostname}:8000/api/v1`;
+    const { protocol, hostname, port } = window.location;
+    // If we're on port 3000 (frontend), use port 8000 for backend
+    // If we're on a different port, assume backend is on same hostname
+    const backendPort = port === '3000' ? '8000' : port;
+    return `${protocol}//${hostname}:${backendPort}/api/v1`;
   }
   // Server-side rendering fallback
   return 'http://localhost:8000/api/v1';
@@ -55,7 +58,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || getApiUrl();
 // Create axios instance with base configuration
 const api = axios.create({
   baseURL: API_URL,
-  timeout: 3000, // 3 second timeout for faster fallback
+  timeout: 10000, // Increased timeout to 10 seconds
   headers: {
     'Content-Type': 'application/json',
   },

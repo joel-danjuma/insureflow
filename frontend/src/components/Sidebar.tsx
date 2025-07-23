@@ -16,11 +16,13 @@ const roleLinks = {
   [UserRole.ADMIN]: [
     // { href: '/brokers', label: 'Brokers', icon: 'Users' }, // Commented out - not working
     // { href: '/claims', label: 'Claims', icon: 'ShieldCheck' }, // Commented out - not working
+    { href: '/policies/create', label: 'Create Policy', icon: 'File' },
     { href: '/reports', label: 'Reports', icon: 'ChartBar' },
     // { href: '/settings', label: 'Settings', icon: 'Gear' }, // Commented out - not working
     { href: '/reminders', label: 'Send Reminders', icon: 'Bell' },
   ],
   [UserRole.BROKER]: [
+    { href: '/policies/create', label: 'Create Policy', icon: 'File' },
     { href: '/clients', label: 'Clients', icon: 'Users' },
     { href: '/payments', label: 'Payments', icon: 'CurrencyDollar' },
     { href: '/commissions', label: 'Commissions', icon: 'Wallet' },
