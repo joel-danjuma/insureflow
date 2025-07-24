@@ -14,6 +14,7 @@ from app.dependencies import (
 )
 from app.models.user import User
 from app.schemas.policy import Policy, PolicyCreate, PolicyUpdate, PolicySummary
+from app.services.virtual_account_service import simulate_policy_payment
 
 router = APIRouter()
 
@@ -245,3 +246,8 @@ def get_policy_statistics(
         stats = policy_crud.get_policy_statistics_by_broker(db, broker_id=current_user.id)
     
     return stats 
+
+@router.post("/{policy_id}/simulate_payment", response_model=schemas.virtual_account.PaymentSimulationResponse)
+async def simulate_policy_payment_endpoint(policy_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_payment_processor)):
+    """Simulate a payment for a policy using Squad's virtual account simulation API."""
+    return await simulate_policy_payment(policy_id, db, current_user) 

@@ -52,6 +52,7 @@ const DashboardPage = () => {
     <Layout userRole={user.role} title={getDashboardTitle()}>
       {/* Render appropriate dashboard based on user role */}
       {user.role === UserRole.ADMIN && <InsureFlowAdminDashboard />}
+      {user.role === UserRole.INSURANCE_ADMIN && <InsuranceFirmDashboard />}
       {user.role === UserRole.BROKER && <BrokerDashboard />}
       {user.role === UserRole.CUSTOMER && (
         <div className="text-center py-12">

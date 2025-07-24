@@ -48,6 +48,16 @@ def update_policy(db: Session, policy_id: int, policy_update: PolicyUpdate) -> O
         db.refresh(db_policy)
     return db_policy
 
+def update_policy_payment_status(db, merchant_ref, status, tx_ref):
+    policy = db.query(Policy).filter(Policy.merchant_reference == merchant_ref).first()
+    if not policy:
+        return
+    policy.payment_status = status
+    policy.transaction_reference = tx_ref
+    db.commit()
+    # Optionally log the update
+    # ...
+
 def delete_policy(db: Session, policy_id: int) -> bool:
     """
     Deletes a policy from the database.

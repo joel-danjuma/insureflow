@@ -1,0 +1,1 @@
+import { simulatePolicyPayment } from '@/services/api';

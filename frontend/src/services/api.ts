@@ -302,4 +302,9 @@ export const notificationService = {
   },
 };
 
+export async function simulatePolicyPayment(policyId: number) {
+  const res = await api.post(`/policies/${policyId}/simulate_payment`);
+  return res.data;
+}
+
 export default api; 

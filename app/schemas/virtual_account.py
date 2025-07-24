@@ -170,10 +170,9 @@ class PaymentSimulationRequest(BaseModel):
     amount: Decimal
 
 class PaymentSimulationResponse(BaseModel):
-    """Schema for payment simulation response."""
     success: bool
-    message: Optional[str] = None
-    data: Optional[str] = None
+    message: str
+    data: dict = {}
 
 class VirtualAccountWebhook(BaseModel):
     """Schema for processing Squad webhook data."""
