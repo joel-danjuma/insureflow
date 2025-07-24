@@ -235,38 +235,6 @@ class VirtualAccountService:
                 logger.error(f"Unexpected error during payment simulation: {str(e)}")
                 return {"error": f"Unexpected error: {str(e)}"}
     
-    async def simulate_policy_payment(policy_id: int, db, user):
-        # Fetch the policy and its virtual account
-        policy = db.query(models.Policy).filter(models.Policy.id == policy_id).first()
-        if not policy:
-            raise HTTPException(status_code=404, detail="Policy not found")
-        va = db.query(models.VirtualAccount).filter(models.VirtualAccount.policy_id == policy_id).first()
-        if not va:
-            raise HTTPException(status_code=404, detail="Virtual account not found for policy")
-        squad_secret = os.getenv("SQUAD_SECRET_KEY")
-        if not squad_secret:
-            raise HTTPException(status_code=500, detail="Squad secret key not configured")
-        url = "https://sandbox-api-d.squadco.com/virtual-account/simulate/payment"
-        payload = {
-            "virtual_account_number": va.virtual_account_number,
-            "amount": str(policy.premium_amount),
-            "dva": True
-        }
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {squad_secret}"
-        }
-        try:
-            resp = requests.post(url, json=payload, headers=headers, timeout=10)
-            resp.raise_for_status()
-            data = resp.json()
-            # Optionally log the simulation
-            # ...
-            return {"success": data.get("success"), "message": data.get("message"), "data": data.get("data")}
-        except Exception as e:
-            # Optionally log the error
-            raise HTTPException(status_code=500, detail=f"Squad simulation failed: {str(e)}")
-    
     def process_webhook_transaction(
         self,
         db: Session,
@@ -425,3 +393,35 @@ class VirtualAccountService:
 
 # Global service instance
 virtual_account_service = VirtualAccountService() 
+
+async def simulate_policy_payment(policy_id: int, db, user):
+    # Fetch the policy and its virtual account
+    policy = db.query(models.Policy).filter(models.Policy.id == policy_id).first()
+    if not policy:
+        raise HTTPException(status_code=404, detail="Policy not found")
+    va = db.query(models.VirtualAccount).filter(models.VirtualAccount.policy_id == policy_id).first()
+    if not va:
+        raise HTTPException(status_code=404, detail="Virtual account not found for policy")
+    squad_secret = os.getenv("SQUAD_SECRET_KEY")
+    if not squad_secret:
+        raise HTTPException(status_code=500, detail="Squad secret key not configured")
+    url = "https://sandbox-api-d.squadco.com/virtual-account/simulate/payment"
+    payload = {
+        "virtual_account_number": va.virtual_account_number,
+        "amount": str(policy.premium_amount),
+        "dva": True
+    }
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {squad_secret}"
+    }
+    try:
+        resp = requests.post(url, json=payload, headers=headers, timeout=10)
+        resp.raise_for_status()
+        data = resp.json()
+        # Optionally log the simulation
+        # ...
+        return {"success": data.get("success"), "message": data.get("message"), "data": data.get("data")}
+    except Exception as e:
+        # Optionally log the error
+        raise HTTPException(status_code=500, detail=f"Squad simulation failed: {str(e)}") 
