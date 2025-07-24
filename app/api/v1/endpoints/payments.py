@@ -67,18 +67,18 @@ async def handle_squad_co_webhook(
                 raise HTTPException(status_code=400, detail=result["error"])
         else:
             # Process as traditional payment
-        # Check if this is a bulk payment
-        metadata = webhook_data.get("meta_data", {})
-        if metadata.get("type") == "bulk_payment" and "premium_ids" in metadata:
-            premium_ids = metadata["premium_ids"]
-            for premium_id in premium_ids:
-                # Update premium status to paid
-                crud_premium.update_premium_status_to_paid(db, premium_id=premium_id)
-        else:
-            # Handle single payment - find the premium by transaction ref
-            payment = crud_payment.get_payment_by_transaction_ref(db, transaction_ref=transaction_ref)
-            if payment and payment.premium_id:
-                crud_premium.update_premium_status_to_paid(db, premium_id=payment.premium_id)
+            # Check if this is a bulk payment
+            metadata = webhook_data.get("meta_data", {})
+            if metadata.get("type") == "bulk_payment" and "premium_ids" in metadata:
+                premium_ids = metadata["premium_ids"]
+                for premium_id in premium_ids:
+                    # Update premium status to paid
+                    crud_premium.update_premium_status_to_paid(db, premium_id=premium_id)
+            else:
+                # Handle single payment - find the premium by transaction ref
+                payment = crud_payment.get_payment_by_transaction_ref(db, transaction_ref=transaction_ref)
+                if payment and payment.premium_id:
+                    crud_premium.update_premium_status_to_paid(db, premium_id=payment.premium_id)
 
     # Acknowledge receipt of the webhook
     return {"status": "success"}
