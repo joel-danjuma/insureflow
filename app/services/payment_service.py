@@ -1,6 +1,7 @@
 """
 Service layer for payment-related operations.
 """
+import uuid
 from decimal import Decimal
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
@@ -73,6 +74,7 @@ async def initiate_premium_payment(premium_id: int, db: Session):
 async def initiate_bulk_premium_payment(premium_ids: list[int], db: Session):
     """
     Orchestrates the initiation of a bulk payment for multiple premiums.
+    This is a simulated version that does not call the Squad API.
     """
     if not premium_ids:
         raise HTTPException(status_code=400, detail="No premium IDs provided.")
@@ -101,37 +103,27 @@ async def initiate_bulk_premium_payment(premium_ids: list[int], db: Session):
         raise HTTPException(status_code=404, detail="Customer not found for this policy")
     customer_email = customer.email
 
-    payment_data = await squad_co_service.initiate_payment(
-        amount=float(total_amount),  # Pass amount in Naira
-        email=customer_email,
-        currency="NGN",
-        metadata={"premium_ids": premium_ids, "type": "bulk_payment"}
-    )
-    
-    if "error" in payment_data or payment_data.get("status") != 200:
-        raise HTTPException(status_code=400, detail=payment_data.get("message", "Bulk payment initiation failed."))
+    # Simulate a successful payment
+    transaction_ref = f"simulated_bulk_{uuid.uuid4()}"
 
-    data = payment_data.get("data", {})
-    checkout_url = data.get("checkout_url")
-    transaction_ref = data.get("transaction_ref")  # Fixed: was transaction_reference
-
-    if not checkout_url or not transaction_ref:
-        raise HTTPException(status_code=500, detail="Could not retrieve checkout URL from Squad Co.")
-
-    for premium_id in premium_ids:
+    for premium in premiums:
+        # Create a payment record
         payment_create = PaymentCreate(
-            premium_id=premium_id,
-            amount_paid=Decimal('0'),  # Will be updated by webhook
-            payment_method=PaymentMethod.CARD,  # Use proper enum
-            transaction_reference=transaction_ref, # Use the same ref for all
+            premium_id=premium.id,
+            amount_paid=premium.amount,
+            payment_method=PaymentMethod.VIRTUAL_ACCOUNT,
+            transaction_reference=transaction_ref,
             payer_email=customer_email
         )
         crud_payment.create_payment(db=db, payment=payment_create)
 
+        # Update the premium status
+        crud_premium.update_premium_status(db=db, premium_id=premium.id, status="paid")
+
     return {
-        "payment_url": checkout_url,
+        "payment_url": f"https://example.com/simulated-payment/{transaction_ref}",
         "transaction_ref": transaction_ref,
-        "message": "Bulk payment initiated successfully."
+        "message": "Bulk payment successfully simulated."
     }
 
 async def initiate_bulk_policy_payment(policy_ids: list[int], db: Session):

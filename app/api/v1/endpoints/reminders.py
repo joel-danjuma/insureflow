@@ -146,18 +146,74 @@ def send_manual_payment_reminders(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Either broker_ids or policy_ids must be provided"
             )
-        
-        # Implementation similar to automatic but for specific brokers/policies
-        # This would be a more targeted version of the automatic system
-        
-        return ReminderResponse(
-            message="Manual reminders feature will be implemented based on automatic reminders",
-            notifications_created=0,
-            brokers_notified=0,
-            policies_processed=0,
-            reminders_sent=[]
+
+        overdue_policies = crud_notification.get_overdue_policies_for_manual_reminders(
+            db=db,
+            broker_ids=request.broker_ids,
+            policy_ids=request.policy_ids
         )
-        
+
+        if not overdue_policies:
+            return ReminderResponse(
+                message="No overdue policies found for the selected criteria",
+                notifications_created=0,
+                brokers_notified=0,
+                policies_processed=0,
+                reminders_sent=[]
+            )
+
+        notifications_created = 0
+        brokers_notified = set()
+        reminders_sent = []
+
+        for policy, broker, customer, days_overdue, outstanding_amount in overdue_policies:
+            try:
+                notification = crud_notification.create_payment_reminder_notification(
+                    db=db,
+                    broker_id=broker.user_id,
+                    policy_id=policy.id,
+                    outstanding_amount=outstanding_amount,
+                    days_overdue=days_overdue,
+                    policy_number=policy.policy_number,
+                    customer_name=customer.full_name
+                )
+
+                policy.reminder_sent_at = datetime.utcnow()
+                db.add(policy)
+
+                notifications_created += 1
+                brokers_notified.add(broker.user_id)
+
+                reminders_sent.append({
+                    "policy_id": policy.id,
+                    "policy_number": policy.policy_number,
+                    "broker_name": broker.name,
+                    "customer_name": customer.full_name,
+                    "outstanding_amount": outstanding_amount,
+                    "days_overdue": days_overdue,
+                    "notification_id": notification.id,
+                    "sent_at": datetime.utcnow().isoformat()
+                })
+
+                logger.info(f"Created manual reminder for policy {policy.policy_number} -> broker {broker.name}")
+
+            except Exception as e:
+                logger.error(f"Error creating manual reminder for policy {policy.id}: {str(e)}")
+                continue
+
+        db.commit()
+
+        success_message = f"Created {notifications_created} manual payment reminder notifications for {len(brokers_notified)} brokers"
+        logger.info(f"MANUAL REMINDERS: {success_message}")
+
+        return ReminderResponse(
+            message=success_message,
+            notifications_created=notifications_created,
+            brokers_notified=len(brokers_notified),
+            policies_processed=len(overdue_policies),
+            reminders_sent=reminders_sent
+        )
+
     except HTTPException:
         raise
     except Exception as e:

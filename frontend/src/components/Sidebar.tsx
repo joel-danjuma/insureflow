@@ -14,11 +14,11 @@ const commonLinks = [
 
 const roleLinks = {
   [UserRole.ADMIN]: [
-    // { href: '/brokers', label: 'Brokers', icon: 'Users' }, // Commented out - not working
-    // { href: '/claims', label: 'Claims', icon: 'ShieldCheck' }, // Commented out - not working
+    { href: '/brokers', label: 'Brokers', icon: 'Users' },
+    { href: '/claims', label: 'Claims', icon: 'ShieldCheck' },
     { href: '/policies/create', label: 'Create Policy', icon: 'File' },
     { href: '/reports', label: 'Reports', icon: 'ChartBar' },
-    // { href: '/settings', label: 'Settings', icon: 'Gear' }, // Commented out - not working
+    { href: '/settings', label: 'Settings', icon: 'Gear' },
     { href: '/reminders', label: 'Send Reminders', icon: 'Bell' },
   ],
   [UserRole.BROKER]: [

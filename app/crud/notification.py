@@ -169,6 +169,54 @@ def get_overdue_policies_without_recent_reminders(
     return query.all()
 
 
+def get_overdue_policies_for_manual_reminders(
+    db: Session,
+    broker_ids: Optional[List[int]] = None,
+    policy_ids: Optional[List[int]] = None
+) -> List[tuple]:
+    """
+    Get overdue policies for manual reminders, filtered by broker or policy IDs.
+    """
+    now = datetime.utcnow()
+
+    outstanding_subquery = db.query(
+        Premium.policy_id,
+        func.sum(Premium.outstanding_amount).label("total_outstanding")
+    ).filter(
+        Premium.payment_status != PaymentStatus.PAID
+    ).group_by(Premium.policy_id).subquery()
+
+    days_overdue_expr = func.current_date() - Policy.end_date
+
+    query = db.query(
+        Policy,
+        Broker,
+        User,
+        days_overdue_expr.label("days_overdue"),
+        outstanding_subquery.c.total_outstanding
+    ).join(
+        Broker, Policy.broker_id == Broker.id
+    ).join(
+        User, Policy.user_id == User.id
+    ).join(
+        outstanding_subquery, Policy.id == outstanding_subquery.c.policy_id
+    ).filter(
+        Policy.status == "active",
+        Policy.broker_id.isnot(None),
+        User.role == UserRole.CUSTOMER,
+        outstanding_subquery.c.total_outstanding > 0,
+        days_overdue_expr > 0
+    )
+
+    if broker_ids:
+        query = query.filter(Policy.broker_id.in_(broker_ids))
+    
+    if policy_ids:
+        query = query.filter(Policy.id.in_(policy_ids))
+
+    return query.all()
+
+
 def cleanup_old_notifications(db: Session, days_old: int = 30) -> int:
     """
     Clean up old dismissed notifications.
