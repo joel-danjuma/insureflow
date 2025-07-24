@@ -37,8 +37,10 @@ const DashboardPage = () => {
 
   const getDashboardTitle = () => {
     switch (user.role) {
-      case UserRole.ADMIN:
+      case UserRole.INSUREFLOW_ADMIN:
         return 'InsureFlow Admin Dashboard';
+      case UserRole.ADMIN:
+        return 'Insurance Firm Dashboard';
       case UserRole.BROKER:
         return 'Broker Dashboard';
       case UserRole.CUSTOMER:
@@ -51,8 +53,8 @@ const DashboardPage = () => {
   return (
     <Layout userRole={user.role} title={getDashboardTitle()}>
       {/* Render appropriate dashboard based on user role */}
-      {user.role === UserRole.ADMIN && <InsureFlowAdminDashboard />}
-      {user.role === UserRole.INSURANCE_ADMIN && <InsuranceFirmDashboard />}
+      {user.role === UserRole.INSUREFLOW_ADMIN && <InsureFlowAdminDashboard />}
+      {user.role === UserRole.ADMIN && <InsuranceFirmDashboard />}
       {user.role === UserRole.BROKER && <BrokerDashboard />}
       {user.role === UserRole.CUSTOMER && (
         <div className="text-center py-12">
