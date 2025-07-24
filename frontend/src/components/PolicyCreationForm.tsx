@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/services/api';
+import usePolicyStore from '@/store/policyStore';
 
 interface PolicyFormData {
   policy_name: string;
@@ -55,6 +56,8 @@ const PolicyCreationForm = () => {
     auto_renew: false,
     notify_broker_on_change: true,
   });
+
+  const addPolicy = usePolicyStore((state) => state.addPolicy);
 
   // Fetch brokers for assignment
   const { data: brokers } = useQuery({
@@ -116,7 +119,26 @@ const PolicyCreationForm = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createPolicyMutation.mutate(formData);
+    createPolicyMutation.mutate(formData, {
+      onSuccess: () => {
+        // Add to local store as well
+        const localPolicy = {
+          ...formData,
+          id: `${formData.policy_number || Math.random().toString(36).substr(2, 9)}-${Date.now()}`,
+          created_at: new Date().toISOString(),
+        };
+        addPolicy(localPolicy);
+      },
+      onError: () => {
+        // Add to local store even if backend fails
+        const localPolicy = {
+          ...formData,
+          id: `${formData.policy_number || Math.random().toString(36).substr(2, 9)}-${Date.now()}`,
+          created_at: new Date().toISOString(),
+        };
+        addPolicy(localPolicy);
+      }
+    });
   };
 
   const policyTypes = [

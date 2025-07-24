@@ -9,6 +9,9 @@ import { useBrokerProfile, usePolicies, usePremiums } from '@/hooks/useQuery';
 import { Policy, Premium } from '@/types/user';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { paymentService, premiumService, notificationService } from '@/services/api';
+import useReminderStore from '@/store/reminderStore';
+import useAuthStore from '@/store/authStore';
+import usePolicyStore from '@/store/policyStore';
 
 type ClientPortfolioItem = {
     id: string;
@@ -27,6 +30,10 @@ const BrokerDashboard = () => {
   const { data: brokerProfile, isLoading: brokerLoading, error: brokerError } = useBrokerProfile();
   const { data: policies, isLoading: policiesLoading, error: policiesError } = usePolicies();
   const { data: premiums, isLoading: premiumsLoading, error: premiumsError } = usePremiums();
+  const { user } = useAuthStore();
+  const getRemindersForBroker = useReminderStore((state) => state.getRemindersForBroker);
+  const brokerReminders = user ? getRemindersForBroker(user.id) : [];
+  const [dismissedReminders, setDismissedReminders] = useState<Set<string>>(new Set());
 
   // State for selected policies
   const [selectedPolicies, setSelectedPolicies] = useState<Set<string>>(new Set());
@@ -93,9 +100,36 @@ const BrokerDashboard = () => {
     });
   }, [premiums]);
 
+  const localPolicies = usePolicyStore((state) => state.getPolicies());
+
+  // Merge backend and local policies
+  const allPolicies = useMemo(() => {
+    const backendPolicies = policies || [];
+    const localPoliciesData = localPolicies.map(localPolicy => ({
+      id: parseInt(localPolicy.id.split('-')[0]) || Math.floor(Math.random() * 10000),
+      policy_number: localPolicy.policy_number || `LOCAL-${localPolicy.id}`,
+      policy_type: localPolicy.policy_type,
+      customer_id: Math.floor(Math.random() * 1000),
+      broker_id: Math.floor(Math.random() * 100),
+      coverage_amount: localPolicy.coverage_amount,
+      premium_amount: localPolicy.premium_amount,
+      start_date: localPolicy.start_date,
+      end_date: localPolicy.due_date,
+      status: 'active',
+      customer: {
+        full_name: localPolicy.contact_person,
+        email: localPolicy.contact_email,
+      },
+      broker: {
+        name: 'Local Broker',
+      },
+    }));
+    return [...backendPolicies, ...localPoliciesData];
+  }, [policies, localPolicies]);
+
   const clientPortfolio = useMemo(() => 
-    transformToClientPortfolio(policies || []), 
-    [policies, transformToClientPortfolio]
+    transformToClientPortfolio(allPolicies), 
+    [allPolicies, transformToClientPortfolio]
   );
 
   // Handle individual row selection
@@ -345,7 +379,7 @@ const BrokerDashboard = () => {
     );
   }
 
-  const metrics = calculateBrokerMetrics(policies || [], premiums || []);
+  const metrics = useMemo(() => calculateBrokerMetrics(allPolicies, premiums || []), [allPolicies, premiums]);
 
   // Mock chart data for premium performance
   const premiumPerformanceData = [
@@ -359,6 +393,16 @@ const BrokerDashboard = () => {
 
   return (
     <>
+      {/* Dummy Payment Reminders */}
+      {brokerReminders.filter(r => !dismissedReminders.has(r.id)).map(reminder => (
+        <div key={reminder.id} className="bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-4 mb-4 flex justify-between items-center">
+          <div>
+            <span className="text-yellow-400 font-bold mr-2">Payment Reminder:</span>
+            <span className="text-white">Policy <b>{reminder.policyNumber}</b> for <b>{reminder.customerName}</b> is overdue by <b>{reminder.daysOverdue} days</b>. Premium: <b>{reminder.premiumAmount}</b></span>
+          </div>
+          <button onClick={() => setDismissedReminders(prev => new Set(prev).add(reminder.id))} className="ml-4 px-3 py-1 rounded bg-yellow-700 text-white hover:bg-yellow-800">Dismiss</button>
+        </div>
+      ))}
       <div className="flex flex-wrap justify-between gap-3 pb-4">
         <div className="flex min-w-72 flex-col gap-3">
           <p className="text-white tracking-light text-[32px] font-bold leading-tight">

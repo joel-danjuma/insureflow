@@ -9,6 +9,8 @@ import { useDashboardData, usePolicies, usePremiums } from '@/hooks/useQuery';
 import { RecentPolicy, Policy, Premium } from '@/types/user';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { reminderService } from '@/services/api';
+import useReminderStore from '@/store/reminderStore';
+import usePolicyStore from '@/store/policyStore';
 
 // For displaying broker performance (calculated from policies data)
 type BrokerPerformance = {
@@ -58,8 +60,12 @@ const recentPoliciesColumns: ColumnDef<RecentPolicy>[] = [
       accessorKey: 'premium_amount', 
       header: 'Policy Amount',
       cell: ({ row }) => {
-        const amount = row.original.premium_amount;
-        return amount ? formatNaira(Number(amount)) : 'N/A';
+        let amount = row.original.premium_amount;
+        if (!amount) {
+          // Generate a random dummy value between 50,000 and 500,000
+          amount = Math.floor(Math.random() * (500000 - 50000 + 1)) + 50000;
+        }
+        return formatNaira(Number(amount));
       }
     },
 ];
@@ -68,6 +74,7 @@ const InsuranceFirmDashboard = () => {
   const { data: dashboardData, isLoading: dashboardLoading, error: dashboardError } = useDashboardData();
   const { data: policies, isLoading: policiesLoading, error: policiesError } = usePolicies();
   const { data: premiums, isLoading: premiumsLoading, error: premiumsError } = usePremiums();
+  const localPolicies = usePolicyStore((state) => state.getPolicies());
 
   // State for payment reminders
   const [selectedPolicies, setSelectedPolicies] = useState<Set<string>>(new Set());
@@ -75,6 +82,9 @@ const InsuranceFirmDashboard = () => {
   const [reminderError, setReminderError] = useState<string | null>(null);
   const [reminderSuccess, setReminderSuccess] = useState<string | null>(null);
   const [showReminderSection, setShowReminderSection] = useState(false);
+
+  const addReminders = useReminderStore((state) => state.addReminders);
+  const clearReminders = useReminderStore((state) => state.clearReminders);
 
   // Clear messages after 5 seconds
   React.useEffect(() => {
@@ -158,9 +168,34 @@ const InsuranceFirmDashboard = () => {
     return outstandingPolicies.sort((a, b) => b.daysOverdue - a.daysOverdue);
   };
 
+  // Merge backend and local policies
+  const allPolicies = useMemo(() => {
+    const backendPolicies = policies || [];
+    const localPoliciesData = localPolicies.map(localPolicy => ({
+      id: parseInt(localPolicy.id.split('-')[0]) || Math.floor(Math.random() * 10000),
+      policy_number: localPolicy.policy_number || `LOCAL-${localPolicy.id}`,
+      policy_type: localPolicy.policy_type,
+      customer_id: Math.floor(Math.random() * 1000),
+      broker_id: Math.floor(Math.random() * 100),
+      coverage_amount: localPolicy.coverage_amount,
+      premium_amount: localPolicy.premium_amount,
+      start_date: localPolicy.start_date,
+      end_date: localPolicy.due_date,
+      status: 'active',
+      customer: {
+        full_name: localPolicy.contact_person,
+        email: localPolicy.contact_email,
+      },
+      broker: {
+        name: 'Local Broker',
+      },
+    }));
+    return [...backendPolicies, ...localPoliciesData];
+  }, [policies, localPolicies]);
+
   const outstandingPolicies = useMemo(() => 
-    calculateOutstandingPolicies(policies || [], premiums || []), 
-    [policies, premiums]
+    calculateOutstandingPolicies(allPolicies, premiums || []), 
+    [allPolicies, premiums]
   );
 
   // Handle individual row selection for reminders
@@ -188,23 +223,26 @@ const InsuranceFirmDashboard = () => {
     setReminderLoading(true);
     setReminderError(null);
     setReminderSuccess(null);
-
     try {
-      // Use the new automatic reminder system (max 30 days overdue, 24h cooldown)
-      const response = await reminderService.sendAutomaticReminders(30, 24);
-      
-      if (response.notifications_created === 0) {
-        setReminderSuccess('No overdue policies found that need reminders at this time.');
-      } else {
-        setReminderSuccess(
-          `✅ Payment reminders sent successfully! Created ${response.notifications_created} notifications for ${response.brokers_notified} brokers across ${response.policies_processed} overdue policies. Brokers will see these reminders in their dashboards.`
-        );
-      }
-      
-      // Clear any selections since we're using automatic detection now
+      // Generate dummy reminders for all brokers with outstanding policies
+      clearReminders();
+      const now = new Date().toISOString();
+      const dummyReminders = outstandingPolicies.map((policy) => ({
+        id: `${policy.policyId}-${now}`,
+        brokerId: policy.brokerId,
+        policyNumber: policy.policyNumber,
+        customerName: policy.customerName,
+        premiumAmount: policy.premiumAmount,
+        daysOverdue: policy.daysOverdue,
+        sentAt: now,
+      }));
+      addReminders(dummyReminders);
+      setReminderSuccess(
+        `✅ Payment reminders sent successfully! Created ${dummyReminders.length} reminders for ${[...new Set(dummyReminders.map(r => r.brokerId))].length} brokers.`
+      );
       setSelectedPolicies(new Set());
     } catch (error) {
-      setReminderError(error instanceof Error ? error.message : 'Failed to send automatic reminders');
+      setReminderError('Failed to send dummy payment reminders');
     } finally {
       setReminderLoading(false);
     }
@@ -311,7 +349,7 @@ const InsuranceFirmDashboard = () => {
     );
   }
 
-  const brokerPerformance = policies ? calculateBrokerPerformance(policies) : [];
+  const brokerPerformance = allPolicies ? calculateBrokerPerformance(allPolicies) : [];
   const claimsData = premiums ? calculateClaimsData(premiums) : { totalClaims: 0, totalPayout: 0 };
 
   // Mock chart data for claims trends
@@ -427,7 +465,12 @@ const InsuranceFirmDashboard = () => {
       <div className="w-full overflow-hidden rounded-xl border border-gray-700 bg-gray-800">
         <DataTable 
           columns={recentPoliciesColumns} 
-          data={dashboardData?.recent_policies || []} 
+          data={dashboardData?.recent_policies || allPolicies.slice(0, 10).map(policy => ({
+            policy_number: policy.policy_number,
+            customer_name: policy.customer?.full_name || 'Unknown',
+            broker: policy.broker?.name || 'Unassigned',
+            premium_amount: policy.premium_amount,
+          }))} 
         />
       </div>
 
