@@ -45,10 +45,10 @@ def get_current_user(
             settings.jwt_secret, 
             algorithms=[settings.JWT_ALGORITHM]
         )
-        email: str = payload.get("sub")
-        if email is None:
-            raise credentials_exception
-        token_data = TokenData(email=email)
+    email: str = payload.get("sub")
+    if email is None:
+        raise credentials_exception
+    token_data = TokenData(email=email)
     except JWTError:
         raise credentials_exception
     
@@ -199,7 +199,7 @@ def require_verified_user(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Account verification required for this operation"
         )
-    return current_user
+    return current_user 
 
 def get_user_with_role(required_role: UserRole):
     """

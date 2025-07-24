@@ -168,7 +168,7 @@ def delete_policy(
     
     if not policy_crud.delete_policy(db, policy_id=policy_id):
         raise HTTPException(status_code=404, detail="Policy not found")
-    return
+    return 
 
 @router.get("/{policy_id}/broker-view")
 def get_policy_broker_view(

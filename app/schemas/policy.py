@@ -132,6 +132,6 @@ class PolicySummary(BaseModel):
     due_date: date
     payment_frequency: str
     status: str
-    
+
     class Config:
         from_attributes = True 

@@ -125,7 +125,7 @@ class Token(BaseModel):
     user: UserResponse
 
 class TokenData(BaseModel):
-    email: EmailStr = None
+    email: EmailStr = None 
 
 class UserRolePermissions(BaseModel):
     """Schema for user role and permissions."""
