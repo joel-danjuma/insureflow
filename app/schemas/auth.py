@@ -78,6 +78,14 @@ class UserResponse(BaseModel):
     updated_at: Optional[datetime] = None
     last_login: Optional[datetime] = None
 
+    @validator('role', pre=True, always=True)
+    def normalize_role(cls, v):
+        if isinstance(v, str):
+            return v.lower()
+        if hasattr(v, 'value'):
+            return v.value.lower()
+        return v
+
     class Config:
         from_attributes = True
 
