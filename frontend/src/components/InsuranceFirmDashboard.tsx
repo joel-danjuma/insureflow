@@ -271,13 +271,13 @@ const InsuranceFirmDashboard = () => {
         {/* Header skeleton */}
         <div className="flex flex-wrap justify-between gap-3 py-4">
           <div className="flex min-w-72 flex-col gap-3">
-            <div className="h-8 bg-gray-200 rounded w-48 animate-pulse"></div>
-            <div className="h-4 bg-gray-200 rounded w-96 animate-pulse"></div>
+            <div className="h-8 bg-gray-700 rounded w-48 animate-pulse"></div>
+            <div className="h-4 bg-gray-700 rounded w-96 animate-pulse"></div>
           </div>
         </div>
         
         {/* Metric cards skeleton */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <MetricCard key={i} title="" value="" isLoading={true} />
           ))}
@@ -285,8 +285,8 @@ const InsuranceFirmDashboard = () => {
         
         {/* Tables skeleton */}
         <div className="space-y-6">
-          <div className="h-6 bg-gray-200 rounded w-48 animate-pulse"></div>
-          <div className="h-64 bg-gray-100 rounded-xl border border-gray-200 animate-pulse"></div>
+          <div className="h-6 bg-gray-700 rounded w-48 animate-pulse"></div>
+          <div className="h-64 bg-gray-800 rounded-xl border border-gray-700 animate-pulse"></div>
         </div>
       </div>
     );
@@ -295,9 +295,9 @@ const InsuranceFirmDashboard = () => {
   if (dashboardError || policiesError || premiumsError) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center p-8 border border-red-200 rounded-lg bg-red-50">
-          <div className="text-red-600 text-xl font-semibold mb-2">Error Loading Dashboard</div>
-          <p className="text-red-500 mb-4">
+        <div className="text-center p-8 border border-red-500/30 rounded-lg bg-red-900/20">
+          <div className="text-red-400 text-xl font-semibold mb-2">Error Loading Dashboard</div>
+          <p className="text-red-300 mb-4">
             {(dashboardError || policiesError || premiumsError)?.toString()}
           </p>
           <button 
@@ -356,7 +356,7 @@ const InsuranceFirmDashboard = () => {
       )}
       
       {/* Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard 
           title="New Policies" 
           value={dashboardData?.kpis.new_policies_this_month || 0} 
