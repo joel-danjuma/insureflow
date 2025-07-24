@@ -10,7 +10,8 @@ from app.crud import policy as policy_crud
 from app.dependencies import (
     get_current_broker_or_admin_user, 
     get_current_policy_creator,
-    get_current_active_user
+    get_current_active_user,
+    get_current_payment_processor
 )
 from app.models.user import User
 from app.schemas.policy import Policy, PolicyCreate, PolicyUpdate, PolicySummary
