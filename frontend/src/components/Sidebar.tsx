@@ -18,7 +18,7 @@ const roleLinks = {
     // { href: '/claims', label: 'Claims', icon: 'ShieldCheck' }, // Commented out - not working
     { href: '/policies/create', label: 'Create Policy', icon: 'File' },
     { href: '/reports', label: 'Reports', icon: 'ChartBar' },
-    // { href: '/settings', label: 'Settings', icon: 'Gear' }, // Commented out - not working
+    { href: '/settings', label: 'Settings', icon: 'Gear' },
     { href: '/reminders', label: 'Send Reminders', icon: 'Bell' },
   ],
   [UserRole.BROKER]: [
@@ -27,11 +27,13 @@ const roleLinks = {
     { href: '/payments', label: 'Payments', icon: 'CurrencyDollar' },
     { href: '/commissions', label: 'Commissions', icon: 'Wallet' },
     { href: '/support', label: 'Support', icon: 'Question' },
+    { href: '/settings', label: 'Settings', icon: 'Gear' },
   ],
   [UserRole.CUSTOMER]: [
     { href: '/my-policies', label: 'My Policies', icon: 'File' },
     { href: '/payments', label: 'Payments', icon: 'CurrencyDollar' },
     { href: '/support', label: 'Support', icon: 'Question' },
+    { href: '/settings', label: 'Settings', icon: 'Gear' },
   ],
 };
 

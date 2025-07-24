@@ -136,19 +136,19 @@ const PolicyCreationForm = () => {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-8">
+    <div className="max-w-4xl mx-auto p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Create New Policy</h1>
-        <p className="text-gray-600">Comprehensive policy creation form with all required fields</p>
+        <h1 className="text-3xl font-bold text-white mb-2">Create New Policy</h1>
+        <p className="text-gray-400">Comprehensive policy creation form with all required fields</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-8">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {/* Policy Information */}
-        <div className="bg-gray-50 p-6 rounded-lg">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">📝 Policy Information</h2>
+        <div className="bg-gray-800 border border-gray-700 p-6 rounded-xl">
+          <h2 className="text-xl font-semibold text-white mb-4">Policy Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Policy Name *
               </label>
               <input
@@ -157,13 +157,13 @@ const PolicyCreationForm = () => {
                 value={formData.policy_name}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-white placeholder-gray-400"
                 placeholder="Enter policy name"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Policy Number
               </label>
               <input
@@ -171,13 +171,13 @@ const PolicyCreationForm = () => {
                 name="policy_number"
                 value={formData.policy_number}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-white placeholder-gray-400"
                 placeholder="Auto-generated or manual"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Policy Type *
               </label>
               <select
@@ -185,7 +185,7 @@ const PolicyCreationForm = () => {
                 value={formData.policy_type}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-white"
               >
                 {policyTypes.map(type => (
                   <option key={type.value} value={type.value}>
@@ -196,7 +196,7 @@ const PolicyCreationForm = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Duration (Months)
               </label>
               <input
@@ -205,12 +205,12 @@ const PolicyCreationForm = () => {
                 value={formData.duration_months}
                 onChange={handleInputChange}
                 min="1"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-white"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Start Date *
               </label>
               <input
@@ -219,12 +219,12 @@ const PolicyCreationForm = () => {
                 value={formData.start_date}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-white"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Due Date *
               </label>
               <input
@@ -233,18 +233,18 @@ const PolicyCreationForm = () => {
                 value={formData.due_date}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-white"
               />
             </div>
           </div>
         </div>
 
         {/* Payment & Premium Details */}
-        <div className="bg-gray-50 p-6 rounded-lg">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">💸 Payment & Premium Details</h2>
+        <div className="bg-gray-800 border border-gray-700 p-6 rounded-xl">
+          <h2 className="text-xl font-semibold text-white mb-4">Payment & Premium Details</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Premium Amount (₦) *
               </label>
               <input
@@ -255,13 +255,13 @@ const PolicyCreationForm = () => {
                 required
                 min="0"
                 step="0.01"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-white placeholder-gray-400"
                 placeholder="0.00"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Payment Frequency *
               </label>
               <select
@@ -269,7 +269,7 @@ const PolicyCreationForm = () => {
                 value={formData.payment_frequency}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-white"
               >
                 {paymentFrequencies.map(freq => (
                   <option key={freq.value} value={freq.value}>
@@ -280,7 +280,7 @@ const PolicyCreationForm = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 First Payment Date
               </label>
               <input
@@ -288,12 +288,12 @@ const PolicyCreationForm = () => {
                 name="first_payment_date"
                 value={formData.first_payment_date}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-white"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Grace Period (Days)
               </label>
               <input
@@ -302,18 +302,18 @@ const PolicyCreationForm = () => {
                 value={formData.grace_period_days}
                 onChange={handleInputChange}
                 min="0"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-white"
               />
             </div>
           </div>
         </div>
 
         {/* Policyholder Information */}
-        <div className="bg-gray-50 p-6 rounded-lg">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">🧍 Policyholder Information</h2>
+        <div className="bg-gray-800 border border-gray-700 p-6 rounded-xl">
+          <h2 className="text-xl font-semibold text-white mb-4">Policyholder Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Company Name *
               </label>
               <input
@@ -322,13 +322,13 @@ const PolicyCreationForm = () => {
                 value={formData.company_name}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-white placeholder-gray-400"
                 placeholder="Enter company name"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Contact Person *
               </label>
               <input
@@ -337,13 +337,13 @@ const PolicyCreationForm = () => {
                 value={formData.contact_person}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-white placeholder-gray-400"
                 placeholder="Enter contact person name"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Email Address *
               </label>
               <input
@@ -352,13 +352,13 @@ const PolicyCreationForm = () => {
                 value={formData.contact_email}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-white placeholder-gray-400"
                 placeholder="Enter email address"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Phone Number
               </label>
               <input
@@ -366,13 +366,13 @@ const PolicyCreationForm = () => {
                 name="contact_phone"
                 value={formData.contact_phone}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-white placeholder-gray-400"
                 placeholder="Enter phone number"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 RC Number / Tax ID
               </label>
               <input
@@ -380,7 +380,7 @@ const PolicyCreationForm = () => {
                 name="rc_number"
                 value={formData.rc_number}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-white placeholder-gray-400"
                 placeholder="Enter RC number or tax ID"
               />
             </div>
@@ -388,11 +388,11 @@ const PolicyCreationForm = () => {
         </div>
 
         {/* Coverage Details */}
-        <div className="bg-gray-50 p-6 rounded-lg">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">🧾 Coverage Details</h2>
+        <div className="bg-gray-800 border border-gray-700 p-6 rounded-xl">
+          <h2 className="text-xl font-semibold text-white mb-4">Coverage Details</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Coverage Amount (₦) *
               </label>
               <input
@@ -403,13 +403,13 @@ const PolicyCreationForm = () => {
                 required
                 min="0"
                 step="0.01"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-white placeholder-gray-400"
                 placeholder="0.00"
               />
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Coverage Items / Risk Type
               </label>
               <textarea
@@ -417,13 +417,13 @@ const PolicyCreationForm = () => {
                 value={formData.coverage_items}
                 onChange={handleInputChange}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-white placeholder-gray-400"
                 placeholder="Describe coverage items and risk types"
               />
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Beneficiaries
               </label>
               <textarea
@@ -431,7 +431,7 @@ const PolicyCreationForm = () => {
                 value={formData.beneficiaries}
                 onChange={handleInputChange}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-white placeholder-gray-400"
                 placeholder="List beneficiaries with their relationships and percentage shares"
               />
             </div>
@@ -439,11 +439,11 @@ const PolicyCreationForm = () => {
         </div>
 
         {/* Tags / Broker Visibility */}
-        <div className="bg-gray-50 p-6 rounded-lg">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">📌 Tags / Broker Visibility</h2>
+        <div className="bg-gray-800 border border-gray-700 p-6 rounded-xl">
+          <h2 className="text-xl font-semibold text-white mb-4">Tags / Broker Visibility</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Broker Notes
               </label>
               <textarea
@@ -451,13 +451,13 @@ const PolicyCreationForm = () => {
                 value={formData.broker_notes}
                 onChange={handleInputChange}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-white placeholder-gray-400"
                 placeholder="Add broker-specific notes"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Internal Tags
               </label>
               <input
@@ -465,7 +465,7 @@ const PolicyCreationForm = () => {
                 name="internal_tags"
                 value={formData.internal_tags}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-white placeholder-gray-400"
                 placeholder="Enter tags separated by commas"
               />
             </div>
@@ -473,8 +473,8 @@ const PolicyCreationForm = () => {
         </div>
 
         {/* Optional Advanced Settings */}
-        <div className="bg-gray-50 p-6 rounded-lg">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">✅ Optional Advanced Settings</h2>
+        <div className="bg-gray-800 border border-gray-700 p-6 rounded-xl">
+          <h2 className="text-xl font-semibold text-white mb-4">Optional Advanced Settings</h2>
           <div className="space-y-4">
             <div className="flex items-center">
               <input
@@ -482,9 +482,9 @@ const PolicyCreationForm = () => {
                 name="auto_renew"
                 checked={formData.auto_renew}
                 onChange={handleInputChange}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-600 rounded bg-gray-700"
               />
-              <label className="ml-2 block text-sm text-gray-900">
+              <label className="ml-2 block text-sm text-gray-300">
                 Auto-Renew Policy
               </label>
             </div>
@@ -495,9 +495,9 @@ const PolicyCreationForm = () => {
                 name="notify_broker_on_change"
                 checked={formData.notify_broker_on_change}
                 onChange={handleInputChange}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-600 rounded bg-gray-700"
               />
-              <label className="ml-2 block text-sm text-gray-900">
+              <label className="ml-2 block text-sm text-gray-300">
                 Notify Broker on Policy Changes
               </label>
             </div>
@@ -509,14 +509,14 @@ const PolicyCreationForm = () => {
           <button
             type="button"
             onClick={() => window.history.back()}
-            className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-6 py-2 border border-gray-600 rounded-lg text-gray-300 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-colors"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={createPolicyMutation.isPending}
-            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+            className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50 transition-colors"
           >
             {createPolicyMutation.isPending ? 'Creating...' : 'Create Policy'}
           </button>
