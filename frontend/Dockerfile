@@ -4,7 +4,7 @@ WORKDIR /app
 
 # Install dependencies separately to leverage Docker layer caching
 COPY package*.json ./
-RUN npm install --silent
+RUN npm install --silent --no-cache
 
 # Copy source code
 COPY . .
