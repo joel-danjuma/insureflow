@@ -50,7 +50,7 @@ const getApiUrl = () => {
     return `${protocol}//${hostname}:${backendPort}/api/v1`;
   }
   // Server-side rendering fallback
-  return 'http://localhost:8000/api/v1';
+  return 'http://backend:8000/api/v1';
 };
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || getApiUrl();
