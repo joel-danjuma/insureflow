@@ -46,6 +46,7 @@ const BrokerDashboard = () => {
   const addPayment = usePaymentStore((state) => state.addPayment);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentSuccessState, setPaymentSuccessState] = useState(false);
+  const [modalLoading, setModalLoading] = useState(false);
 
   // Clear messages after 5 seconds
   React.useEffect(() => {
@@ -177,7 +178,7 @@ const BrokerDashboard = () => {
 
   // Handle payment completion
   const handleCompletePayment = async (paymentMethod: 'bank_transfer' | 'ussd') => {
-    setPaymentLoading(true);
+    // Set loading state for the modal
     setPaymentError(null);
     setPaymentSuccess(null);
     setPaymentSuccessState(false);
@@ -210,7 +211,6 @@ const BrokerDashboard = () => {
       addPayment(paymentRecord);
 
       // Show success state in modal
-      setPaymentLoading(false);
       setPaymentSuccessState(true);
 
       setTimeout(() => {
@@ -221,7 +221,6 @@ const BrokerDashboard = () => {
       }, 2000);
     } catch (error) {
       setPaymentError('Payment failed. Please try again.');
-      setPaymentLoading(false);
     }
   };
 
@@ -549,7 +548,7 @@ const BrokerDashboard = () => {
           premiumAmountRaw: item.premiumAmountRaw,
         }))}
         totalAmount={selectedPoliciesData.selectedTotal}
-        isLoading={paymentLoading}
+        isLoading={false}
         isSuccess={paymentSuccessState}
       />
     </>
