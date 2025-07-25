@@ -12,6 +12,8 @@ import { paymentService, premiumService, notificationService } from '@/services/
 import useReminderStore from '@/store/reminderStore';
 import useAuthStore from '@/store/authStore';
 import usePolicyStore from '@/store/policyStore';
+import usePaymentStore from '@/store/paymentStore';
+import PaymentModal from '@/components/PaymentModal';
 
 type ClientPortfolioItem = {
     id: string;
@@ -41,6 +43,9 @@ const BrokerDashboard = () => {
   const [bulkPaymentLoading, setBulkPaymentLoading] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [paymentSuccess, setPaymentSuccess] = useState<string | null>(null);
+  const addPayment = usePaymentStore((state) => state.addPayment);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentSuccessState, setPaymentSuccessState] = useState(false);
 
   // Clear messages after 5 seconds
   React.useEffect(() => {
@@ -152,68 +157,71 @@ const BrokerDashboard = () => {
     }
   };
 
-  // Handle individual premium payment
+  // Handle single premium payment
   const handleSinglePayment = async (premiumId: number, policyId: string) => {
-    if (!premiumId) {
-      setPaymentError('No premium found for this policy');
-      return;
-    }
+    const policy = clientPortfolio.find(item => item.id === policyId);
+    if (!policy) return;
 
-    setPaymentLoading(prev => new Set(prev).add(policyId));
-    setPaymentError(null);
-    setPaymentSuccess(null);
-
-    try {
-      const response = await premiumService.payPremium(premiumId);
-      
-      if (response.payment_url) {
-        // Redirect to Squad Co payment page
-        window.open(response.payment_url, '_blank');
-        setPaymentSuccess(`Payment initiated for premium ${premiumId}. Complete payment in the new tab.`);
-      } else {
-        setPaymentError('No payment URL received from payment service');
-      }
-    } catch (error) {
-      setPaymentError(error instanceof Error ? error.message : 'Failed to initiate payment');
-    } finally {
-      setPaymentLoading(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(policyId);
-        return newSet;
-      });
-    }
+    setSelectedPolicies(new Set([policyId]));
+    setShowPaymentModal(true);
   };
 
   // Handle bulk payment
   const handleBulkPayment = async () => {
-    const selectedPolicyIds = Array.from(selectedPolicies).map(id => parseInt(id));
-    
-    if (selectedPolicyIds.length === 0) {
+    if (selectedPolicies.size === 0) {
       setPaymentError('No policies selected for payment');
       return;
     }
+    setShowPaymentModal(true);
+  };
 
-    setBulkPaymentLoading(true);
+  // Handle payment completion
+  const handleCompletePayment = async (paymentMethod: 'bank_transfer' | 'ussd') => {
+    setPaymentLoading(true);
     setPaymentError(null);
     setPaymentSuccess(null);
+    setPaymentSuccessState(false);
 
     try {
-      const response = await paymentService.initiateBulkPayment(selectedPolicyIds);
+      // Simulate payment processing
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Get selected policies data
+      const selectedPoliciesData = clientPortfolio.filter(item => selectedPolicies.has(item.id));
       
-      if (response.payment_url) {
-        // Redirect to Squad Co payment page
-        window.open(response.payment_url, '_blank');
-        setPaymentSuccess(`Bulk payment initiated for ${selectedPolicyIds.length} policies. Complete payment in the new tab.`);
-        
-        // Clear selection after successful initiation
+      // Create payment record
+      const paymentRecord = {
+        id: `payment-${Date.now()}`,
+        brokerId: user?.id || 0,
+        brokerName: brokerProfile?.name || 'Unknown Broker',
+        totalAmount: selectedPoliciesData.reduce((sum, item) => sum + item.premiumAmountRaw, 0),
+        policies: selectedPoliciesData.map(item => ({
+          policyId: item.policyId,
+          policyNumber: item.clientName.split(' ')[0] + '-POL-' + item.policyId,
+          customerName: item.clientName,
+          amount: item.premiumAmountRaw,
+        })),
+        paymentMethod,
+        status: 'completed' as const,
+        completedAt: new Date().toISOString(),
+      };
+
+      // Add to payment store
+      addPayment(paymentRecord);
+
+      // Show success state in modal
+      setPaymentLoading(false);
+      setPaymentSuccessState(true);
+
+      setTimeout(() => {
+        setPaymentSuccess(`Payment completed successfully! ${selectedPoliciesData.length} policies paid via ${paymentMethod === 'bank_transfer' ? 'Bank Transfer' : 'USSD'}.`);
         setSelectedPolicies(new Set());
-      } else {
-        setPaymentError('No payment URL received from payment service');
-      }
+        setShowPaymentModal(false);
+        setPaymentSuccessState(false);
+      }, 2000);
     } catch (error) {
-      setPaymentError(error instanceof Error ? error.message : 'Failed to initiate bulk payment');
-    } finally {
-      setBulkPaymentLoading(false);
+      setPaymentError('Payment failed. Please try again.');
+      setPaymentLoading(false);
     }
   };
 
@@ -524,6 +532,26 @@ const BrokerDashboard = () => {
       <div className="w-full overflow-hidden rounded-xl border border-gray-700 bg-gray-800">
         <DataTable columns={portfolioColumns} data={clientPortfolio} />
       </div>
+
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => {
+          setShowPaymentModal(false);
+          setPaymentSuccessState(false);
+        }}
+        onCompletePayment={handleCompletePayment}
+        selectedPolicies={clientPortfolio.filter(item => selectedPolicies.has(item.id)).map(item => ({
+          id: item.id,
+          policyNumber: item.clientName.split(' ')[0] + '-POL-' + item.policyId,
+          customerName: item.clientName,
+          premiumAmount: item.premiumAmount,
+          premiumAmountRaw: item.premiumAmountRaw,
+        }))}
+        totalAmount={selectedPoliciesData.selectedTotal}
+        isLoading={paymentLoading}
+        isSuccess={paymentSuccessState}
+      />
     </>
   );
 };
