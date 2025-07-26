@@ -21,6 +21,8 @@ interface PolicyFormData {
   contact_email: string;
   contact_phone: string;
   rc_number: string;
+  bvn: string;
+  broker: string;
   coverage_amount: number;
   coverage_items: string;
   beneficiaries: string;
@@ -48,6 +50,8 @@ const PolicyCreationForm = () => {
     contact_email: '',
     contact_phone: '',
     rc_number: '',
+    bvn: '',
+    broker: '',
     coverage_amount: 0,
     coverage_items: '',
     beneficiaries: '',
@@ -95,6 +99,8 @@ const PolicyCreationForm = () => {
         contact_email: '',
         contact_phone: '',
         rc_number: '',
+        bvn: '',
+        broker: '',
         coverage_amount: 0,
         coverage_items: '',
         beneficiaries: '',
@@ -155,6 +161,12 @@ const PolicyCreationForm = () => {
     { value: 'quarterly', label: 'Quarterly' },
     { value: 'annually', label: 'Annually' },
     { value: 'custom', label: 'Custom' },
+  ];
+
+  const brokerOptions = [
+    { value: 'SCIB', label: 'SCIB' },
+    { value: 'ARK_INSURANCE', label: 'ARK INSURANCE' },
+    { value: 'IBN', label: 'IBN' },
   ];
 
   return (
@@ -336,7 +348,7 @@ const PolicyCreationForm = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Company Name *
+                Individual/Company Name *
               </label>
               <input
                 type="text"
@@ -345,7 +357,7 @@ const PolicyCreationForm = () => {
                 onChange={handleInputChange}
                 required
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-white placeholder-gray-400"
-                placeholder="Enter company name"
+                placeholder="Enter individual or company name"
               />
             </div>
 
@@ -405,6 +417,40 @@ const PolicyCreationForm = () => {
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-white placeholder-gray-400"
                 placeholder="Enter RC number or tax ID"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                BVN
+              </label>
+              <input
+                type="text"
+                name="bvn"
+                value={formData.bvn}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-white placeholder-gray-400"
+                placeholder="Enter BVN"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Broker *
+              </label>
+              <select
+                name="broker"
+                value={formData.broker}
+                onChange={handleInputChange}
+                required
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-white"
+              >
+                <option value="">Select a Broker</option>
+                {brokerOptions.map(broker => (
+                  <option key={broker.value} value={broker.value}>
+                    {broker.label}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         </div>

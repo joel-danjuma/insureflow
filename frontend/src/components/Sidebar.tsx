@@ -22,7 +22,7 @@ const roleLinks = {
     { href: '/reminders', label: 'Send Reminders', icon: 'Bell' },
   ],
   [UserRole.BROKER]: [
-    { href: '/policies/create', label: 'Create Policy', icon: 'File' },
+    // { href: '/policies/create', label: 'Create Policy', icon: 'File' }, // Commented out - only available for insurance firm
     { href: '/clients', label: 'Clients', icon: 'Users' },
     { href: '/payments', label: 'Payments', icon: 'CurrencyDollar' },
     { href: '/commissions', label: 'Commissions', icon: 'Wallet' },
