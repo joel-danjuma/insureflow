@@ -132,17 +132,6 @@ const PaymentsPage = () => {
       ),
     },
     {
-      accessorKey: 'due_date',
-      header: 'Due Date',
-      cell: ({ row }) => (
-        <div className="text-center">
-          <div className="text-white">
-            {new Date(row.original.due_date).toLocaleDateString()}
-          </div>
-        </div>
-      ),
-    },
-    {
       accessorKey: 'status',
       header: 'Status',
       cell: ({ row }) => {
@@ -162,23 +151,10 @@ const PaymentsPage = () => {
     },
     {
       accessorKey: 'payment_method',
-      header: 'Payment Method',
+      header: 'Method',
       cell: ({ row }) => (
         <div className="text-center">
-          <div className="text-white">{row.original.payment_method}</div>
-        </div>
-      ),
-    },
-    {
-      accessorKey: 'transaction_ref',
-      header: 'Transaction Ref',
-      cell: ({ row }) => (
-        <div className="text-center">
-          {row.original.transaction_ref ? (
-            <div className="text-white text-sm">{row.original.transaction_ref}</div>
-          ) : (
-            <div className="text-gray-400 text-sm">-</div>
-          )}
+          <div className="text-white text-sm">{row.original.payment_method}</div>
         </div>
       ),
     },
@@ -216,7 +192,7 @@ const PaymentsPage = () => {
   if (isLoading) {
     return (
       <Layout title="Payments">
-        <div className="w-full p-4 lg:p-6">
+        <div className="max-w-7xl mx-auto p-6">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-white mb-2">Payments</h1>
             <p className="text-gray-400">Manage payment transactions</p>
@@ -235,7 +211,7 @@ const PaymentsPage = () => {
 
   return (
     <Layout title="Payments">
-      <div className="w-full p-4 lg:p-6">
+      <div className="max-w-7xl mx-auto p-6">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">Payments</h1>
           <p className="text-gray-400">Manage payment transactions</p>

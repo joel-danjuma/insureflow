@@ -113,7 +113,7 @@ const CommissionsPage = () => {
     },
     {
       accessorKey: 'premium_amount',
-      header: 'Premium Amount',
+      header: 'Premium',
       cell: ({ row }) => (
         <div className="text-right">
           <div className="text-white font-medium">
@@ -123,39 +123,13 @@ const CommissionsPage = () => {
       ),
     },
     {
-      accessorKey: 'commission_rate',
-      header: 'Commission Rate',
-      cell: ({ row }) => (
-        <div className="text-center">
-          <div className="text-white font-medium">
-            {(row.original.commission_rate * 100).toFixed(1)}%
-          </div>
-        </div>
-      ),
-    },
-    {
       accessorKey: 'commission_amount',
-      header: 'Commission Amount',
+      header: 'Commission',
       cell: ({ row }) => (
         <div className="text-right">
           <div className="text-white font-medium">
             ₦{(row.original.commission_amount / 1000).toFixed(1)}K
           </div>
-        </div>
-      ),
-    },
-    {
-      accessorKey: 'payment_date',
-      header: 'Payment Date',
-      cell: ({ row }) => (
-        <div className="text-center">
-          {row.original.payment_date ? (
-            <div className="text-white">
-              {new Date(row.original.payment_date).toLocaleDateString()}
-            </div>
-          ) : (
-            <div className="text-gray-400">-</div>
-          )}
         </div>
       ),
     },
@@ -178,23 +152,10 @@ const CommissionsPage = () => {
     },
     {
       accessorKey: 'payment_method',
-      header: 'Payment Method',
+      header: 'Method',
       cell: ({ row }) => (
         <div className="text-center">
-          <div className="text-white">{row.original.payment_method}</div>
-        </div>
-      ),
-    },
-    {
-      accessorKey: 'transaction_ref',
-      header: 'Transaction Ref',
-      cell: ({ row }) => (
-        <div className="text-center">
-          {row.original.transaction_ref ? (
-            <div className="text-white text-sm">{row.original.transaction_ref}</div>
-          ) : (
-            <div className="text-gray-400 text-sm">-</div>
-          )}
+          <div className="text-white text-sm">{row.original.payment_method}</div>
         </div>
       ),
     },
@@ -232,7 +193,7 @@ const CommissionsPage = () => {
   if (isLoading) {
     return (
       <Layout title="Commissions">
-        <div className="w-full p-4 lg:p-6">
+        <div className="max-w-7xl mx-auto p-6">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-white mb-2">Commissions</h1>
             <p className="text-gray-400">View your commission earnings</p>
@@ -251,7 +212,7 @@ const CommissionsPage = () => {
 
   return (
     <Layout title="Commissions">
-      <div className="w-full p-4 lg:p-6">
+      <div className="max-w-7xl mx-auto p-6">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">Commissions</h1>
           <p className="text-gray-400">View your commission earnings</p>
