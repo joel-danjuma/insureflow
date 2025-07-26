@@ -11,6 +11,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { reminderService } from '@/services/api';
 import useReminderStore from '@/store/reminderStore';
 import usePolicyStore from '@/store/policyStore';
+import usePaymentStore from '@/store/paymentStore';
 
 // For displaying broker performance (calculated from policies data)
 type BrokerPerformance = {
@@ -32,6 +33,23 @@ type OutstandingPolicy = {
   premiumAmountRaw: number;
   daysOverdue: number;
   lastPaymentDate: string;
+};
+
+// For displaying latest payments from brokers
+type LatestPayment = {
+  id: string;
+  brokerName: string;
+  totalAmount: number;
+  policyCount: number;
+  paymentMethod: string;
+  status: string;
+  completedAt: string;
+  policies: Array<{
+    policyId: number;
+    policyNumber: string;
+    customerName: string;
+    amount: number;
+  }>;
 };
 
 const brokerColumns: ColumnDef<BrokerPerformance>[] = [
@@ -70,6 +88,31 @@ const recentPoliciesColumns: ColumnDef<RecentPolicy>[] = [
     },
 ];
 
+const latestPaymentsColumns: ColumnDef<LatestPayment>[] = [
+    { accessorKey: 'brokerName', header: 'Broker Name' },
+    { 
+      accessorKey: 'totalAmount', 
+      header: 'Total Amount',
+      cell: ({ row }) => formatNaira(row.original.totalAmount)
+    },
+    { accessorKey: 'policyCount', header: 'Policies Paid' },
+    { accessorKey: 'paymentMethod', header: 'Payment Method' },
+    { 
+      accessorKey: 'status', 
+      header: 'Status',
+      cell: ({ row }) => (
+        <span className="px-3 py-1 rounded-full text-sm font-medium bg-green-900/30 text-green-400 border border-green-500/30">
+          {row.original.status}
+        </span>
+      )
+    },
+    { 
+      accessorKey: 'completedAt', 
+      header: 'Payment Date',
+      cell: ({ row }) => new Date(row.original.completedAt).toLocaleDateString('en-GB')
+    },
+];
+
 const InsuranceFirmDashboard = () => {
   const { data: dashboardData, isLoading: dashboardLoading, error: dashboardError } = useDashboardData();
   const { data: policies, isLoading: policiesLoading, error: policiesError } = usePolicies();
@@ -85,6 +128,7 @@ const InsuranceFirmDashboard = () => {
 
   const addReminders = useReminderStore((state) => state.addReminders);
   const clearReminders = useReminderStore((state) => state.clearReminders);
+  const payments = usePaymentStore((state) => state.payments);
 
   // Clear messages after 5 seconds
   React.useEffect(() => {
@@ -521,6 +565,19 @@ const InsuranceFirmDashboard = () => {
             />
           </AreaChart>
         </ResponsiveContainer>
+      </div>
+
+      {/* Latest Payments Section */}
+      <h2 className="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pt-8 pb-3">Latest Payments</h2>
+      <div className="w-full overflow-hidden rounded-xl border border-gray-700 bg-gray-800">
+        {payments && payments.length > 0 ? (
+          <DataTable columns={latestPaymentsColumns} data={payments} />
+        ) : (
+          <div className="p-8 text-center">
+            <div className="text-gray-400 text-lg font-semibold mb-2">No Payments Yet</div>
+            <p className="text-gray-500">Payments made by brokers will appear here.</p>
+          </div>
+        )}
       </div>
     </>
   );
