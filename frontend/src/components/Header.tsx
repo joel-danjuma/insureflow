@@ -106,14 +106,14 @@ const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="bg-gray-900 border-b border-gray-700 px-4 lg:px-6 py-4 h-[73px] flex items-center w-full">
-      <div className="flex items-center justify-between w-full">
+      <div className="flex items-center justify-between w-full min-w-0">
         {/* Left Side - Hamburger + Title */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-4 min-w-0 flex-1">
           {/* Hamburger Menu (Mobile Only) */}
           {showSidebarToggle && onToggleSidebar && (
             <button
               onClick={onToggleSidebar}
-              className="lg:hidden p-2 text-gray-400 hover:bg-gray-800 hover:text-white border border-transparent hover:border-gray-600 transition-all duration-200 rounded-lg"
+              className="lg:hidden p-2 text-gray-400 hover:bg-gray-800 hover:text-white border border-transparent hover:border-gray-600 transition-all duration-200 rounded-lg flex-shrink-0"
               aria-label="Toggle sidebar"
             >
               <svg 
@@ -129,13 +129,13 @@ const Header: React.FC<HeaderProps> = ({
           )}
           
           {/* Title */}
-          <div>
-            <h1 className="text-xl lg:text-2xl font-bold text-white">{title}</h1>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl lg:text-2xl font-bold text-white truncate">{title}</h1>
           </div>
         </div>
 
         {/* Right Side - User Menu & Actions */}
-        <div className="flex items-center space-x-2 lg:space-x-4">
+        <div className="flex items-center space-x-2 lg:space-x-4 flex-shrink-0">
           {/* Notifications */}
           <div className="relative">
             <button 

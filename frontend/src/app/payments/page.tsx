@@ -216,7 +216,7 @@ const PaymentsPage = () => {
   if (isLoading) {
     return (
       <Layout title="Payments">
-        <div className="max-w-7xl mx-auto p-6">
+        <div className="w-full p-4 lg:p-6">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-white mb-2">Payments</h1>
             <p className="text-gray-400">Manage payment transactions</p>
@@ -235,7 +235,7 @@ const PaymentsPage = () => {
 
   return (
     <Layout title="Payments">
-      <div className="max-w-7xl mx-auto p-6">
+      <div className="w-full p-4 lg:p-6">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">Payments</h1>
           <p className="text-gray-400">Manage payment transactions</p>
@@ -243,7 +243,7 @@ const PaymentsPage = () => {
 
         {/* Filters and Search */}
         <div className="bg-gray-800 border border-gray-700 rounded-xl p-6 mb-6">
-          <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 Search Payments

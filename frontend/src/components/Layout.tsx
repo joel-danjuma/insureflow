@@ -39,7 +39,10 @@ const Layout: React.FC<LayoutProps> = ({
       <div className={`flex-1 flex flex-col ${showSidebar ? 'lg:ml-64' : ''}`}>
         {/* Fixed Header */}
         {showHeader && (
-          <div className="fixed top-0 right-0 z-30" style={{ left: showSidebar ? '0px' : '0px', width: '100%' }}>
+          <div className="fixed top-0 right-0 z-30 bg-gray-900" style={{ 
+            left: showSidebar ? '16rem' : '0px', 
+            width: showSidebar ? 'calc(100% - 16rem)' : '100%' 
+          }}>
             <Header 
               title={title} 
               onToggleSidebar={showSidebar ? toggleSidebar : undefined}
