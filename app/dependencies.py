@@ -231,4 +231,18 @@ def get_user_with_any_role(allowed_roles: list[UserRole]):
             )
         return current_user
     
-    return role_dependency 
+    return role_dependency
+
+def get_current_insureflow_admin_user(
+    current_user: User = Depends(get_current_user)
+) -> User:
+    """
+    Get current user and verify they have InsureFlow admin role.
+    Only InsureFlow admins can access settlement management.
+    """
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=403,
+            detail="Only InsureFlow platform admins can access this resource"
+        )
+    return current_user 
