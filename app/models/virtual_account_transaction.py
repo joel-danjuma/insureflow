@@ -84,6 +84,12 @@ class VirtualAccountTransaction(Base):
     webhook_received_at = Column(DateTime, nullable=True)
     notification_sent = Column(Boolean, default=False, nullable=False)
     
+    # Settlement tracking
+    settlement_status = Column(String(20), nullable=False, default='pending')
+    settlement_date = Column(DateTime, nullable=True)
+    settlement_reference = Column(String(100), nullable=True)
+    gaps_transaction_ref = Column(String(100), nullable=True)
+    
     # Additional metadata
     transaction_metadata = Column(Text, nullable=True)  # JSON string for additional data
     

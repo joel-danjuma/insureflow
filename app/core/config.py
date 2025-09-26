@@ -61,6 +61,20 @@ class Settings(BaseSettings):
     SQUAD_BASE_URL: str = "https://sandbox-api-d.squadco.com"  # Default to sandbox
     SQUAD_WEBHOOK_URL: Optional[str] = None  # Webhook URL for Squad Co payments
     
+    # GAPS (GTBank Automated Payment System) Configuration
+    GAPS_BASE_URL: str = "https://gtweb6.gtbank.com/GSTPS/GAPS_FileUploader/FileUploader.asmx"
+    GAPS_CUSTOMER_ID: str = ""  # To be provided by GTBank
+    GAPS_USERNAME: str = ""     # To be provided by GTBank  
+    GAPS_PASSWORD: str = ""     # To be provided by GTBank
+    GAPS_CHANNEL: str = "GSTP"
+    GAPS_PUBLIC_KEY: str = ""   # RSA public key from GTBank
+    
+    # Settlement Configuration
+    INSUREFLOW_SETTLEMENT_ACCOUNT: str = ""  # Main settlement account number
+    PLATFORM_COMMISSION_RATE: float = 0.01  # 1% commission rate
+    AUTO_SETTLEMENT_ENABLED: bool = True     # Enable automatic daily settlements
+    SETTLEMENT_THRESHOLD: float = 1000.0     # Minimum amount for settlement (NGN)
+    
     # API Keys for AI features
     OPENAI_API_KEY: Optional[str] = None
     GOOGLE_API_KEY: Optional[str] = None

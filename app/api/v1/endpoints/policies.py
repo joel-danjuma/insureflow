@@ -1,6 +1,7 @@
 """
 API endpoints for policy management.
 """
+import logging
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -18,16 +19,17 @@ from app.schemas.policy import Policy, PolicyCreate, PolicyUpdate, PolicySummary
 from app.schemas.virtual_account import PaymentSimulationResponse
 from app.services.virtual_account_service import simulate_policy_payment
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 @router.post("/", response_model=Policy, status_code=status.HTTP_201_CREATED)
-def create_policy(
+async def create_policy(
     policy: PolicyCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_policy_creator)
 ):
     """
-    Create a new policy. Only Insurance Admin or Accountant with policy creation permission.
+    Create a new policy with automatic virtual account creation. Only Insurance Admin or Accountant with policy creation permission.
     """
     # Validate policy data
     if not policy.policy_name or not policy.policy_name.strip():
@@ -60,7 +62,20 @@ def create_policy(
             detail="Coverage amount must be greater than 0"
         )
     
-    return policy_crud.create_policy(db=db, policy=policy)
+    # Create the policy
+    db_policy = policy_crud.create_policy(db=db, policy=policy)
+    
+    # Create virtual account for the policy
+    from app.services.virtual_account_service import virtual_account_service
+    va_result = await virtual_account_service.create_policy_virtual_account(db, db_policy)
+    
+    if va_result.get("error"):
+        logger.warning(f"Failed to create virtual account for policy {db_policy.id}: {va_result['error']}")
+        # Policy is still created, but without virtual account
+    else:
+        logger.info(f"Policy {db_policy.id} created with virtual account {va_result['virtual_account'].virtual_account_number}")
+    
+    return db_policy
 
 @router.get("/", response_model=List[PolicySummary])
 def list_policies(

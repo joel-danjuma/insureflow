@@ -86,6 +86,16 @@ const recentPoliciesColumns: ColumnDef<RecentPolicy>[] = [
         return formatNaira(Number(amount));
       }
     },
+    {
+      accessorKey: 'virtual_account',
+      header: 'Virtual Account',
+      cell: ({ row }) => (
+        <div className="text-center">
+          <div className="text-white font-mono text-sm">1234567890</div>
+          <div className="text-gray-400 text-xs">Squad Bank</div>
+        </div>
+      ),
+    },
 ];
 
 const latestPaymentsColumns: ColumnDef<LatestPayment>[] = [
@@ -281,9 +291,9 @@ const InsuranceFirmDashboard = () => {
         sentAt: now,
       }));
       addReminders(dummyReminders);
-      setReminderSuccess(
+        setReminderSuccess(
         `✅ Payment reminders sent successfully! Created ${dummyReminders.length} reminders for ${[...new Set(dummyReminders.map(r => r.brokerId))].length} brokers.`
-      );
+        );
       setSelectedPolicies(new Set());
     } catch (error) {
       setReminderError('Failed to send dummy payment reminders');

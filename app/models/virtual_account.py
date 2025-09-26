@@ -35,6 +35,7 @@ class VirtualAccount(Base):
     
     # Relationships - Foreign Keys
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    policy_id = Column(Integer, ForeignKey("policies.id"), nullable=True, index=True)
     
     # Squad Co Virtual Account Details
     customer_identifier = Column(String(100), unique=True, index=True, nullable=False)
@@ -85,6 +86,7 @@ class VirtualAccount(Base):
     
     # Relationships
     user = relationship("User", back_populates="virtual_accounts")
+    policy = relationship("Policy", back_populates="virtual_account")
     transactions = relationship("VirtualAccountTransaction", back_populates="virtual_account", cascade="all, delete-orphan")
     
     @property

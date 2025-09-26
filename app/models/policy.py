@@ -110,6 +110,7 @@ class Policy(Base):
     broker = relationship("Broker", back_populates="policies")
     premiums = relationship("Premium", back_populates="policy", cascade="all, delete-orphan")
     notifications = relationship("Notification", back_populates="policy")
+    virtual_account = relationship("VirtualAccount", back_populates="policy", uselist=False, cascade="all, delete-orphan")
     
     merchant_reference = Column(String, unique=True, index=True, nullable=True)
     payment_status = Column(String, default="pending")

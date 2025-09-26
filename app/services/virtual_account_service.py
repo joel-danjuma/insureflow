@@ -391,15 +391,86 @@ class VirtualAccountService:
             return response.text
 
 
+    async def create_policy_virtual_account(
+        self,
+        db: Session,
+        policy
+    ) -> Dict[str, Any]:
+        """
+        Create a virtual account specifically for a policy.
+        """
+        if not self.secret_key:
+            return {"error": "Virtual account service not configured"}
+        
+        # Generate customer identifier for the policy
+        customer_identifier = f"POLICY_{policy.id}_{int(datetime.now().timestamp())}"
+        
+        url = f"{self.base_url}/virtual-account"
+        
+        payload = {
+            "customer_identifier": customer_identifier,
+            "first_name": policy.contact_person.split()[0] if policy.contact_person else "Policy",
+            "last_name": " ".join(policy.contact_person.split()[1:]) if len(policy.contact_person.split()) > 1 else "Holder",
+            "mobile_num": policy.contact_phone or "08000000000",
+            "email": policy.contact_email,
+        }
+        
+        # Add BVN if available
+        if hasattr(policy, 'bvn') and policy.bvn:
+            payload["bvn"] = policy.bvn
+        
+        logger.info(f"Creating virtual account for policy {policy.id}: {policy.policy_number}")
+        
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            try:
+                response = await client.post(url, json=payload, headers=self.headers)
+                response.raise_for_status()
+                
+                result = response.json()
+                
+                if result.get("success"):
+                    # Save virtual account to database
+                    va_data = result.get("data", {})
+                    virtual_account = VirtualAccount(
+                        user_id=policy.user_id,
+                        policy_id=policy.id,
+                        customer_identifier=customer_identifier,
+                        virtual_account_number=va_data.get("virtual_account_number"),
+                        bank_code=va_data.get("bank_code", "058"),
+                        account_type=VirtualAccountType.BUSINESS,
+                        business_name=f"Policy {policy.policy_number}",
+                        email=policy.contact_email,
+                        mobile_number=policy.contact_phone,
+                        squad_created_at=datetime.fromisoformat(va_data.get("created_at", "").replace("Z", "+00:00")) if va_data.get("created_at") else None,
+                    )
+                    
+                    db.add(virtual_account)
+                    db.commit()
+                    db.refresh(virtual_account)
+                    
+                    logger.info(f"Virtual account created for policy: {virtual_account.virtual_account_number}")
+                    return {"success": True, "virtual_account": virtual_account, "squad_response": result}
+                else:
+                    logger.error(f"Squad API returned unsuccessful response: {result}")
+                    return {"error": f"Squad API error: {result.get('message', 'Unknown error')}"}
+                    
+            except Exception as e:
+                logger.error(f"Error creating policy virtual account: {str(e)}")
+                return {"error": f"Unexpected error: {str(e)}"}
+
+
 # Global service instance
-virtual_account_service = VirtualAccountService() 
+virtual_account_service = VirtualAccountService()
 
 async def simulate_policy_payment(policy_id: int, db, user):
     # Fetch the policy and its virtual account
-    policy = db.query(models.Policy).filter(models.Policy.id == policy_id).first()
+    from app.models.policy import Policy
+    from app.models.virtual_account import VirtualAccount
+    
+    policy = db.query(Policy).filter(Policy.id == policy_id).first()
     if not policy:
         raise HTTPException(status_code=404, detail="Policy not found")
-    va = db.query(models.VirtualAccount).filter(models.VirtualAccount.policy_id == policy_id).first()
+    va = db.query(VirtualAccount).filter(VirtualAccount.policy_id == policy_id).first()
     if not va:
         raise HTTPException(status_code=404, detail="Virtual account not found for policy")
     squad_secret = os.getenv("SQUAD_SECRET_KEY")

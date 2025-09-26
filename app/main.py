@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.api import api_router
 from app.core.config import settings
+from app.tasks.settlement_tasks import setup_settlement_scheduler
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -26,4 +27,13 @@ if settings.BACKEND_CORS_ORIGINS:
 async def health_check():
     return {"status": "healthy", "service": "InsureFlow API"}
 
-app.include_router(api_router, prefix=settings.API_V1_STR) 
+app.include_router(api_router, prefix=settings.API_V1_STR)
+
+# Initialize settlement scheduler on startup
+@app.on_event("startup")
+async def startup_event():
+    """Initialize services on application startup."""
+    if settings.AUTO_SETTLEMENT_ENABLED:
+        scheduler = setup_settlement_scheduler()
+        if scheduler:
+            app.state.settlement_scheduler = scheduler 

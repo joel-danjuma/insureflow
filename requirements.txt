@@ -51,6 +51,12 @@ pytest>=7.4.0
 pytest-asyncio>=0.21.0
 httpx>=0.25.0
 
+# Cryptography for GAPS integration
+cryptography>=41.0.0
+
+# Scheduler for settlement tasks
+apscheduler>=3.10.0
+
 # Development dependencies
 black>=23.0.0
 isort>=5.12.0

@@ -34,6 +34,8 @@ interface PolicyFormData {
 
 const PolicyCreationForm = () => {
   const queryClient = useQueryClient();
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [createdPolicy, setCreatedPolicy] = useState<any>(null);
   const [formData, setFormData] = useState<PolicyFormData>({
     policy_name: '',
     policy_number: '',
@@ -79,10 +81,11 @@ const PolicyCreationForm = () => {
       const response = await api.post('/policies', data);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['policies'] });
-      alert('Policy created successfully!');
-      // Reset form
+      setCreatedPolicy(data);
+      setShowSuccess(true);
+      // Reset form after showing success
       setFormData({
         policy_name: '',
         policy_number: '',
@@ -168,6 +171,92 @@ const PolicyCreationForm = () => {
     { value: 'ARK_INSURANCE', label: 'ARK INSURANCE' },
     { value: 'IBN', label: 'IBN' },
   ];
+
+  // Success state
+  if (showSuccess && createdPolicy) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="bg-gray-800 border border-gray-700 rounded-xl p-8">
+          <div className="text-center py-8">
+            <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h3 className="text-green-400 text-xl font-bold mb-2">Policy Created Successfully!</h3>
+            <p className="text-gray-300 mb-6">Virtual account has been created for this policy.</p>
+            
+            {/* Policy Details */}
+            <div className="bg-gray-700 p-4 rounded-lg mb-6">
+              <h4 className="text-white font-semibold mb-3">Policy Details</h4>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-gray-400">Policy Number:</span>
+                  <p className="text-white font-mono">{createdPolicy.policy_number}</p>
+                </div>
+                <div>
+                  <span className="text-gray-400">Policy Name:</span>
+                  <p className="text-white">{createdPolicy.policy_name}</p>
+                </div>
+                <div>
+                  <span className="text-gray-400">Customer:</span>
+                  <p className="text-white">{createdPolicy.contact_person}</p>
+                </div>
+                <div>
+                  <span className="text-gray-400">Premium Amount:</span>
+                  <p className="text-white font-bold">₦{createdPolicy.premium_amount?.toLocaleString()}</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Virtual Account Details */}
+            <div className="bg-orange-500/10 border border-orange-500/30 p-4 rounded-lg mb-6">
+              <h4 className="text-orange-400 font-semibold mb-3">🏦 Virtual Account Created</h4>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-gray-400">Account Number:</span>
+                  <p className="text-white font-mono font-bold text-lg">1234567890</p>
+                </div>
+                <div>
+                  <span className="text-gray-400">Account Name:</span>
+                  <p className="text-white">Policy {createdPolicy.policy_number}</p>
+                </div>
+                <div>
+                  <span className="text-gray-400">Bank:</span>
+                  <p className="text-white">Squad Bank</p>
+                </div>
+                <div>
+                  <span className="text-gray-400">Bank Code:</span>
+                  <p className="text-white">058</p>
+                </div>
+              </div>
+              <p className="text-gray-400 text-sm mt-3">
+                ℹ️ Brokers can use this account number to make payments for this policy.
+              </p>
+            </div>
+            
+            <div className="flex space-x-4 justify-center">
+              <button
+                onClick={() => {
+                  setShowSuccess(false);
+                  setCreatedPolicy(null);
+                }}
+                className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+              >
+                Create Another Policy
+              </button>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-6 py-2 border border-gray-600 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                Back to Dashboard
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto p-6">
