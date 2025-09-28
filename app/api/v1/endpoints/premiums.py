@@ -15,6 +15,19 @@ from app.services import payment_service
 
 router = APIRouter()
 
+@router.get("/", response_model=List[Premium])
+def list_premiums(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_broker_or_admin_user)
+):
+    """
+    Retrieve a list of premiums. Broker or Admin only.
+    """
+    # For now, return empty list - you can implement actual logic later
+    return []
+
 @router.post("/", response_model=Premium, status_code=status.HTTP_201_CREATED)
 def create_premium(
     premium: PremiumCreate,
