@@ -92,6 +92,17 @@ def update_user(db: Session, user_id: int, user_update: UserUpdate) -> User:
     db.refresh(db_user)
     return db_user
 
+def update_last_login(db: Session, user_id: int) -> None:
+    """
+    Updates the last login timestamp for a user.
+    """
+    from datetime import datetime
+    
+    db_user = get_user_by_id(db, user_id)
+    if db_user:
+        db_user.last_login = datetime.utcnow()
+        db.commit()
+
 def delete_user(db: Session, user_id: int) -> bool:
     """
     Deletes a user from the database.
