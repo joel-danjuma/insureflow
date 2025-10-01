@@ -4,11 +4,11 @@ API endpoints for insurance firm management.
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app import dependencies, models
-from app.schemas.user import UserResponse
+from app.schemas.user import User
 
 router = APIRouter()
 
-@router.get("/me", response_model=UserResponse)
+@router.get("/me", response_model=User)
 def read_insurance_me(
     current_user: models.user.User = Depends(dependencies.get_current_active_user),
     db: Session = Depends(dependencies.get_db)
@@ -26,7 +26,7 @@ def read_insurance_me(
     # Return the user profile for insurance firm users
     return current_user
 
-@router.put("/me", response_model=UserResponse)
+@router.put("/me", response_model=User)
 def update_insurance_me(
     user_update: dict,
     current_user: models.user.User = Depends(dependencies.get_current_active_user),
