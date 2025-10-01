@@ -21,6 +21,16 @@ const roleLinks = {
     { href: '/settings', label: 'Settings', icon: 'Gear' },
     { href: '/reminders', label: 'Send Reminders', icon: 'Bell' },
   ],
+  [UserRole.INSURANCE_ADMIN]: [
+    { href: '/policies/create', label: 'Create Policy', icon: 'File' },
+    { href: '/reports', label: 'Reports', icon: 'ChartBar' },
+    { href: '/settings', label: 'Settings', icon: 'Gear' },
+    { href: '/reminders', label: 'Send Reminders', icon: 'Bell' },
+  ],
+  [UserRole.INSURANCE_ACCOUNTANT]: [
+    { href: '/reports', label: 'Reports', icon: 'ChartBar' },
+    { href: '/settings', label: 'Settings', icon: 'Gear' },
+  ],
   [UserRole.BROKER]: [
     // { href: '/policies/create', label: 'Create Policy', icon: 'File' }, // Commented out - only available for insurance firm
     { href: '/clients', label: 'Clients', icon: 'Users' },

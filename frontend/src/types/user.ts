@@ -1,6 +1,8 @@
 export enum UserRole {
   INSUREFLOW_ADMIN = 'insureflow_admin',
   ADMIN = 'admin',
+  INSURANCE_ADMIN = 'insurance_admin',
+  INSURANCE_ACCOUNTANT = 'insurance_accountant',
   BROKER = 'broker',
   CUSTOMER = 'customer',
 }
