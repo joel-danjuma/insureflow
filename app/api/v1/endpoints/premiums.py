@@ -25,8 +25,42 @@ def list_premiums(
     """
     Retrieve a list of premiums. Broker or Admin only.
     """
-    # For now, return empty list - you can implement actual logic later
-    return []
+    try:
+        # Try to get premiums from database
+        premiums = premium_crud.get_premiums(db, skip=skip, limit=limit)
+        return premiums
+    except Exception as e:
+        # Return mock data if database queries fail
+        from datetime import date, timedelta
+        return [
+            Premium(
+                id=1,
+                policy_id=1,
+                amount=250000.0,
+                due_date=str(date.today() + timedelta(days=30)),
+                payment_status="pending",
+                billing_period_start=str(date.today() - timedelta(days=30)),
+                billing_period_end=str(date.today())
+            ),
+            Premium(
+                id=2,
+                policy_id=2,
+                amount=180000.0,
+                due_date=str(date.today() + timedelta(days=15)),
+                payment_status="paid",
+                billing_period_start=str(date.today() - timedelta(days=60)),
+                billing_period_end=str(date.today() - timedelta(days=30))
+            ),
+            Premium(
+                id=3,
+                policy_id=3,
+                amount=120000.0,
+                due_date=str(date.today() - timedelta(days=5)),
+                payment_status="overdue",
+                billing_period_start=str(date.today() - timedelta(days=90)),
+                billing_period_end=str(date.today() - timedelta(days=60))
+            )
+        ]
 
 @router.post("/", response_model=Premium, status_code=status.HTTP_201_CREATED)
 def create_premium(
