@@ -4,7 +4,7 @@ API router configuration.
 from fastapi import APIRouter
 
 from app.api.v1.endpoints import (
-    auth, users, brokers, policies, premiums, 
+    auth, users, brokers, insurance, policies, premiums, 
     payments, dashboard, notifications, reminders, virtual_accounts, insureflow_admin, settlements
 )
 
@@ -13,6 +13,7 @@ api_router = APIRouter()
 api_router.include_router(auth.router, prefix="/auth", tags=["authentication"])
 api_router.include_router(users.router, prefix="/users", tags=["users"])
 api_router.include_router(brokers.router, prefix="/brokers", tags=["brokers"])
+api_router.include_router(insurance.router, prefix="/insurance", tags=["insurance"])
 api_router.include_router(policies.router, prefix="/policies", tags=["policies"])
 api_router.include_router(premiums.router, prefix="/premiums", tags=["premiums"])
 api_router.include_router(payments.router, prefix="/payments", tags=["payments"])

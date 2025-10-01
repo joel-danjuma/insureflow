@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { UserRole } from '@/types/user';
 import useAuthStore from '@/store/authStore';
-import { useBrokerProfile } from '@/hooks/useQuery';
+import { useUserProfile } from '@/hooks/useQuery';
 
 const commonLinks = [
   { href: '/dashboard', label: 'Dashboard', icon: 'House' },
@@ -105,8 +105,8 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole, isOpen = true, onToggle }) 
   const currentRole = userRole || user?.role || UserRole.BROKER;
   const links = [...commonLinks, ...(roleLinks[currentRole] || [])];
 
-  // Get broker profile data only if user is a broker
-  const { data: brokerProfile } = useBrokerProfile();
+  // Get user profile data based on role
+  const { data: userProfile } = useUserProfile(currentRole);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -125,12 +125,19 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole, isOpen = true, onToggle }) 
         return 'Sovereign Trust';
       case UserRole.BROKER:
         // Use broker's name (like "SCIB") first, then agency name if available
-        if (brokerProfile?.name) {
-          return brokerProfile.name;
-        } else if (brokerProfile?.agency_name) {
-          return brokerProfile.agency_name;
+        if (userProfile && 'name' in userProfile && userProfile.name) {
+          return userProfile.name;
+        } else if (userProfile && 'agency_name' in userProfile && userProfile.agency_name) {
+          return userProfile.agency_name;
         }
         return 'Broker';
+      case UserRole.INSURANCE_ADMIN:
+      case UserRole.INSURANCE_ACCOUNTANT:
+        // Use organization name for insurance users
+        if (userProfile && 'organization_name' in userProfile && userProfile.organization_name) {
+          return userProfile.organization_name;
+        }
+        return 'Insurance Firm';
       case UserRole.CUSTOMER:
         return 'Customer Portal';
       default:
@@ -144,6 +151,10 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole, isOpen = true, onToggle }) 
         return 'Administrator';
       case UserRole.BROKER:
         return 'Insurance Broker';
+      case UserRole.INSURANCE_ADMIN:
+        return 'Insurance Admin';
+      case UserRole.INSURANCE_ACCOUNTANT:
+        return 'Insurance Accountant';
       case UserRole.CUSTOMER:
         return 'Customer';
       default:

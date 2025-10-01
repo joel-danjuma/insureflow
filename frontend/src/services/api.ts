@@ -176,6 +176,43 @@ export const brokerService = {
   },
 };
 
+export const insuranceService = {
+  getInsuranceProfile: async () => {
+    try {
+      const response = await api.get('/insurance/me');
+      return response.data;
+    } catch (error) {
+      errorHandler(error, 'fetching insurance firm profile');
+    }
+  },
+};
+
+export const userProfileService = {
+  getUserProfile: async (userRole: string) => {
+    try {
+      let response;
+      switch (userRole) {
+        case 'BROKER':
+          response = await api.get('/brokers/me');
+          break;
+        case 'INSURANCE_ADMIN':
+        case 'INSURANCE_ACCOUNTANT':
+          response = await api.get('/insurance/me');
+          break;
+        case 'ADMIN':
+          response = await api.get('/users/me');
+          break;
+        default:
+          response = await api.get('/users/me');
+          break;
+      }
+      return response.data;
+    } catch (error) {
+      errorHandler(error, 'fetching user profile');
+    }
+  },
+};
+
 export const policyService = {
   getPolicies: async () => {
     try {

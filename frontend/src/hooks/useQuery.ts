@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useQuery as useReactQuery } from '@tanstack/react-query';
-import { dashboardService, brokerService, policyService, premiumService } from '@/services/api';
-import { DashboardData, Broker, Policy, Premium } from '@/types/user';
+import { dashboardService, brokerService, userProfileService, policyService, premiumService } from '@/services/api';
+import { DashboardData, Broker, Policy, Premium, User } from '@/types/user';
 
 interface QueryResult<T> {
   data: T | null;
@@ -214,7 +214,7 @@ export const useDashboardData = () => {
   });
 };
 
-// Broker profile hook for Broker dashboard
+// Broker profile hook for Broker dashboard (legacy - use useUserProfile instead)
 export const useBrokerProfile = () => {
   return useReactQuery<Broker>({
     queryKey: ['broker', 'profile'],
@@ -229,6 +229,37 @@ export const useBrokerProfile = () => {
     staleTime: 30 * 1000, // 30 seconds (reduced)
     retry: false, // Don't retry, use mock data on failure
     refetchOnWindowFocus: false,
+  });
+};
+
+// New universal user profile hook that calls correct endpoint based on role
+export const useUserProfile = (userRole: string) => {
+  return useReactQuery<User | Broker>({
+    queryKey: ['user', 'profile', userRole],
+    queryFn: async () => {
+      try {
+        return await userProfileService.getUserProfile(userRole);
+      } catch (error) {
+        console.warn('User profile API failed, using fallback:', error);
+        // Return appropriate mock data based on role
+        if (userRole === 'BROKER') {
+          return mockBroker;
+        }
+        // For other roles, return basic user info (you can expand this)
+        return {
+          id: 1,
+          email: 'user@example.com',
+          full_name: 'User Name',
+          role: userRole,
+          organization_name: 'Organization',
+          is_active: true
+        };
+      }
+    },
+    staleTime: 30 * 1000, // 30 seconds
+    retry: false, // Don't retry, use mock data on failure
+    refetchOnWindowFocus: false,
+    enabled: !!userRole, // Only run query if userRole is provided
   });
 };
 
