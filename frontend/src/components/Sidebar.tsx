@@ -115,6 +115,10 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole, isOpen = true, onToggle }) 
   const currentRole = userRole || user?.role || UserRole.BROKER;
   const links = [...commonLinks, ...(roleLinks[currentRole] || [])];
 
+  console.log('🔍 Sidebar: userRole prop =', userRole);
+  console.log('🔍 Sidebar: user?.role =', user?.role);
+  console.log('🔍 Sidebar: currentRole =', currentRole);
+
   // Get user profile data based on role
   const { data: userProfile } = useUserProfile(currentRole);
 

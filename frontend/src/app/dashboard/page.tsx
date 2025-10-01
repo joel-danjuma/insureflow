@@ -53,6 +53,10 @@ const DashboardPage = () => {
     }
   };
 
+  console.log('🔍 Dashboard: user.role =', user.role);
+  console.log('🔍 Dashboard: UserRole.INSURANCE_ADMIN =', UserRole.INSURANCE_ADMIN);
+  console.log('🔍 Dashboard: Role comparison =', user.role === UserRole.INSURANCE_ADMIN);
+
   return (
     <Layout userRole={user.role} title={getDashboardTitle()}>
       {/* Render appropriate dashboard based on user role */}
