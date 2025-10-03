@@ -1,0 +1,59 @@
+"""add_user_profile_fields
+
+Revision ID: ed0d4e158d3f
+Revises: 3c4d5e6f7g8h
+Create Date: 2025-10-03 08:09:30.466022
+
+"""
+from typing import Sequence, Union
+
+from alembic import op
+import sqlalchemy as sa
+
+
+# revision identifiers, used by Alembic.
+revision: str = 'ed0d4e158d3f'
+down_revision: Union[str, None] = '3c4d5e6f7g8h'
+branch_labels: Union[str, Sequence[str], None] = None
+depends_on: Union[str, Sequence[str], None] = None
+
+
+def upgrade() -> None:
+    # Check if columns exist before adding them (to handle existing deployments)
+    conn = op.get_bind()
+    inspector = sa.inspect(conn)
+    columns = [col['name'] for col in inspector.get_columns('users')]
+    
+    # Add phone_number if it doesn't exist
+    if 'phone_number' not in columns:
+        op.add_column('users', sa.Column('phone_number', sa.String(length=20), nullable=True))
+    
+    # Add organization_name if it doesn't exist
+    if 'organization_name' not in columns:
+        op.add_column('users', sa.Column('organization_name', sa.String(length=255), nullable=True))
+    
+    # Add bvn if it doesn't exist
+    if 'bvn' not in columns:
+        op.add_column('users', sa.Column('bvn', sa.String(length=11), nullable=True))
+    
+    # Add date_of_birth if it doesn't exist
+    if 'date_of_birth' not in columns:
+        op.add_column('users', sa.Column('date_of_birth', sa.DateTime(), nullable=True))
+    
+    # Add gender if it doesn't exist
+    if 'gender' not in columns:
+        op.add_column('users', sa.Column('gender', sa.String(length=10), nullable=True))
+    
+    # Add address if it doesn't exist
+    if 'address' not in columns:
+        op.add_column('users', sa.Column('address', sa.String(length=500), nullable=True))
+
+
+def downgrade() -> None:
+    # Remove the added columns
+    op.drop_column('users', 'address')
+    op.drop_column('users', 'gender')
+    op.drop_column('users', 'date_of_birth')
+    op.drop_column('users', 'bvn')
+    op.drop_column('users', 'organization_name')
+    op.drop_column('users', 'phone_number')
