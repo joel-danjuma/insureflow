@@ -13,6 +13,12 @@ def get_premium(db: Session, premium_id: int) -> Optional[Premium]:
     """
     return db.query(Premium).filter(Premium.id == premium_id).first()
 
+def get_premiums(db: Session, skip: int = 0, limit: int = 100) -> List[Premium]:
+    """
+    Retrieves a list of all premiums from the database.
+    """
+    return db.query(Premium).offset(skip).limit(limit).all()
+
 def get_premiums_by_policy(db: Session, policy_id: int, skip: int = 0, limit: int = 100) -> List[Premium]:
     """
     Retrieves a list of premiums for a specific policy from the database.

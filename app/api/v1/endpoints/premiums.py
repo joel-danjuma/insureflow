@@ -32,25 +32,21 @@ def list_premiums(
         # Return mock data if database query fails
         print(f"⚠️  Premiums API failed, using mock data: {e}")
         from app.schemas.premium import Premium
-        from decimal import Decimal
+        from datetime import date
         return [
             Premium(
                 id=1,
                 policy_id=1,
-                amount=Decimal("250000.00"),
-                due_date="2024-01-15",
-                payment_status="paid",
-                billing_period_start="2024-01-15",
-                billing_period_end="2024-02-15"
+                amount=250000.00,
+                due_date=date(2024, 12, 15),
+                status="paid"
             ),
             Premium(
                 id=2,
                 policy_id=2,
-                amount=Decimal("180000.00"),
-                due_date="2024-02-01",
-                payment_status="pending",
-                billing_period_start="2024-02-01",
-                billing_period_end="2024-03-01"
+                amount=180000.00,
+                due_date=date(2024, 11, 30),
+                status="pending"
             )
         ]
 

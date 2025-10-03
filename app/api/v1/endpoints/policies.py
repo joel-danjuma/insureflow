@@ -84,26 +84,30 @@ def list_policies(
         # Return mock data if database query fails
         print(f"⚠️  Policies API failed, using mock data: {e}")
         from app.schemas.policy import PolicySummary
+        from decimal import Decimal
+        from datetime import date
         return [
             PolicySummary(
                 id=1,
-                policy_number="POL-001-2024-0001",
                 policy_name="Life Insurance Policy",
-                customer_name="John Adebayo",
-                broker="SCIB",
-                status="active",
-                premium_amount=250000.00,
-                coverage_amount=5000000.00
+                policy_number="POL-001-2024-0001",
+                policy_type="life",
+                company_name="TechCorp Nigeria Ltd",
+                premium_amount=Decimal("250000.00"),
+                due_date=date(2024, 12, 31),
+                payment_frequency="monthly",
+                status="active"
             ),
             PolicySummary(
                 id=2,
-                policy_number="POL-002-2024-0002",
                 policy_name="Auto Insurance Policy",
-                customer_name="Sarah Okafor",
-                broker="ARK Insurance",
-                status="active",
-                premium_amount=180000.00,
-                coverage_amount=3000000.00
+                policy_number="POL-002-2024-0002",
+                policy_type="auto",
+                company_name="Lagos Motors Ltd",
+                premium_amount=Decimal("180000.00"),
+                due_date=date(2024, 11, 15),
+                payment_frequency="quarterly",
+                status="active"
             )
         ]
 
