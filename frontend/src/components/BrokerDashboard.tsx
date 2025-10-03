@@ -61,46 +61,71 @@ const BrokerDashboard = () => {
 
   // Calculate broker metrics from data
   const calculateBrokerMetrics = (policies: Policy[], premiums: Premium[]) => {
-    const totalPremiums = policies.reduce((sum, policy) => sum + policy.premium_amount, 0);
-    const totalCommission = totalPremiums * 0.15; // 15% commission rate
-    const activeClients = new Set(policies.map(p => p.customer_id)).size;
-    const retentionRate = policies.length > 0 ? Math.round((activeClients / policies.length) * 100) : 0;
+    // Ensure policies is an array and has valid data
+    const validPolicies = Array.isArray(policies) ? policies : [];
+    
+    // Calculate total premiums with null checks
+    const totalPremiums = validPolicies.reduce((sum, policy) => {
+      const premiumAmount = typeof policy?.premium_amount === 'number' ? policy.premium_amount : 0;
+      return sum + premiumAmount;
+    }, 0);
+    
+    // Calculate commission (15% of total premiums)
+    const totalCommission = totalPremiums * 0.15;
+    
+    // Calculate active clients with null checks
+    const activeClients = new Set(
+      validPolicies
+        .filter(p => p?.customer_id != null)
+        .map(p => p.customer_id)
+    ).size;
+    
+    // Calculate retention rate
+    const retentionRate = validPolicies.length > 0 ? Math.round((activeClients / validPolicies.length) * 100) : 0;
     
     return {
-      totalPremiums,
-      totalCommission,
-      retentionRate,
-      activeClients,
+      totalPremiums: isNaN(totalPremiums) ? 0 : totalPremiums,
+      totalCommission: isNaN(totalCommission) ? 0 : totalCommission,
+      retentionRate: isNaN(retentionRate) ? 0 : retentionRate,
+      activeClients: isNaN(activeClients) ? 0 : activeClients,
     };
   };
 
   // Transform policies into client portfolio with payment status
   const transformToClientPortfolio = React.useCallback((policies: Policy[]): ClientPortfolioItem[] => {
-    return policies.map(policy => {
-      const nextPaymentDate = new Date(policy.end_date);
+    // Ensure policies is an array
+    const validPolicies = Array.isArray(policies) ? policies : [];
+    
+    return validPolicies.map(policy => {
+      // Handle potential undefined dates
+      const endDate = policy?.end_date ? new Date(policy.end_date) : new Date();
+      const nextPaymentDate = isNaN(endDate.getTime()) ? new Date() : endDate;
       const today = new Date();
       const daysDiff = Math.ceil((nextPaymentDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
       
       let paymentStatus: 'Paid' | 'Pending' | 'Overdue' = 'Pending';
       if (daysDiff < 0) {
         paymentStatus = 'Overdue';
-      } else if (policy.status === 'active' && daysDiff > 30) {
+      } else if (policy?.status === 'active' && daysDiff > 30) {
         paymentStatus = 'Paid';
       }
 
       // Find the corresponding premium for this policy
-      const premium = premiums?.find(p => p.policy_id === policy.id);
+      const premium = premiums?.find(p => p?.policy_id === policy?.id);
+      
+      // Ensure premium amount is a valid number
+      const premiumAmount = typeof policy?.premium_amount === 'number' ? policy.premium_amount : 0;
 
       return {
-        id: policy.id.toString(),
-        policyId: policy.id,
+        id: policy?.id?.toString() || 'unknown',
+        policyId: policy?.id || 0,
         premiumId: premium?.id || null,
-        clientName: policy.customer?.full_name || 'Unknown Client',
-        policyType: policy.policy_type,
-        policyStatus: policy.status === 'active' ? 'Active' : 'Pending',
+        clientName: policy?.customer?.full_name || 'Unknown Client',
+        policyType: policy?.policy_type || 'Unknown',
+        policyStatus: policy?.status === 'active' ? 'Active' : 'Pending',
         paymentStatus,
-        premiumAmount: formatNaira(policy.premium_amount),
-        premiumAmountRaw: policy.premium_amount,
+        premiumAmount: formatNaira(premiumAmount),
+        premiumAmountRaw: premiumAmount,
         nextPaymentDate: nextPaymentDate.toLocaleDateString('en-GB'),
       };
     });
@@ -110,21 +135,23 @@ const BrokerDashboard = () => {
 
   // Merge backend and local policies
   const allPolicies = useMemo(() => {
-    const backendPolicies = policies || [];
-    const localPoliciesData = localPolicies.map(localPolicy => ({
-      id: parseInt(localPolicy.id.split('-')[0]) || Math.floor(Math.random() * 10000),
-      policy_number: localPolicy.policy_number || `LOCAL-${localPolicy.id}`,
-      policy_type: localPolicy.policy_type,
+    const backendPolicies = Array.isArray(policies) ? policies : [];
+    const validLocalPolicies = Array.isArray(localPolicies) ? localPolicies : [];
+    
+    const localPoliciesData = validLocalPolicies.map(localPolicy => ({
+      id: parseInt(localPolicy?.id?.split('-')[0]) || Math.floor(Math.random() * 10000),
+      policy_number: localPolicy?.policy_number || `LOCAL-${localPolicy?.id || 'unknown'}`,
+      policy_type: localPolicy?.policy_type || 'unknown',
       customer_id: Math.floor(Math.random() * 1000),
       broker_id: Math.floor(Math.random() * 100),
-      coverage_amount: localPolicy.coverage_amount,
-      premium_amount: localPolicy.premium_amount,
-      start_date: localPolicy.start_date,
-      end_date: localPolicy.due_date,
+      coverage_amount: typeof localPolicy?.coverage_amount === 'number' ? localPolicy.coverage_amount : 0,
+      premium_amount: typeof localPolicy?.premium_amount === 'number' ? localPolicy.premium_amount : 0,
+      start_date: localPolicy?.start_date || new Date().toISOString(),
+      end_date: localPolicy?.due_date || new Date().toISOString(),
       status: 'active',
       customer: {
-        full_name: localPolicy.contact_person,
-        email: localPolicy.contact_email,
+        full_name: localPolicy?.contact_person || 'Unknown Client',
+        email: localPolicy?.contact_email || 'unknown@example.com',
       },
       broker: {
         name: 'Local Broker',

@@ -6,6 +6,11 @@ export const convertUSDToNaira = (usdAmount: number): string => {
 };
 
 export const formatNaira = (amount: number): string => {
+  // Handle edge cases: NaN, undefined, null, or non-numeric values
+  if (typeof amount !== 'number' || isNaN(amount) || amount === null || amount === undefined) {
+    return '₦0';
+  }
+  
   const options: Intl.NumberFormatOptions = { 
     style: 'currency', 
     currency: 'NGN',
@@ -18,8 +23,13 @@ export const formatNaira = (amount: number): string => {
     options.maximumFractionDigits = 0;
   }
   
-  const formatter = new Intl.NumberFormat('en-NG', options);
-  return formatter.format(amount).replace('NGN', '₦');
+  try {
+    const formatter = new Intl.NumberFormat('en-NG', options);
+    return formatter.format(amount).replace('NGN', '₦');
+  } catch (error) {
+    // Fallback if formatting fails
+    return `₦${amount.toLocaleString()}`;
+  }
 };
 
 export const parseCurrencyString = (currencyStr: string): number => {
