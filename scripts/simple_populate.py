@@ -161,13 +161,13 @@ def main():
                 status = 'PAID' if due_date <= date.today() and random.random() > 0.3 else 'PENDING'
                 
                 db.execute(text("""
-                    INSERT INTO premiums (policy_id, amount, due_date, status, billing_cycle, created_at, updated_at)
-                    VALUES (:policy_id, :amount, :due_date, :status, 'MONTHLY', NOW(), NOW())
+                    INSERT INTO premiums (policy_id, amount, due_date, payment_status, billing_cycle, currency, created_at, updated_at)
+                    VALUES (:policy_id, :amount, :due_date, :payment_status, 'monthly', 'NGN', NOW(), NOW())
                 """), {
                     "policy_id": policy_id,
                     "amount": float(premium_amount),
                     "due_date": due_date,
-                    "status": status
+                    "payment_status": status.lower()  # Convert to lowercase for enum
                 })
                 premiums_created += 1
         

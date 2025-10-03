@@ -207,90 +207,90 @@ AND NOT EXISTS (SELECT 1 FROM policies WHERE policy_number = 'POL-001-2024-0008'
 
 -- Create premiums for each policy (2-3 premiums per policy)
 -- Policy 1 premiums
-INSERT INTO premiums (policy_id, amount, due_date, status, billing_cycle, created_at, updated_at)
-SELECT p.id, 450000, CURRENT_DATE - INTERVAL '60 days', 'PAID', 'MONTHLY', NOW(), NOW()
+INSERT INTO premiums (policy_id, amount, due_date, payment_status, billing_cycle, currency, created_at, updated_at)
+SELECT p.id, 450000, CURRENT_DATE - INTERVAL '60 days', 'paid', 'monthly', 'NGN', NOW(), NOW()
 FROM policies p WHERE p.policy_number = 'POL-001-2024-0001'
 AND NOT EXISTS (SELECT 1 FROM premiums WHERE policy_id = p.id AND due_date = CURRENT_DATE - INTERVAL '60 days');
 
-INSERT INTO premiums (policy_id, amount, due_date, status, billing_cycle, created_at, updated_at)
-SELECT p.id, 450000, CURRENT_DATE + INTERVAL '30 days', 'PENDING', 'MONTHLY', NOW(), NOW()
+INSERT INTO premiums (policy_id, amount, due_date, payment_status, billing_cycle, currency, created_at, updated_at)
+SELECT p.id, 450000, CURRENT_DATE + INTERVAL '30 days', 'pending', 'monthly', 'NGN', NOW(), NOW()
 FROM policies p WHERE p.policy_number = 'POL-001-2024-0001'
 AND NOT EXISTS (SELECT 1 FROM premiums WHERE policy_id = p.id AND due_date = CURRENT_DATE + INTERVAL '30 days');
 
 -- Policy 2 premiums
-INSERT INTO premiums (policy_id, amount, due_date, status, billing_cycle, created_at, updated_at)
-SELECT p.id, 320000, CURRENT_DATE - INTERVAL '30 days', 'PAID', 'MONTHLY', NOW(), NOW()
+INSERT INTO premiums (policy_id, amount, due_date, payment_status, billing_cycle, currency, created_at, updated_at)
+SELECT p.id, 320000, CURRENT_DATE - INTERVAL '30 days', 'paid', 'monthly', 'NGN', NOW(), NOW()
 FROM policies p WHERE p.policy_number = 'POL-001-2024-0002'
 AND NOT EXISTS (SELECT 1 FROM premiums WHERE policy_id = p.id AND due_date = CURRENT_DATE - INTERVAL '30 days');
 
-INSERT INTO premiums (policy_id, amount, due_date, status, billing_cycle, created_at, updated_at)
-SELECT p.id, 320000, CURRENT_DATE + INTERVAL '60 days', 'PENDING', 'MONTHLY', NOW(), NOW()
+INSERT INTO premiums (policy_id, amount, due_date, payment_status, billing_cycle, currency, created_at, updated_at)
+SELECT p.id, 320000, CURRENT_DATE + INTERVAL '60 days', 'pending', 'monthly', 'NGN', NOW(), NOW()
 FROM policies p WHERE p.policy_number = 'POL-001-2024-0002'
 AND NOT EXISTS (SELECT 1 FROM premiums WHERE policy_id = p.id AND due_date = CURRENT_DATE + INTERVAL '60 days');
 
 -- Policy 3 premiums
-INSERT INTO premiums (policy_id, amount, due_date, status, billing_cycle, created_at, updated_at)
-SELECT p.id, 180000, CURRENT_DATE - INTERVAL '90 days', 'PAID', 'MONTHLY', NOW(), NOW()
+INSERT INTO premiums (policy_id, amount, due_date, payment_status, billing_cycle, currency, created_at, updated_at)
+SELECT p.id, 180000, CURRENT_DATE - INTERVAL '90 days', 'paid', 'monthly', 'NGN', NOW(), NOW()
 FROM policies p WHERE p.policy_number = 'POL-001-2024-0003'
 AND NOT EXISTS (SELECT 1 FROM premiums WHERE policy_id = p.id AND due_date = CURRENT_DATE - INTERVAL '90 days');
 
-INSERT INTO premiums (policy_id, amount, due_date, status, billing_cycle, created_at, updated_at)
-SELECT p.id, 180000, CURRENT_DATE + INTERVAL '15 days', 'PENDING', 'MONTHLY', NOW(), NOW()
+INSERT INTO premiums (policy_id, amount, due_date, payment_status, billing_cycle, currency, created_at, updated_at)
+SELECT p.id, 180000, CURRENT_DATE + INTERVAL '15 days', 'pending', 'monthly', 'NGN', NOW(), NOW()
 FROM policies p WHERE p.policy_number = 'POL-001-2024-0003'
 AND NOT EXISTS (SELECT 1 FROM premiums WHERE policy_id = p.id AND due_date = CURRENT_DATE + INTERVAL '15 days');
 
 -- Policy 4 premiums
-INSERT INTO premiums (policy_id, amount, due_date, status, billing_cycle, created_at, updated_at)
-SELECT p.id, 620000, CURRENT_DATE - INTERVAL '15 days', 'PAID', 'MONTHLY', NOW(), NOW()
+INSERT INTO premiums (policy_id, amount, due_date, payment_status, billing_cycle, currency, created_at, updated_at)
+SELECT p.id, 620000, CURRENT_DATE - INTERVAL '15 days', 'paid', 'monthly', 'NGN', NOW(), NOW()
 FROM policies p WHERE p.policy_number = 'POL-001-2024-0004'
 AND NOT EXISTS (SELECT 1 FROM premiums WHERE policy_id = p.id AND due_date = CURRENT_DATE - INTERVAL '15 days');
 
-INSERT INTO premiums (policy_id, amount, due_date, status, billing_cycle, created_at, updated_at)
-SELECT p.id, 620000, CURRENT_DATE + INTERVAL '45 days', 'PENDING', 'MONTHLY', NOW(), NOW()
+INSERT INTO premiums (policy_id, amount, due_date, payment_status, billing_cycle, currency, created_at, updated_at)
+SELECT p.id, 620000, CURRENT_DATE + INTERVAL '45 days', 'pending', 'monthly', 'NGN', NOW(), NOW()
 FROM policies p WHERE p.policy_number = 'POL-001-2024-0004'
 AND NOT EXISTS (SELECT 1 FROM premiums WHERE policy_id = p.id AND due_date = CURRENT_DATE + INTERVAL '45 days');
 
 -- Policy 5 premiums
-INSERT INTO premiums (policy_id, amount, due_date, status, billing_cycle, created_at, updated_at)
-SELECT p.id, 280000, CURRENT_DATE, 'PENDING', 'MONTHLY', NOW(), NOW()
+INSERT INTO premiums (policy_id, amount, due_date, payment_status, billing_cycle, currency, created_at, updated_at)
+SELECT p.id, 280000, CURRENT_DATE, 'pending', 'monthly', 'NGN', NOW(), NOW()
 FROM policies p WHERE p.policy_number = 'POL-001-2024-0005'
 AND NOT EXISTS (SELECT 1 FROM premiums WHERE policy_id = p.id AND due_date = CURRENT_DATE);
 
-INSERT INTO premiums (policy_id, amount, due_date, status, billing_cycle, created_at, updated_at)
-SELECT p.id, 280000, CURRENT_DATE + INTERVAL '90 days', 'PENDING', 'MONTHLY', NOW(), NOW()
+INSERT INTO premiums (policy_id, amount, due_date, payment_status, billing_cycle, currency, created_at, updated_at)
+SELECT p.id, 280000, CURRENT_DATE + INTERVAL '90 days', 'pending', 'monthly', 'NGN', NOW(), NOW()
 FROM policies p WHERE p.policy_number = 'POL-001-2024-0005'
 AND NOT EXISTS (SELECT 1 FROM premiums WHERE policy_id = p.id AND due_date = CURRENT_DATE + INTERVAL '90 days');
 
 -- Policy 6 premiums
-INSERT INTO premiums (policy_id, amount, due_date, status, billing_cycle, created_at, updated_at)
-SELECT p.id, 220000, CURRENT_DATE - INTERVAL '45 days', 'PAID', 'MONTHLY', NOW(), NOW()
+INSERT INTO premiums (policy_id, amount, due_date, payment_status, billing_cycle, currency, created_at, updated_at)
+SELECT p.id, 220000, CURRENT_DATE - INTERVAL '45 days', 'paid', 'monthly', 'NGN', NOW(), NOW()
 FROM policies p WHERE p.policy_number = 'POL-001-2024-0006'
 AND NOT EXISTS (SELECT 1 FROM premiums WHERE policy_id = p.id AND due_date = CURRENT_DATE - INTERVAL '45 days');
 
-INSERT INTO premiums (policy_id, amount, due_date, status, billing_cycle, created_at, updated_at)
-SELECT p.id, 220000, CURRENT_DATE + INTERVAL '75 days', 'PENDING', 'MONTHLY', NOW(), NOW()
+INSERT INTO premiums (policy_id, amount, due_date, payment_status, billing_cycle, currency, created_at, updated_at)
+SELECT p.id, 220000, CURRENT_DATE + INTERVAL '75 days', 'pending', 'monthly', 'NGN', NOW(), NOW()
 FROM policies p WHERE p.policy_number = 'POL-001-2024-0006'
 AND NOT EXISTS (SELECT 1 FROM premiums WHERE policy_id = p.id AND due_date = CURRENT_DATE + INTERVAL '75 days');
 
 -- Policy 7 premiums
-INSERT INTO premiums (policy_id, amount, due_date, status, billing_cycle, created_at, updated_at)
-SELECT p.id, 380000, CURRENT_DATE - INTERVAL '120 days', 'PAID', 'MONTHLY', NOW(), NOW()
+INSERT INTO premiums (policy_id, amount, due_date, payment_status, billing_cycle, currency, created_at, updated_at)
+SELECT p.id, 380000, CURRENT_DATE - INTERVAL '120 days', 'paid', 'monthly', 'NGN', NOW(), NOW()
 FROM policies p WHERE p.policy_number = 'POL-001-2024-0007'
 AND NOT EXISTS (SELECT 1 FROM premiums WHERE policy_id = p.id AND due_date = CURRENT_DATE - INTERVAL '120 days');
 
-INSERT INTO premiums (policy_id, amount, due_date, status, billing_cycle, created_at, updated_at)
-SELECT p.id, 380000, CURRENT_DATE + INTERVAL '10 days', 'PENDING', 'MONTHLY', NOW(), NOW()
+INSERT INTO premiums (policy_id, amount, due_date, payment_status, billing_cycle, currency, created_at, updated_at)
+SELECT p.id, 380000, CURRENT_DATE + INTERVAL '10 days', 'pending', 'monthly', 'NGN', NOW(), NOW()
 FROM policies p WHERE p.policy_number = 'POL-001-2024-0007'
 AND NOT EXISTS (SELECT 1 FROM premiums WHERE policy_id = p.id AND due_date = CURRENT_DATE + INTERVAL '10 days');
 
 -- Policy 8 premiums
-INSERT INTO premiums (policy_id, amount, due_date, status, billing_cycle, created_at, updated_at)
-SELECT p.id, 410000, CURRENT_DATE + INTERVAL '10 days', 'PENDING', 'MONTHLY', NOW(), NOW()
+INSERT INTO premiums (policy_id, amount, due_date, payment_status, billing_cycle, currency, created_at, updated_at)
+SELECT p.id, 410000, CURRENT_DATE + INTERVAL '10 days', 'pending', 'monthly', 'NGN', NOW(), NOW()
 FROM policies p WHERE p.policy_number = 'POL-001-2024-0008'
 AND NOT EXISTS (SELECT 1 FROM premiums WHERE policy_id = p.id AND due_date = CURRENT_DATE + INTERVAL '10 days');
 
-INSERT INTO premiums (policy_id, amount, due_date, status, billing_cycle, created_at, updated_at)
-SELECT p.id, 410000, CURRENT_DATE + INTERVAL '100 days', 'PENDING', 'MONTHLY', NOW(), NOW()
+INSERT INTO premiums (policy_id, amount, due_date, payment_status, billing_cycle, currency, created_at, updated_at)
+SELECT p.id, 410000, CURRENT_DATE + INTERVAL '100 days', 'pending', 'monthly', 'NGN', NOW(), NOW()
 FROM policies p WHERE p.policy_number = 'POL-001-2024-0008'
 AND NOT EXISTS (SELECT 1 FROM premiums WHERE policy_id = p.id AND due_date = CURRENT_DATE + INTERVAL '100 days');
 

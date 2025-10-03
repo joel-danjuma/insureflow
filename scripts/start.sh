@@ -38,26 +38,32 @@ python3 scripts/populate_database.py || {
     echo "⚠️  Database population failed (model/schema mismatch)"
     echo "⚠️  Trying simple population script..."
     python3 scripts/simple_populate.py || {
-        echo "⚠️  Simple population also failed, trying raw SQL approach..."
-    
-    # Check if we have policies first
-    POLICY_COUNT=$(python3 -c "
+        echo "⚠️  Simple population also failed, trying direct SQL approach..."
+    python3 scripts/direct_sql_populate.py || {
+        echo "⚠️  Direct SQL population also failed, trying raw SQL approach..."
+        
+        # Check if we have policies first
+        POLICY_COUNT=$(python3 -c "
 from app.core.database import get_db
 from sqlalchemy import text
-db = next(get_db())
-result = db.execute(text('SELECT COUNT(*) FROM policies')).fetchone()
-print(result[0] if result else 0)
-db.close()
-")
-    
-    if [ "$POLICY_COUNT" -eq 0 ]; then
-        echo "⚠️  No policies found, running raw SQL population..."
-        # Run the raw SQL script using psql from within the container
-        PGPASSWORD=insureflow psql -h insureflow_db -U insureflow -d insureflow -f /app/scripts/raw_populate.sql
-        echo "✅ Raw SQL population completed!"
-    else
-        echo "ℹ️  Found $POLICY_COUNT policies, skipping population"
-    fi
+try:
+    db = next(get_db())
+    result = db.execute(text('SELECT COUNT(*) FROM policies')).fetchone()
+    print(result[0] if result else 0)
+    db.close()
+except:
+    print(0)
+" 2>/dev/null || echo 0)
+        
+        if [ "$POLICY_COUNT" -eq 0 ]; then
+            echo "⚠️  No policies found, trying raw SQL methods..."
+            # Try different methods to run raw SQL
+            cat /app/scripts/raw_populate.sql | docker exec -i insureflow_db psql -U insureflow -d insureflow 2>/dev/null || \
+            echo "⚠️  All raw SQL methods failed, will use absolute minimal fallback"
+        else
+            echo "ℹ️  Found $POLICY_COUNT policies, skipping raw SQL"
+        fi
+    }
     
     echo "⚠️  If raw SQL also fails, creating absolute minimal fallback..."
     python3 << 'END'
