@@ -36,11 +36,13 @@ alembic upgrade head
 echo "👥 Checking and populating database..."
 python3 scripts/populate_database.py || {
     echo "⚠️  Database population failed (model/schema mismatch)"
-    echo "⚠️  Trying simple population script..."
-    python3 scripts/simple_populate.py || {
-        echo "⚠️  Simple population also failed, trying direct SQL approach..."
-    python3 scripts/direct_sql_populate.py || {
-        echo "⚠️  Direct SQL population also failed, trying raw SQL approach..."
+    echo "⚠️  Trying enum fix and population script..."
+    python3 scripts/fix_and_populate.py || {
+        echo "⚠️  Enum fix script also failed, trying simple population..."
+        python3 scripts/simple_populate.py || {
+            echo "⚠️  Simple population also failed, trying direct SQL approach..."
+            python3 scripts/direct_sql_populate.py || {
+                echo "⚠️  Direct SQL population also failed, trying raw SQL approach..."
         
         # Check if we have policies first
         POLICY_COUNT=$(python3 -c "
@@ -59,13 +61,15 @@ except:
             echo "⚠️  No policies found, trying raw SQL methods..."
             # Try different methods to run raw SQL
             cat /app/scripts/raw_populate.sql | docker exec -i insureflow_db psql -U insureflow -d insureflow 2>/dev/null || \
-            echo "⚠️  All raw SQL methods failed, will use absolute minimal fallback"
-        else
-            echo "ℹ️  Found $POLICY_COUNT policies, skipping raw SQL"
-        fi
+                echo "⚠️  All raw SQL methods failed, will use absolute minimal fallback"
+            else
+                echo "ℹ️  Found $POLICY_COUNT policies, skipping raw SQL"
+            fi
+            }
+        }
     }
     
-    echo "⚠️  If raw SQL also fails, creating absolute minimal fallback..."
+    echo "⚠️  If all methods fail, creating absolute minimal fallback..."
     python3 << 'END'
 from app.core.database import get_db
 from app.models.user import User, UserRole
