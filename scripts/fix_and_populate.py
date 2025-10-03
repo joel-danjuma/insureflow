@@ -36,15 +36,8 @@ def main():
             payment_status_values = [row[0] for row in result] if result else []
             print(f"📋 Current paymentstatus enum values: {payment_status_values}")
             
-            # Add missing payment status values
-            required_payment_values = ['pending', 'paid', 'overdue', 'cancelled', 'refunded']
-            for value in required_payment_values:
-                if value not in payment_status_values:
-                    try:
-                        db.execute(text(f"ALTER TYPE paymentstatus ADD VALUE IF NOT EXISTS '{value}'"))
-                        print(f"✅ Added paymentstatus value: {value}")
-                    except Exception as e:
-                        print(f"⚠️  Could not add paymentstatus value '{value}': {e}")
+            # Use existing enum values instead of adding duplicates
+            print(f"📋 Using existing paymentstatus enum values: {payment_status_values}")
             
             # Check billingcycle enum
             result = db.execute(text("""
@@ -54,17 +47,7 @@ def main():
             """)).fetchall()
             
             billing_cycle_values = [row[0] for row in result] if result else []
-            print(f"📋 Current billingcycle enum values: {billing_cycle_values}")
-            
-            # Add missing billing cycle values
-            required_billing_values = ['monthly', 'quarterly', 'semi_annual', 'annual']
-            for value in required_billing_values:
-                if value not in billing_cycle_values:
-                    try:
-                        db.execute(text(f"ALTER TYPE billingcycle ADD VALUE IF NOT EXISTS '{value}'"))
-                        print(f"✅ Added billingcycle value: {value}")
-                    except Exception as e:
-                        print(f"⚠️  Could not add billingcycle value '{value}': {e}")
+            print(f"📋 Using existing billingcycle enum values: {billing_cycle_values}")
             
             db.commit()
             
@@ -176,9 +159,9 @@ def main():
             available_statuses = [row[0] for row in result] if result else []
             print(f"📋 Available payment statuses for premiums: {available_statuses}")
             
-            # Use the first available status, or default to a safe value
-            paid_status = 'paid' if 'paid' in available_statuses else (available_statuses[0] if available_statuses else 'pending')
-            pending_status = 'pending' if 'pending' in available_statuses else (available_statuses[0] if available_statuses else 'pending')
+            # Use existing uppercase values if available, otherwise lowercase
+            paid_status = 'PAID' if 'PAID' in available_statuses else ('paid' if 'paid' in available_statuses else (available_statuses[0] if available_statuses else 'PENDING'))
+            pending_status = 'PENDING' if 'PENDING' in available_statuses else ('pending' if 'pending' in available_statuses else (available_statuses[0] if available_statuses else 'PENDING'))
             
             print(f"📋 Using statuses - Paid: '{paid_status}', Pending: '{pending_status}'")
             
@@ -204,7 +187,7 @@ def main():
             """)).fetchall()
             
             available_cycles = [row[0] for row in result] if result else []
-            billing_cycle = 'monthly' if 'monthly' in available_cycles else (available_cycles[0] if available_cycles else 'monthly')
+            billing_cycle = 'MONTHLY' if 'MONTHLY' in available_cycles else ('monthly' if 'monthly' in available_cycles else (available_cycles[0] if available_cycles else 'MONTHLY'))
             
             print(f"📋 Using billing cycle: '{billing_cycle}'")
             
@@ -212,8 +195,8 @@ def main():
                 due_date = date.today() + timedelta(days=days_offset)
                 
                 db.execute(text("""
-                    INSERT INTO premiums (policy_id, amount, due_date, payment_status, billing_cycle, currency, created_at, updated_at)
-                    SELECT p.id, :amount, :due_date, :status, :billing_cycle, 'NGN', NOW(), NOW()
+                    INSERT INTO premiums (policy_id, amount, due_date, payment_status, billing_cycle, currency, grace_period_days, paid_amount, late_fee_amount, created_at, updated_at)
+                    SELECT p.id, :amount, :due_date, :status, :billing_cycle, 'NGN', 30, 0, 0, NOW(), NOW()
                     FROM policies p 
                     WHERE p.policy_number = :policy_number
                     AND NOT EXISTS (

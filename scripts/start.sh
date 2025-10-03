@@ -290,7 +290,6 @@ print(f'✅ Minimal test data created successfully!')
 print(f'📊 Summary: {len(policies)} policies, {premiums_created} premiums')
 db.close()
 END
-    }
 }
 
 echo "✅ Database setup complete!"
