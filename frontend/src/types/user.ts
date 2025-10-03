@@ -1,10 +1,10 @@
 export enum UserRole {
-  INSUREFLOW_ADMIN = 'INSUREFLOW_ADMIN',
-  ADMIN = 'ADMIN',
-  INSURANCE_ADMIN = 'INSURANCE_ADMIN',
-  INSURANCE_ACCOUNTANT = 'INSURANCE_ACCOUNTANT',
-  BROKER = 'BROKER',
-  CUSTOMER = 'CUSTOMER',
+  INSUREFLOW_ADMIN = 'insureflow_admin',
+  ADMIN = 'admin',
+  INSURANCE_ADMIN = 'insurance_admin',
+  INSURANCE_ACCOUNTANT = 'insurance_accountant',
+  BROKER = 'broker',
+  CUSTOMER = 'customer',
 }
 
 export interface User {

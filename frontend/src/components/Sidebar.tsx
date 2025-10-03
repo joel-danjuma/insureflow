@@ -115,12 +115,13 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole, isOpen = true, onToggle }) 
   const currentRole = userRole || user?.role || UserRole.BROKER;
   const links = [...commonLinks, ...(roleLinks[currentRole] || [])];
 
-  console.log('🔍 Sidebar: userRole prop =', userRole);
-  console.log('🔍 Sidebar: user?.role =', user?.role);
-  console.log('🔍 Sidebar: currentRole =', currentRole);
-
-  // Get user profile data based on role
+  // Use hybrid approach: original useBrokerProfile for brokers, new useUserProfile for others
+  const shouldUseBrokerProfile = currentRole === UserRole.BROKER;
+  const { data: brokerProfile } = useBrokerProfile();
   const { data: userProfile } = useUserProfile(currentRole);
+  
+  // Select the appropriate profile data
+  const profileData = shouldUseBrokerProfile ? brokerProfile : userProfile;
 
   useEffect(() => {
     const checkMobile = () => {
@@ -139,17 +140,17 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole, isOpen = true, onToggle }) 
         return 'Sovereign Trust';
       case UserRole.BROKER:
         // Use broker's name (like "SCIB") first, then agency name if available
-        if (userProfile && 'name' in userProfile && userProfile.name) {
-          return userProfile.name;
-        } else if (userProfile && 'agency_name' in userProfile && userProfile.agency_name) {
-          return userProfile.agency_name;
+        if (profileData && 'name' in profileData && profileData.name) {
+          return profileData.name;
+        } else if (profileData && 'agency_name' in profileData && profileData.agency_name) {
+          return profileData.agency_name;
         }
         return 'Broker';
       case UserRole.INSURANCE_ADMIN:
       case UserRole.INSURANCE_ACCOUNTANT:
         // Use organization name for insurance users
-        if (userProfile && 'organization_name' in userProfile && userProfile.organization_name) {
-          return userProfile.organization_name;
+        if (profileData && 'organization_name' in profileData && profileData.organization_name) {
+          return profileData.organization_name;
         }
         return 'Insurance Firm';
       case UserRole.CUSTOMER:

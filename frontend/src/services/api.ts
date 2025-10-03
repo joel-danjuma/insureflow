@@ -190,32 +190,29 @@ export const insuranceService = {
 export const userProfileService = {
   getUserProfile: async (userRole: string) => {
     try {
-      console.log('🚀 userProfileService called with role:', userRole);
       let response;
       let endpoint;
-      switch (userRole) {
-        case 'BROKER':
-          endpoint = '/brokers/me';
-          response = await api.get(endpoint);
-          break;
-        case 'INSURANCE_ADMIN':
-        case 'INSURANCE_ACCOUNTANT':
-          endpoint = '/insurance/me';
-          response = await api.get(endpoint);
-          break;
-        case 'ADMIN':
-          endpoint = '/users/me';
-          response = await api.get(endpoint);
-          break;
-        default:
-          endpoint = '/users/me';
-          response = await api.get(endpoint);
-          break;
-      }
-      console.log('✅ userProfileService calling endpoint:', endpoint, 'for role:', userRole);
+        switch (userRole) {
+          case 'broker':
+            endpoint = '/brokers/me';
+            response = await api.get(endpoint);
+            break;
+          case 'insurance_admin':
+          case 'insurance_accountant':
+            endpoint = '/insurance/me';
+            response = await api.get(endpoint);
+            break;
+          case 'admin':
+            endpoint = '/users/me';
+            response = await api.get(endpoint);
+            break;
+          default:
+            endpoint = '/users/me';
+            response = await api.get(endpoint);
+            break;
+        }
       return response.data;
     } catch (error) {
-      console.error('❌ userProfileService error for role:', userRole, error);
       errorHandler(error, 'fetching user profile');
     }
   },

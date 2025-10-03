@@ -238,14 +238,12 @@ export const useUserProfile = (userRole: string) => {
     queryKey: ['user', 'profile', userRole],
     queryFn: async () => {
       try {
-        console.log('🔍 useUserProfile called with role:', userRole);
         const result = await userProfileService.getUserProfile(userRole);
-        console.log('✅ useUserProfile success for role:', userRole, result);
         return result;
       } catch (error) {
-        console.warn('❌ User profile API failed for role:', userRole, error);
+        console.warn('User profile API failed, using mock data:', error);
         // Return appropriate mock data based on role
-        if (userRole === 'BROKER') {
+        if (userRole === 'broker') {
           return mockBroker;
         }
         // For other roles, return basic user info (you can expand this)
