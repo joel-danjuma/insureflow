@@ -5,7 +5,7 @@ from fastapi import APIRouter
 
 from app.api.v1.endpoints import (
     auth, users, brokers, policies, premiums, 
-    payments, dashboard, notifications, reminders, virtual_accounts, insureflow_admin
+    payments, dashboard, notifications, reminders, virtual_accounts, insureflow_admin, settlements
 )
 
 api_router = APIRouter()
@@ -20,4 +20,5 @@ api_router.include_router(dashboard.router, prefix="/dashboard", tags=["dashboar
 api_router.include_router(notifications.router, prefix="/notifications", tags=["notifications"])
 api_router.include_router(reminders.router, prefix="/reminders", tags=["reminders"])
 api_router.include_router(virtual_accounts.router, prefix="/virtual-accounts", tags=["virtual-accounts"])
-api_router.include_router(insureflow_admin.router, prefix="/admin/insureflow", tags=["insureflow-admin"]) 
+api_router.include_router(insureflow_admin.router, prefix="/admin/insureflow", tags=["insureflow-admin"])
+api_router.include_router(settlements.router, prefix="/settlements", tags=["settlements"]) 

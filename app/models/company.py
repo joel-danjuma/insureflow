@@ -29,6 +29,11 @@ class InsuranceCompany(Base):
     website = Column(String(255), nullable=True)
     description = Column(Text, nullable=True)
     
+    # Settlement account details for GAPS transfers
+    settlement_account_number = Column(String(20), nullable=True, index=True)
+    settlement_bank_code = Column(String(10), nullable=True)
+    settlement_account_name = Column(String(255), nullable=True)
+    
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)

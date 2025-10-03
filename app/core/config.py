@@ -61,6 +61,24 @@ class Settings(BaseSettings):
     SQUAD_BASE_URL: str = "https://sandbox-api-d.squadco.com"  # Default to sandbox
     SQUAD_WEBHOOK_URL: Optional[str] = None  # Webhook URL for Squad Co payments
     
+    # GAPS (GTBank Automated Payment System) Configuration
+    GAPS_BASE_URL: str = "https://gtweb6.gtbank.com/GSTPS/GAPS_FileUploader/FileUploader.asmx"  # Test URL
+    GAPS_CUSTOMER_ID: str = ""  # GAPS Access Code (encrypted)
+    GAPS_USERNAME: str = ""  # GAPS Username (encrypted)
+    GAPS_PASSWORD: str = ""  # GAPS Password (encrypted)
+    GAPS_CHANNEL: str = "GSTP"  # Channel identifier
+    GAPS_PUBLIC_KEY: str = """MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCrtPgIUBsQscypy+2A2l6oHKlLRTgD4hlrYKW9
+IrAK4ll0FPndJ3i57CioPalYKdNMF9+K4mFaGfT3dAMRSgWWWDeaerHx35VLgdX/wFTN5Zf1QYGe
+WiKyAmCAXoPwtlfvlLqsr9NMBJ3Ua+fFqSC4/6ThhudMlrxNL/ut/kd+pQIDAQAB"""  # Test public key
+    
+    # Settlement Configuration
+    INSUREFLOW_SETTLEMENT_ACCOUNT: str = ""  # InsureFlow's settlement account number
+    INSUREFLOW_COMMISSION_RATE: float = 0.75  # 0.75% commission rate
+    HABARI_COMMISSION_RATE: float = 0.25  # 0.25% commission rate
+    PLATFORM_COMMISSION_RATE: float = 1.0  # Total platform commission (0.75% + 0.25%)
+    AUTO_SETTLEMENT_ENABLED: bool = True  # Enable automatic settlements
+    SETTLEMENT_THRESHOLD: float = 10000.0  # Minimum amount for settlement (₦10,000)
+    
     # API Keys for AI features
     OPENAI_API_KEY: Optional[str] = None
     GOOGLE_API_KEY: Optional[str] = None
