@@ -115,11 +115,12 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole, isOpen = true, onToggle }) 
   const currentRole = userRole || user?.role || UserRole.BROKER;
   const links = [...commonLinks, ...(roleLinks[currentRole] || [])];
 
-  // Always call both hooks (React rules require this), but use appropriate data
+  // Only call useBrokerProfile for brokers, otherwise null
+  // We can't conditionally call hooks, so we call both but only use the relevant one
   const { data: brokerProfile } = useBrokerProfile();
   const { data: userProfile } = useUserProfile(currentRole);
   
-  // Select the appropriate profile data based on role
+  // Select profile data based on role - brokerProfile for brokers, userProfile for others
   const profileData = currentRole === UserRole.BROKER ? brokerProfile : userProfile;
 
   useEffect(() => {
