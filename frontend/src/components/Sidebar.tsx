@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { UserRole } from '@/types/user';
 import useAuthStore from '@/store/authStore';
-import { useUserProfile } from '@/hooks/useQuery';
+import { useUserProfile, useBrokerProfile } from '@/hooks/useQuery';
 
 const commonLinks = [
   { href: '/dashboard', label: 'Dashboard', icon: 'House' },
@@ -115,13 +115,12 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole, isOpen = true, onToggle }) 
   const currentRole = userRole || user?.role || UserRole.BROKER;
   const links = [...commonLinks, ...(roleLinks[currentRole] || [])];
 
-  // Use hybrid approach: original useBrokerProfile for brokers, new useUserProfile for others
-  const shouldUseBrokerProfile = currentRole === UserRole.BROKER;
+  // Always call both hooks (React rules require this), but use appropriate data
   const { data: brokerProfile } = useBrokerProfile();
   const { data: userProfile } = useUserProfile(currentRole);
   
-  // Select the appropriate profile data
-  const profileData = shouldUseBrokerProfile ? brokerProfile : userProfile;
+  // Select the appropriate profile data based on role
+  const profileData = currentRole === UserRole.BROKER ? brokerProfile : userProfile;
 
   useEffect(() => {
     const checkMobile = () => {

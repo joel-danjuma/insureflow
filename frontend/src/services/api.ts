@@ -193,16 +193,16 @@ export const userProfileService = {
       let response;
       let endpoint;
         switch (userRole) {
-          case 'broker':
+          case 'BROKER':
             endpoint = '/brokers/me';
             response = await api.get(endpoint);
             break;
-          case 'insurance_admin':
-          case 'insurance_accountant':
+          case 'INSURANCE_ADMIN':
+          case 'INSURANCE_ACCOUNTANT':
             endpoint = '/insurance/me';
             response = await api.get(endpoint);
             break;
-          case 'admin':
+          case 'ADMIN':
             endpoint = '/users/me';
             response = await api.get(endpoint);
             break;

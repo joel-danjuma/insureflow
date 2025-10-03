@@ -243,7 +243,7 @@ export const useUserProfile = (userRole: string) => {
       } catch (error) {
         console.warn('User profile API failed, using mock data:', error);
         // Return appropriate mock data based on role
-        if (userRole === 'broker') {
+        if (userRole === 'BROKER') {
           return mockBroker;
         }
         // For other roles, return basic user info (you can expand this)
