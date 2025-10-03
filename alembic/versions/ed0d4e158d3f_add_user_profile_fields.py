@@ -47,10 +47,20 @@ def upgrade() -> None:
     # Add address if it doesn't exist
     if 'address' not in columns:
         op.add_column('users', sa.Column('address', sa.String(length=500), nullable=True))
+    
+    # Add can_create_policies if it doesn't exist (for Insurance Accountants)
+    if 'can_create_policies' not in columns:
+        op.add_column('users', sa.Column('can_create_policies', sa.Boolean(), nullable=False, server_default='false'))
+    
+    # Add can_make_payments if it doesn't exist (for Broker Accountants)
+    if 'can_make_payments' not in columns:
+        op.add_column('users', sa.Column('can_make_payments', sa.Boolean(), nullable=False, server_default='false'))
 
 
 def downgrade() -> None:
     # Remove the added columns
+    op.drop_column('users', 'can_make_payments')
+    op.drop_column('users', 'can_create_policies')
     op.drop_column('users', 'address')
     op.drop_column('users', 'gender')
     op.drop_column('users', 'date_of_birth')
