@@ -69,8 +69,8 @@ def main():
         if john_id:
             # Create broker profile
             db.execute(text("""
-                INSERT INTO brokers (user_id, name, license_number, agency_name, contact_email, contact_phone, office_address, is_active, created_at, updated_at)
-                SELECT :user_id, 'SCIB', 'BRK-2023-001', 'Sovereign Capital Investment Banking', 'john.broker@scib.ng', '+234-801-234-5678', 'Lagos, Nigeria', true, NOW(), NOW()
+                INSERT INTO brokers (user_id, name, license_number, agency_name, contact_email, contact_phone, office_address, commission_type, default_commission_rate, total_policies_sold, total_premiums_collected, total_commission_earned, is_active, is_verified, created_at, updated_at)
+                SELECT :user_id, 'SCIB', 'BRK-2023-001', 'Sovereign Capital Investment Banking', 'john.broker@scib.ng', '+234-801-234-5678', 'Lagos, Nigeria', 'percentage', 0.125, 0, 0, 0, true, true, NOW(), NOW()
                 WHERE NOT EXISTS (SELECT 1 FROM brokers WHERE user_id = :user_id)
             """), {"user_id": john_id})
             

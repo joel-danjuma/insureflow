@@ -38,7 +38,28 @@ python3 scripts/populate_database.py || {
     echo "⚠️  Database population failed (model/schema mismatch)"
     echo "⚠️  Trying simple population script..."
     python3 scripts/simple_populate.py || {
-        echo "⚠️  Simple population also failed, creating minimal test data..."
+        echo "⚠️  Simple population also failed, trying raw SQL approach..."
+    
+    # Check if we have policies first
+    POLICY_COUNT=$(python3 -c "
+from app.core.database import get_db
+from sqlalchemy import text
+db = next(get_db())
+result = db.execute(text('SELECT COUNT(*) FROM policies')).fetchone()
+print(result[0] if result else 0)
+db.close()
+")
+    
+    if [ "$POLICY_COUNT" -eq 0 ]; then
+        echo "⚠️  No policies found, running raw SQL population..."
+        # Run the raw SQL script using psql from within the container
+        PGPASSWORD=insureflow psql -h insureflow_db -U insureflow -d insureflow -f /app/scripts/raw_populate.sql
+        echo "✅ Raw SQL population completed!"
+    else
+        echo "ℹ️  Found $POLICY_COUNT policies, skipping population"
+    fi
+    
+    echo "⚠️  If raw SQL also fails, creating absolute minimal fallback..."
     python3 << 'END'
 from app.core.database import get_db
 from app.models.user import User, UserRole
