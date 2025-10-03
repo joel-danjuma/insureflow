@@ -7,6 +7,7 @@ import withAuth from '@/hocs/withAuth';
 import InsuranceFirmDashboard from '@/components/InsuranceFirmDashboard';
 import BrokerDashboard from '@/components/BrokerDashboard';
 import InsureFlowAdminDashboard from '@/components/InsureFlowAdminDashboard';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import useAuthStore from '@/store/authStore';
 import { UserRole } from '@/types/user';
 
@@ -53,9 +54,21 @@ const DashboardPage = () => {
   return (
     <Layout userRole={user.role} title={getDashboardTitle()}>
       {/* Render appropriate dashboard based on user role */}
-      {user.role === UserRole.INSUREFLOW_ADMIN && <InsureFlowAdminDashboard />}
-      {user.role === UserRole.ADMIN && <InsuranceFirmDashboard />}
-      {user.role === UserRole.BROKER && <BrokerDashboard />}
+      {user.role === UserRole.INSUREFLOW_ADMIN && (
+        <ErrorBoundary>
+          <InsureFlowAdminDashboard />
+        </ErrorBoundary>
+      )}
+      {user.role === UserRole.ADMIN && (
+        <ErrorBoundary>
+          <InsuranceFirmDashboard />
+        </ErrorBoundary>
+      )}
+      {user.role === UserRole.BROKER && (
+        <ErrorBoundary>
+          <BrokerDashboard />
+        </ErrorBoundary>
+      )}
       {user.role === UserRole.CUSTOMER && (
         <div className="text-center py-12">
           <h2 className="text-2xl font-bold text-white mb-4">Customer Dashboard</h2>

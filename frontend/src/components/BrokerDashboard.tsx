@@ -37,6 +37,51 @@ const BrokerDashboard = () => {
   const brokerReminders = user ? getRemindersForBroker(user.id) : [];
   const [dismissedReminders, setDismissedReminders] = useState<Set<string>>(new Set());
 
+  // Early return for loading states to prevent render errors
+  if (brokerLoading || policiesLoading || premiumsLoading) {
+    return (
+      <div className="min-h-screen bg-gray-900 p-6">
+        <div className="flex flex-wrap justify-between gap-3 pb-4">
+          <div className="flex min-w-72 flex-col gap-3">
+            <div className="h-8 bg-gray-700 rounded w-64 animate-pulse"></div>
+            <div className="h-4 bg-gray-700 rounded w-96 animate-pulse"></div>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <MetricCard key={i} title="" value="" isLoading={true} />
+          ))}
+        </div>
+        
+        <div className="space-y-6">
+          <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
+            <div className="h-6 bg-gray-700 rounded w-48 mb-4 animate-pulse"></div>
+            <div className="h-64 bg-gray-700 rounded animate-pulse"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Early return for critical errors
+  if (brokerError && policiesError && premiumsError) {
+    return (
+      <div className="min-h-screen bg-gray-900 p-6 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-white mb-4">Unable to Load Dashboard</h2>
+          <p className="text-gray-400 mb-4">There was an error loading your dashboard data.</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   // State for selected policies
   const [selectedPolicies, setSelectedPolicies] = useState<Set<string>>(new Set());
   const [paymentLoading, setPaymentLoading] = useState<Set<string>>(new Set());
