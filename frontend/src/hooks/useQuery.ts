@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useQuery as useReactQuery } from '@tanstack/react-query';
 import { dashboardService, brokerService, userProfileService, policyService, premiumService } from '@/services/api';
+import useAuthStore from '@/store/authStore';
 import { DashboardData, Broker, Policy, Premium, User } from '@/types/user';
 
 interface QueryResult<T> {
@@ -216,6 +217,10 @@ export const useDashboardData = () => {
 
 // Broker profile hook for Broker dashboard (legacy - use useUserProfile instead)
 export const useBrokerProfile = () => {
+  // Only enable this query for broker users to avoid 403s for other roles
+  const { user } = useAuthStore();
+  const isBroker = user?.role === 'BROKER';
+
   return useReactQuery<Broker>({
     queryKey: ['broker', 'profile'],
     queryFn: async () => {
@@ -226,6 +231,7 @@ export const useBrokerProfile = () => {
         return mockBroker;
       }
     },
+    enabled: !!isBroker, // prevent calling /brokers/me for non-broker roles
     staleTime: 30 * 1000, // 30 seconds (reduced)
     retry: false, // Don't retry, use mock data on failure
     refetchOnWindowFocus: false,
