@@ -23,6 +23,10 @@ node_modules/
 
 # OS specific
 .DS_Store
+._*
+__pycache__/
+*.py[cod]
+*$py.class
 
 venv/
 .cursor
@@ -33,3 +37,4 @@ app.env
 .roomodes
 .windsurfrules
 .env
+gaps_docs.md 
