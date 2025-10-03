@@ -42,12 +42,22 @@ const errorHandler = (error: any, context: string): never => {
 // In development, it falls back to localhost:8000
 const getApiUrl = () => {
   if (typeof window !== 'undefined') {
-    // Browser environment - use current hostname with backend port
+    // Browser environment - use current hostname
     const { protocol, hostname, port } = window.location;
-    // If we're on port 3000 (frontend), use port 8000 for backend
-    // If we're on a different port, assume backend is on same hostname
-    const backendPort = port === '3000' ? '8000' : port;
-    return `${protocol}//${hostname}:${backendPort}/api/v1`;
+    
+    // If we're on port 3000 (frontend dev), use port 8000 for backend
+    if (port === '3000') {
+      return `${protocol}//${hostname}:8000/api/v1`;
+    }
+    
+    // For production (no port or port 80/443), Nginx routes /api/v1 to backend
+    // So just use the same host without specifying a port
+    if (!port || port === '80' || port === '443') {
+      return `${protocol}//${hostname}/api/v1`;
+    }
+    
+    // For any other port, keep it
+    return `${protocol}//${hostname}:${port}/api/v1`;
   }
   // Server-side rendering fallback
   return 'http://backend:8000/api/v1';
