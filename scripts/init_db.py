@@ -15,12 +15,13 @@ from app.core.security import get_password_hash
 
 def wait_for_db(max_retries=30, retry_interval=2):
     """Wait for database to be ready"""
+    from sqlalchemy import text
     engine = create_engine(settings.DATABASE_URL)
     
     for attempt in range(max_retries):
         try:
             with engine.connect() as conn:
-                conn.execute("SELECT 1")
+                conn.execute(text("SELECT 1"))
             print("✅ Database is ready!")
             return True
         except Exception as e:

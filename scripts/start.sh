@@ -8,7 +8,7 @@ echo "⏳ Waiting for database..."
 python3 << END
 import time
 import sys
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from app.core.config import settings
 
 max_retries = 30
@@ -16,7 +16,7 @@ for i in range(max_retries):
     try:
         engine = create_engine(settings.DATABASE_URL)
         with engine.connect() as conn:
-            conn.execute("SELECT 1")
+            conn.execute(text("SELECT 1"))
         print("✅ Database is ready!")
         sys.exit(0)
     except Exception as e:
