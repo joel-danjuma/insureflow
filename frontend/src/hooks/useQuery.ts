@@ -197,12 +197,12 @@ export default useQuery;
 // React Query hooks for specific data fetching with mock fallbacks
 
 // Dashboard data hook for Admin/Insurance Firm dashboard
-export const useDashboardData = () => {
+export const useDashboardData = (userRole?: string) => {
   return useReactQuery<DashboardData>({
-    queryKey: ['dashboard'],
+    queryKey: ['dashboard', userRole],
     queryFn: async () => {
       try {
-        return await dashboardService.getDashboardData();
+        return await dashboardService.getDashboardData(userRole);
       } catch (error) {
         console.warn('Dashboard API failed, using mock data:', error);
         return mockDashboardData;

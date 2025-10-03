@@ -11,6 +11,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { reminderService } from '@/services/api';
 import useReminderStore from '@/store/reminderStore';
 import usePolicyStore from '@/store/policyStore';
+import useAuthStore from '@/store/authStore';
 import usePaymentStore from '@/store/paymentStore';
 
 // For displaying broker performance (calculated from policies data)
@@ -114,7 +115,8 @@ const latestPaymentsColumns: ColumnDef<LatestPayment>[] = [
 ];
 
 const InsuranceFirmDashboard = () => {
-  const { data: dashboardData, isLoading: dashboardLoading, error: dashboardError } = useDashboardData();
+  const { user } = useAuthStore();
+  const { data: dashboardData, isLoading: dashboardLoading, error: dashboardError } = useDashboardData(user?.role);
   const { data: policies, isLoading: policiesLoading, error: policiesError } = usePolicies();
   const { data: premiums, isLoading: premiumsLoading, error: premiumsError } = usePremiums();
   const localPolicies = usePolicyStore((state) => state.getPolicies());

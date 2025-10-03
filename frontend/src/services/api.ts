@@ -155,9 +155,31 @@ export const authService = {
 };
 
 export const dashboardService = {
-  getDashboardData: async () => {
+  getDashboardData: async (userRole?: string) => {
     try {
-      const response = await api.get('/dashboard/');
+      // Call role-specific dashboard endpoint
+      let endpoint = '/dashboard/';
+      
+      if (userRole) {
+        switch (userRole.toUpperCase()) {
+          case 'BROKER':
+          case 'BROKER_ADMIN':
+          case 'BROKER_ACCOUNTANT':
+            endpoint = '/dashboard/broker';
+            break;
+          case 'INSURANCE_ADMIN':
+          case 'INSURANCE_ACCOUNTANT':
+            endpoint = '/dashboard/insurance-firm';
+            break;
+          case 'ADMIN':
+            endpoint = '/dashboard/admin';
+            break;
+          default:
+            endpoint = '/dashboard/';
+        }
+      }
+      
+      const response = await api.get(endpoint);
       return response.data;
     } catch (error) {
       errorHandler(error, 'fetching dashboard data');
