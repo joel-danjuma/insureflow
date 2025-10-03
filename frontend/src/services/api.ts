@@ -55,6 +55,11 @@ const getApiUrl = () => {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || getApiUrl();
 
+// Debug logging for API URL
+if (typeof window !== 'undefined') {
+  console.log('🔧 API Base URL:', API_URL);
+}
+
 // Create axios instance with base configuration
 const api = axios.create({
   baseURL: API_URL,

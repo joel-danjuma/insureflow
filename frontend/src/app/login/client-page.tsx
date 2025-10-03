@@ -33,26 +33,18 @@ const LoginClientContent = () => {
       const response = await authService.login(data);
       setAuth(response.access_token, response.user);
       router.push('/dashboard');
-    } catch (err) {
-      console.warn('Real authentication failed, using mock auth:', err);
+    } catch (err: any) {
+      console.error('Authentication failed:', err);
+      console.error('Error details:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status,
+        config: err.config
+      });
       
-      let mockUser;
-      if (data.email.includes('admin') || data.email.includes('securelife')) {
-        mockUser = {
-          email: data.email, full_name: 'Adebayo Johnson', role: UserRole.ADMIN, id: 1,
-          username: 'admin', is_active: true, is_verified: true,
-          created_at: new Date().toISOString(), updated_at: new Date().toISOString()
-        };
-      } else {
-        mockUser = {
-          email: data.email, full_name: 'Ethan Carter', role: UserRole.BROKER, id: 2,
-          username: 'broker', is_active: true, is_verified: true,
-          created_at: new Date().toISOString(), updated_at: new Date().toISOString()
-        };
-      }
-      
-      setAuth('mock-token', mockUser);
-      router.push('/dashboard');
+      // Show the actual error to the user instead of falling back to mock auth
+      const errorMessage = err.response?.data?.detail || err.message || 'Login failed. Please check your credentials and try again.';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
