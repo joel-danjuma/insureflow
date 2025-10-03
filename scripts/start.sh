@@ -36,7 +36,9 @@ alembic upgrade head
 echo "👥 Checking and populating database..."
 python3 scripts/populate_database.py || {
     echo "⚠️  Database population failed (model/schema mismatch)"
-    echo "⚠️  Creating minimal test data with policies and premiums..."
+    echo "⚠️  Trying simple population script..."
+    python3 scripts/simple_populate.py || {
+        echo "⚠️  Simple population also failed, creating minimal test data..."
     python3 << 'END'
 from app.core.database import get_db
 from app.models.user import User, UserRole
@@ -257,6 +259,7 @@ print(f'✅ Minimal test data created successfully!')
 print(f'📊 Summary: {len(policies)} policies, {premiums_created} premiums')
 db.close()
 END
+    }
 }
 
 echo "✅ Database setup complete!"

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Simple database population script for InsureFlow.
-Creates basic test data for payments testing.
+Simple database population script that avoids SQLAlchemy compatibility issues.
+Creates minimal data needed for broker dashboard to work.
 """
 
 import os
@@ -13,202 +13,174 @@ import random
 # Add the parent directory to the path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from sqlalchemy.orm import Session
+from sqlalchemy import text
 from app.core.database import SessionLocal
 from app.core.security import get_password_hash
-from app.models.user import User, UserRole
-from app.models.company import InsuranceCompany
-from app.models.broker import Broker
-from app.models.policy import Policy, PolicyType, PolicyStatus
-from app.models.premium import Premium, PaymentStatus, BillingCycle
-
-def create_test_data(db: Session):
-    """Create minimal test data for payment testing."""
-    
-    print("Creating insurance company...")
-    # Create a test insurance company
-    company = db.query(InsuranceCompany).filter(InsuranceCompany.name == "Test Insurance Co").first()
-    if not company:
-        company = InsuranceCompany(
-            name="Test Insurance Co",
-            registration_number="RC12345",
-            contact_email="info@testinsurance.com",
-            contact_phone="+234-1-234-5678",
-            address="123 Test Street, Lagos",
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
-        )
-        db.add(company)
-        db.commit()
-        print(f"✅ Created company: {company.name}")
-    else:
-        print(f"ℹ️  Company already exists: {company.name}")
-
-    print("\nCreating customer...")
-    # Create a test customer
-    customer = db.query(User).filter(User.email == "customer@test.com").first()
-    if not customer:
-        customer = User(
-            username="testcustomer",
-            email="customer@test.com",
-            full_name="Test Customer",
-            role=UserRole.CUSTOMER,
-            hashed_password=get_password_hash("password123"),
-            is_active=True,
-            is_verified=True,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
-        )
-        db.add(customer)
-        db.commit()
-        print(f"✅ Created customer: {customer.email}")
-    else:
-        print(f"ℹ️  Customer already exists: {customer.email}")
-
-    print("\nCreating broker...")
-    # Get or create a broker user
-    broker_user = db.query(User).filter(User.email == "broker@test.com").first()
-    if not broker_user:
-        broker_user = User(
-            username="testbroker",
-            email="broker@test.com",
-            full_name="Test Broker",
-            role=UserRole.BROKER,
-            hashed_password=get_password_hash("password123"),
-            is_active=True,
-            is_verified=True,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
-        )
-        db.add(broker_user)
-        db.commit()
-        print(f"✅ Created broker user: {broker_user.email}")
-    
-    # Create broker profile
-    broker = db.query(Broker).filter(Broker.user_id == broker_user.id).first()
-    if not broker:
-        broker = Broker(
-            user_id=broker_user.id,
-            name="Test Broker",
-            license_number="BRK-TEST-001",
-            agency_name="Test Broker Agency",
-            contact_email="broker@test.com",
-            contact_phone="+234-800-000-0000",
-            company_id=company.id,
-            is_verified=True,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
-        )
-        db.add(broker)
-        db.commit()
-        print(f"✅ Created broker profile: {broker.name}")
-
-    print("\nCreating policies...")
-    # Create a few test policies
-    policy_types = [PolicyType.LIFE, PolicyType.HEALTH, PolicyType.AUTO]
-    policies = []
-    
-    for i, policy_type in enumerate(policy_types):
-        policy_number = f"POL-TEST-{i+1:04d}"
-        existing_policy = db.query(Policy).filter(Policy.policy_number == policy_number).first()
-        
-        if not existing_policy:
-            policy = Policy(
-                policy_number=policy_number,
-                policy_type=policy_type,
-                user_id=customer.id,
-                company_id=company.id,
-                broker_id=broker.id,
-                status=PolicyStatus.ACTIVE,
-                start_date=date.today() - timedelta(days=30),
-                end_date=date.today() + timedelta(days=335),
-                coverage_amount=str(1000000 * (i + 1)),  # 1M, 2M, 3M
-                coverage_details=f'{{"type": "{policy_type.value}", "coverage": {1000000 * (i + 1)}}}',
-                created_at=datetime.utcnow(),
-                updated_at=datetime.utcnow()
-            )
-            db.add(policy)
-            policies.append(policy)
-            print(f"✅ Created policy: {policy.policy_number} ({policy_type.value})")
-        else:
-            policies.append(existing_policy)
-            print(f"ℹ️  Policy already exists: {policy_number}")
-    
-    db.commit()
-
-    print("\nCreating premiums...")
-    # Create premiums for each policy
-    premium_count = 0
-    for policy in policies:
-        # Create 3 premiums for each policy
-        for month in range(3):
-            premium_ref = f"PREM-{policy.policy_number}-{month+1:02d}"
-            
-            existing_premium = db.query(Premium).filter(
-                Premium.premium_reference == premium_ref
-            ).first()
-            
-            if not existing_premium:
-                # First premium is paid, second is overdue, third is pending
-                if month == 0:
-                    payment_status = PaymentStatus.PAID
-                    due_date = date.today() - timedelta(days=60)
-                elif month == 1:
-                    payment_status = PaymentStatus.OVERDUE
-                    due_date = date.today() - timedelta(days=10)
-                else:
-                    payment_status = PaymentStatus.PENDING
-                    due_date = date.today() + timedelta(days=20)
-                
-                premium = Premium(
-                    policy_id=policy.id,
-                    amount=Decimal("50000"),  # 50,000 Naira
-                    currency="NGN",
-                    due_date=due_date,
-                    billing_cycle=BillingCycle.MONTHLY,
-                    payment_status=payment_status,
-                    premium_reference=premium_ref,
-                    created_at=datetime.utcnow(),
-                    updated_at=datetime.utcnow()
-                )
-                
-                if payment_status == PaymentStatus.PAID:
-                    premium.paid_amount = premium.amount
-                    premium.payment_date = due_date + timedelta(days=5)
-                    premium.payment_reference = f"PAY-{premium_ref}"
-                
-                db.add(premium)
-                premium_count += 1
-                print(f"✅ Created premium: {premium_ref} ({payment_status.value})")
-    
-    db.commit()
-    print(f"\n✅ Total premiums created: {premium_count}")
 
 def main():
-    """Main function."""
+    """Create minimal data using raw SQL to avoid SQLAlchemy type issues."""
     print("🚀 Starting simple database population...")
-    print("=" * 50)
     
     db = SessionLocal()
     
     try:
-        create_test_data(db)
+        # Check if we already have policies
+        result = db.execute(text("SELECT COUNT(*) FROM policies")).fetchone()
+        policy_count = result[0] if result else 0
         
-        # Show summary
-        print("\n📊 Database Summary:")
-        print(f"  - Companies: {db.query(InsuranceCompany).count()}")
-        print(f"  - Users: {db.query(User).count()}")
-        print(f"  - Policies: {db.query(Policy).count()}")
-        print(f"  - Premiums: {db.query(Premium).count()}")
-        print(f"  - Unpaid Premiums: {db.query(Premium).filter(Premium.payment_status != PaymentStatus.PAID).count()}")
+        if policy_count > 0:
+            print(f"ℹ️  Database already has {policy_count} policies")
+            return
         
-        print("\n✅ Database population completed!")
+        print("✅ Creating minimal test data using raw SQL...")
+        
+        # Create insurance company if not exists
+        db.execute(text("""
+            INSERT INTO insurance_companies (name, registration_number, address, contact_email, contact_phone, website, description, created_at, updated_at)
+            SELECT 'Secure Life Insurance Nigeria', 'RC123456', '14B Adeola Odeku Street, Victoria Island, Lagos', 'info@securelife.ng', '+234-1-234-5678', 'https://securelife.ng', 'Leading life insurance provider in Nigeria', NOW(), NOW()
+            WHERE NOT EXISTS (SELECT 1 FROM insurance_companies WHERE name = 'Secure Life Insurance Nigeria')
+        """))
+        
+        # Get company ID
+        company_result = db.execute(text("SELECT id FROM insurance_companies WHERE name = 'Secure Life Insurance Nigeria' LIMIT 1")).fetchone()
+        company_id = company_result[0] if company_result else 1
+        
+        # Create users using raw SQL to avoid enum issues
+        hashed_password = get_password_hash('password123')
+        
+        # Create Sarah Johnson (Insurance Admin)
+        db.execute(text("""
+            INSERT INTO users (username, email, hashed_password, full_name, role, is_active, is_verified, created_at, updated_at)
+            SELECT 'sarah.johnson', 'sarah.johnson@sovereigntrust.com', :password, 'Sarah Johnson', 'INSURANCE_ADMIN', true, true, NOW(), NOW()
+            WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'sarah.johnson@sovereigntrust.com')
+        """), {"password": hashed_password})
+        
+        # Create John Broker
+        db.execute(text("""
+            INSERT INTO users (username, email, hashed_password, full_name, role, is_active, is_verified, created_at, updated_at)
+            SELECT 'john.broker', 'john.broker@scib.ng', :password, 'John Broker', 'BROKER', true, true, NOW(), NOW()
+            WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'john.broker@scib.ng')
+        """), {"password": hashed_password})
+        
+        # Get John's user ID
+        john_result = db.execute(text("SELECT id FROM users WHERE email = 'john.broker@scib.ng' LIMIT 1")).fetchone()
+        john_id = john_result[0] if john_result else None
+        
+        if john_id:
+            # Create broker profile
+            db.execute(text("""
+                INSERT INTO brokers (user_id, name, license_number, agency_name, contact_email, contact_phone, office_address, is_active, created_at, updated_at)
+                SELECT :user_id, 'SCIB', 'BRK-2023-001', 'Sovereign Capital Investment Banking', 'john.broker@scib.ng', '+234-801-234-5678', 'Lagos, Nigeria', true, NOW(), NOW()
+                WHERE NOT EXISTS (SELECT 1 FROM brokers WHERE user_id = :user_id)
+            """), {"user_id": john_id})
+            
+            # Get broker ID
+            broker_result = db.execute(text("SELECT id FROM brokers WHERE user_id = :user_id LIMIT 1"), {"user_id": john_id}).fetchone()
+            broker_id = broker_result[0] if broker_result else None
+        else:
+            broker_id = None
+        
+        # Create customer users
+        for i in range(5):
+            email = f'customer{i+1}@example.com'
+            db.execute(text("""
+                INSERT INTO users (username, email, hashed_password, full_name, role, is_active, is_verified, created_at, updated_at)
+                SELECT :username, :email, :password, :full_name, 'CUSTOMER', true, true, NOW(), NOW()
+                WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = :email)
+            """), {
+                "username": f'customer{i+1}',
+                "email": email,
+                "password": hashed_password,
+                "full_name": f'Customer {i+1}'
+            })
+        
+        # Get customer IDs
+        customer_results = db.execute(text("SELECT id FROM users WHERE role = 'CUSTOMER' LIMIT 5")).fetchall()
+        customer_ids = [row[0] for row in customer_results]
+        
+        # Create policies using raw SQL
+        policy_types = ['LIFE', 'AUTO', 'HEALTH']
+        
+        for i in range(8):
+            policy_number = f'POL-001-2024-{i+1:04d}'
+            customer_id = random.choice(customer_ids) if customer_ids else john_id
+            policy_type = random.choice(policy_types)
+            
+            # Generate realistic amounts
+            if policy_type == 'LIFE':
+                premium_amount = random.randint(200000, 800000)
+                coverage_amount = random.randint(5000000, 20000000)
+            elif policy_type == 'AUTO':
+                premium_amount = random.randint(150000, 600000)
+                coverage_amount = random.randint(2000000, 10000000)
+            else:  # HEALTH
+                premium_amount = random.randint(100000, 400000)
+                coverage_amount = random.randint(1000000, 5000000)
+            
+            start_date = date.today() - timedelta(days=random.randint(30, 300))
+            end_date = start_date + timedelta(days=365)
+            
+            # Insert policy
+            db.execute(text("""
+                INSERT INTO policies (
+                    policy_number, policy_type, user_id, company_id, broker_id, 
+                    status, start_date, end_date, premium_amount, coverage_amount,
+                    company_name, contact_person, contact_email, contact_phone,
+                    created_at, updated_at
+                ) VALUES (
+                    :policy_number, :policy_type, :user_id, :company_id, :broker_id,
+                    'ACTIVE', :start_date, :end_date, :premium_amount, :coverage_amount,
+                    :company_name, :contact_person, :contact_email, :contact_phone,
+                    NOW(), NOW()
+                )
+            """), {
+                "policy_number": policy_number,
+                "policy_type": policy_type,
+                "user_id": customer_id,
+                "company_id": company_id,
+                "broker_id": broker_id,
+                "start_date": start_date,
+                "end_date": end_date,
+                "premium_amount": premium_amount,
+                "coverage_amount": coverage_amount,
+                "company_name": f'Company {i+1}',
+                "contact_person": f'Customer {i+1}',
+                "contact_email": f'customer{i+1}@example.com',
+                "contact_phone": '+234-800-000-0000'
+            })
+        
+        # Get policy IDs
+        policy_results = db.execute(text("SELECT id, premium_amount, start_date FROM policies")).fetchall()
+        
+        # Create premiums
+        premiums_created = 0
+        for policy_id, premium_amount, start_date in policy_results:
+            # Create 2-3 premiums per policy
+            for j in range(random.randint(2, 3)):
+                due_date = start_date + timedelta(days=j*30)
+                status = 'PAID' if due_date <= date.today() and random.random() > 0.3 else 'PENDING'
+                
+                db.execute(text("""
+                    INSERT INTO premiums (policy_id, amount, due_date, status, billing_cycle, created_at, updated_at)
+                    VALUES (:policy_id, :amount, :due_date, :status, 'MONTHLY', NOW(), NOW())
+                """), {
+                    "policy_id": policy_id,
+                    "amount": float(premium_amount),
+                    "due_date": due_date,
+                    "status": status
+                })
+                premiums_created += 1
+        
+        db.commit()
+        
+        print(f'✅ Created {len(policy_results)} policies')
+        print(f'✅ Created {premiums_created} premiums')
+        print(f'✅ Simple test data created successfully!')
         
     except Exception as e:
-        print(f"\n❌ Error: {str(e)}")
-        import traceback
-        traceback.print_exc()
+        print(f"❌ Error during simple population: {e}")
         db.rollback()
+        raise
     finally:
         db.close()
 
