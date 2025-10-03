@@ -110,7 +110,7 @@ def main():
             print(f"   Total Amount: ₦{total_amount:,.2f}")
             print(f"   Paid Amount: ₦{paid_amount:,.2f}")
             print(f"   Pending Amount: ₦{pending_amount:,.2f}")
-            print(f"   Expected Commission (15%): ₦{total_amount * 0.15:,.2f}")
+            print(f"   Expected Commission (15%): ₦{float(total_amount) * 0.15:,.2f}")
         
     except Exception as e:
         print(f"❌ Error during manual population: {e}")
