@@ -2,6 +2,7 @@
 CRUD operations for the User model.
 """
 from typing import List, Optional
+from datetime import datetime
 from sqlalchemy.orm import Session
 
 from app import schemas
@@ -91,6 +92,19 @@ def update_user(db: Session, user_id: int, user_update: UserUpdate) -> User:
     db.commit()
     db.refresh(db_user)
     return db_user
+
+def update_last_login(db: Session, user_id: int) -> bool:
+    """
+    Updates the last_login timestamp for a user.
+    Returns True if successful, False if user not found.
+    """
+    db_user = get_user_by_id(db, user_id)
+    if not db_user:
+        return False
+    
+    db_user.last_login = datetime.utcnow()
+    db.commit()
+    return True
 
 def delete_user(db: Session, user_id: int) -> bool:
     """
