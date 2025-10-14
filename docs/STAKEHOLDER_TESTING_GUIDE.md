@@ -12,9 +12,12 @@ This guide provides step-by-step instructions for stakeholders to test the compl
 - You'll see the main dashboard with various sections
 
 ### 2. **Navigate to Payment Testing**
-- **For Insurance Admins**: Look for the "Payment Flow Testing" section on your dashboard
-- **For InsureFlow Admins**: Click the "Payment Testing" tab in the admin dashboard
+- **Login as a Broker**: Use any broker account (e.g., `ethan.carter@brokers.ng` / `password123`)
+- **Access Broker Dashboard**: This is where payments are initiated in production
+- **Scroll down** to find the "Payment Flow Testing" section
 - Click **"Show Testing Panel"** to reveal the testing interface
+
+**Why Broker Dashboard?** This is the authentic production experience - brokers initiate all payments in real life!
 
 ## 🧪 **Testing Scenarios**
 

@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.dependencies import get_current_admin_user, get_current_insurance_admin
+from app.dependencies import get_current_admin_user, get_current_insurance_admin, get_current_broker_or_admin_user
 from app.models.user import User
 from app.schemas.testing import (
     PaymentFlowSimulationRequest,
@@ -346,7 +346,7 @@ class PaymentFlowSimulator:
 async def simulate_complete_payment_flow(
     request: PaymentFlowSimulationRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_insurance_admin)
+    current_user: User = Depends(get_current_broker_or_admin_user)
 ):
     """
     Simulate complete payment flow with detailed logging for stakeholder demonstrations.
@@ -389,7 +389,7 @@ async def simulate_complete_payment_flow(
 @router.post("/create-test-virtual-account")
 async def create_test_virtual_account(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_insurance_admin)
+    current_user: User = Depends(get_current_broker_or_admin_user)
 ):
     """Create a test virtual account for stakeholder demonstrations."""
     
@@ -437,7 +437,7 @@ async def create_test_virtual_account(
 @router.get("/simulation-logs")
 async def get_simulation_logs(
     limit: int = 100,
-    current_user: User = Depends(get_current_insurance_admin)
+    current_user: User = Depends(get_current_broker_or_admin_user)
 ):
     """Get recent simulation logs for stakeholder review."""
     

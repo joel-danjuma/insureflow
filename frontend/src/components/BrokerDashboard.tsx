@@ -14,6 +14,7 @@ import useAuthStore from '@/store/authStore';
 import usePolicyStore from '@/store/policyStore';
 import usePaymentStore from '@/store/paymentStore';
 import PaymentModal from '@/components/PaymentModal';
+import PaymentTestingPanel from '@/components/PaymentTestingPanel';
 
 type ClientPortfolioItem = {
     id: string;
@@ -92,6 +93,9 @@ const BrokerDashboard = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentSuccessState, setPaymentSuccessState] = useState(false);
   const [modalLoading, setModalLoading] = useState(false);
+  
+  // Payment testing panel state
+  const [showPaymentTesting, setShowPaymentTesting] = useState(false);
 
   // Clear messages after 5 seconds
   React.useEffect(() => {
@@ -603,6 +607,30 @@ const BrokerDashboard = () => {
       <div className="w-full overflow-hidden rounded-xl border border-gray-700 bg-gray-800">
         <DataTable columns={portfolioColumns} data={clientPortfolio} />
       </div>
+
+      {/* Payment Flow Testing Section - For Stakeholder Demos */}
+      <div className="flex justify-between items-center pt-8 pb-3">
+        <h2 className="text-white text-[22px] font-bold leading-tight tracking-[-0.015em]">
+          Payment Flow Testing
+        </h2>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setShowPaymentTesting(!showPaymentTesting)}
+            className="px-4 py-2 border border-blue-500 text-blue-400 rounded-lg font-medium hover:bg-blue-500/10 transition-colors"
+          >
+            {showPaymentTesting ? 'Hide Testing Panel' : 'Show Testing Panel'}
+          </button>
+          <div className="text-gray-400 text-sm">
+            For stakeholder demonstrations
+          </div>
+        </div>
+      </div>
+
+      {showPaymentTesting && (
+        <div className="mb-8">
+          <PaymentTestingPanel />
+        </div>
+      )}
 
       {/* Payment Modal */}
       <PaymentModal

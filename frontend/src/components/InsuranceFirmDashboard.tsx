@@ -13,7 +13,6 @@ import useReminderStore from '@/store/reminderStore';
 import usePolicyStore from '@/store/policyStore';
 import useAuthStore from '@/store/authStore';
 import usePaymentStore from '@/store/paymentStore';
-import PaymentTestingPanel from '@/components/PaymentTestingPanel';
 
 // For displaying broker performance (calculated from policies data)
 type BrokerPerformance = {
@@ -129,8 +128,6 @@ const InsuranceFirmDashboard = () => {
   const [reminderSuccess, setReminderSuccess] = useState<string | null>(null);
   const [showReminderSection, setShowReminderSection] = useState(false);
 
-  // State for payment testing panel
-  const [showPaymentTesting, setShowPaymentTesting] = useState(false);
 
 
   const addReminders = useReminderStore((state) => state.addReminders);
@@ -510,27 +507,6 @@ const InsuranceFirmDashboard = () => {
               <p className="text-gray-400">No outstanding premiums requiring reminders at this time.</p>
             </div>
           )}
-        </div>
-      )}
-
-      {/* Payment Flow Testing Section */}
-      <div className="flex justify-between items-center pt-8 pb-3">
-        <h2 className="text-white text-[22px] font-bold leading-tight tracking-[-0.015em]">
-          Payment Flow Testing
-        </h2>
-        <div className="flex gap-3">
-          <button
-            onClick={() => setShowPaymentTesting(!showPaymentTesting)}
-            className="px-4 py-2 border border-blue-500 text-blue-400 rounded-lg font-medium hover:bg-blue-500/10 transition-colors"
-          >
-            {showPaymentTesting ? 'Hide Testing Panel' : 'Show Testing Panel'}
-          </button>
-        </div>
-      </div>
-
-      {showPaymentTesting && (
-        <div className="mb-8">
-          <PaymentTestingPanel />
         </div>
       )}
 
