@@ -45,10 +45,10 @@ def get_current_user(
             settings.jwt_secret, 
             algorithms=[settings.JWT_ALGORITHM]
         )
-    email: str = payload.get("sub")
-    if email is None:
-        raise credentials_exception
-    token_data = TokenData(email=email)
+        email: str = payload.get("sub")
+        if email is None:
+            raise credentials_exception
+        token_data = TokenData(email=email)
     except JWTError:
         raise credentials_exception
     
