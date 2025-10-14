@@ -3,7 +3,7 @@ Pydantic schemas for user management.
 """
 from typing import Optional
 from pydantic import BaseModel, EmailStr
-from datetime import datetime
+from datetime import datetime, date
 
 from app.models.user import UserRole
 
@@ -18,6 +18,30 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str
     role: str = 'customer'
+
+
+# Properties for creating a broker user with virtual account
+class BrokerUserCreate(BaseModel):
+    email: EmailStr
+    full_name: str
+    username: str
+    phone_number: Optional[str] = None
+    organization_name: Optional[str] = None
+    bvn: Optional[str] = None
+    date_of_birth: Optional[date] = None
+    gender: Optional[str] = None
+    address: Optional[str] = None
+    # Virtual account will be created automatically
+    # Password will be generated automatically
+
+
+# Response schema for broker user creation
+class BrokerUserCreateResponse(BaseModel):
+    success: bool
+    user: User
+    generated_password: str
+    virtual_account: Optional[dict] = None
+    message: str
 
 
 # Properties to receive via API on update

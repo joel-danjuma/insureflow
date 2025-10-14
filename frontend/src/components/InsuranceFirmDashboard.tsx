@@ -13,6 +13,8 @@ import useReminderStore from '@/store/reminderStore';
 import usePolicyStore from '@/store/policyStore';
 import useAuthStore from '@/store/authStore';
 import usePaymentStore from '@/store/paymentStore';
+import CreateUserForm from '@/components/CreateUserForm';
+import UserCreationSuccess from '@/components/UserCreationSuccess';
 
 // For displaying broker performance (calculated from policies data)
 type BrokerPerformance = {
@@ -127,6 +129,10 @@ const InsuranceFirmDashboard = () => {
   const [reminderError, setReminderError] = useState<string | null>(null);
   const [reminderSuccess, setReminderSuccess] = useState<string | null>(null);
   const [showReminderSection, setShowReminderSection] = useState(false);
+
+  // State for create user section
+  const [showCreateUserForm, setShowCreateUserForm] = useState(false);
+  const [userCreationResult, setUserCreationResult] = useState<any>(null);
 
   const addReminders = useReminderStore((state) => state.addReminders);
   const clearReminders = useReminderStore((state) => state.clearReminders);
@@ -292,6 +298,17 @@ const InsuranceFirmDashboard = () => {
     } finally {
       setReminderLoading(false);
     }
+  };
+
+  // Handle user creation success
+  const handleUserCreationSuccess = (result: any) => {
+    setUserCreationResult(result);
+    setShowCreateUserForm(false);
+  };
+
+  // Handle closing success modal
+  const handleCloseSuccessModal = () => {
+    setUserCreationResult(null);
   };
 
   // Check if all policies are selected
@@ -506,6 +523,34 @@ const InsuranceFirmDashboard = () => {
           )}
         </div>
       )}
+
+      {/* Create New User Section */}
+      <div className="flex justify-between items-center pt-8 pb-3">
+        <h2 className="text-white text-[22px] font-bold leading-tight tracking-[-0.015em]">
+          User Management
+        </h2>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setShowCreateUserForm(!showCreateUserForm)}
+            className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+              showCreateUserForm
+                ? 'bg-gray-600 text-gray-300 hover:bg-gray-700'
+                : 'bg-orange-500 hover:bg-orange-600 text-white'
+            }`}
+          >
+            {showCreateUserForm ? 'Cancel' : 'Create New Broker User'}
+          </button>
+        </div>
+      </div>
+
+      {showCreateUserForm && (
+        <div className="mb-6">
+          <CreateUserForm
+            onSuccess={handleUserCreationSuccess}
+            onCancel={() => setShowCreateUserForm(false)}
+          />
+        </div>
+      )}
       
       <h2 className="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pt-8 pb-3">Recent Policies</h2>
       <div className="w-full overflow-hidden rounded-xl border border-gray-700 bg-gray-800">
@@ -581,6 +626,14 @@ const InsuranceFirmDashboard = () => {
           </div>
         )}
       </div>
+
+      {/* User Creation Success Modal */}
+      {userCreationResult && (
+        <UserCreationSuccess
+          result={userCreationResult}
+          onClose={handleCloseSuccessModal}
+        />
+      )}
     </>
   );
 };

@@ -22,7 +22,7 @@ def get_dashboard_data(
     Retrieve aggregated data for the main dashboard (legacy endpoint for backward compatibility).
     """
     try:
-        kpis = crud_dashboard.get_dashboard_kpis(db, current_user=current_user)
+    kpis = crud_dashboard.get_dashboard_kpis(db, current_user=current_user)
         recent_policies = crud_dashboard.get_recent_policies(db, current_user=current_user)
         
         return schemas_dashboard.DashboardData(

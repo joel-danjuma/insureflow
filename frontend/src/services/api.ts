@@ -198,6 +198,18 @@ export const brokerService = {
   },
 };
 
+export const userService = {
+  createBrokerUser: async (userData: any) => {
+    try {
+      const response = await api.post('/users/create-broker', userData);
+      return response.data;
+    } catch (error) {
+      errorHandler(error, 'creating broker user');
+      throw error;
+    }
+  },
+};
+
 export const policyService = {
   getPolicies: async () => {
     try {

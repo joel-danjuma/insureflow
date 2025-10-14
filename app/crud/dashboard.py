@@ -54,7 +54,7 @@ def get_dashboard_kpis(db: Session, current_user: User) -> DashboardKPIS:
     outstanding_premiums = premium_query.with_entities(func.sum(premium.Premium.amount)).filter(
         premium.Premium.payment_status != PaymentStatus.PAID
     ).scalar() or 0.0
-
+    
     total_premium_collected = premium_query.with_entities(func.sum(premium.Premium.paid_amount)).filter(
         premium.Premium.payment_status == PaymentStatus.PAID
     ).scalar() or 0.0
