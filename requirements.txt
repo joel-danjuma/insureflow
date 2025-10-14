@@ -1,21 +1,12 @@
 # FastAPI and core dependencies
-fastapi
-uvicorn
-sqlalchemy
-psycopg2-binary
-alembic
-pydantic[email]
-pydantic-settings
-passlib[bcrypt]
-python-jose[cryptography]
-python-multipart
-requests
-axios
+fastapi>=0.104.0
+uvicorn>=0.24.0
+python-multipart>=0.0.6
 
-# Database dependencies
-sqlalchemy==2.0.31
-alembic==1.16.2
-psycopg2-binary==2.9.10
+# Database dependencies - Fixed versions for compatibility
+sqlalchemy==2.0.23
+alembic==1.12.1
+psycopg2-binary==2.9.7
 
 # Authentication and security
 python-jose[cryptography]==3.3.0

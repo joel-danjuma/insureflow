@@ -34,7 +34,9 @@ alembic upgrade head
 
 # Populate database with comprehensive demo data if empty (optional - don't fail if it errors)
 echo "👥 Checking and populating database..."
-python3 scripts/populate_database.py || {
+python3 scripts/robust_populate.py || {
+    echo "⚠️  Robust population failed, trying original method..."
+    python3 scripts/populate_database.py || {
     echo "⚠️  Database population failed (model/schema mismatch)"
     echo "⚠️  Trying enum fix and population script..."
     python3 scripts/fix_and_populate.py || {
@@ -68,6 +70,7 @@ except:
             }
         }
     }
+}
     
     echo "⚠️  If all methods fail, creating absolute minimal fallback..."
     python3 << 'END'
