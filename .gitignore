@@ -23,6 +23,9 @@ node_modules/
 
 # OS specific
 .DS_Store
+._*
+**/.DS_Store
+**/._*
 
 venv/
 .cursor
