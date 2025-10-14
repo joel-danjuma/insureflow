@@ -23,7 +23,8 @@ logger = logging.getLogger(__name__)
 
 def get_database_url():
     """Get database URL from settings."""
-    return f"postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_SERVER}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}"
+    # Use the existing DATABASE_URL from settings which handles Docker service names correctly
+    return settings.DATABASE_URL
 
 def create_robust_engine():
     """Create a database engine with robust settings."""
