@@ -1,351 +1,253 @@
 'use client';
 
 import React, { useState } from 'react';
-import Layout from '@/components/Layout';
-import withAuth from '@/hocs/withAuth';
-import { DataTable } from '@/components/DataTable';
-import { ColumnDef } from '@tanstack/react-table';
-import { useQuery } from '@tanstack/react-query';
-import api from '@/services/api';
+import { useRouter } from 'next/navigation';
+import useAuthStore from '@/store/authStore';
+import { usePolicies, usePremiums } from '@/hooks/useQuery';
+import { formatNaira } from '@/utils/currency';
 
-interface Payment {
-  id: number;
-  policy_number: string;
-  client_name: string;
-  amount: number;
-  payment_date: string;
-  due_date: string;
-  status: 'paid' | 'pending' | 'overdue' | 'failed';
-  payment_method: string;
-  transaction_ref: string;
-}
+export default function PaymentsPage() {
+  const router = useRouter();
+  const { user } = useAuthStore();
+  const [selectedPremium, setSelectedPremium] = useState<any>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-const PaymentsPage = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending' | 'overdue' | 'failed'>('all');
+  const { data: policies, isLoading: policiesLoading } = usePolicies();
+  const { data: premiums, isLoading: premiumsLoading } = usePremiums();
 
-  // Mock data - replace with actual API call
-  const { data: payments = [], isLoading } = useQuery({
-    queryKey: ['payments'],
-    queryFn: async () => {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return [
-        {
-          id: 1,
-          policy_number: 'POL-2024-001',
-          client_name: 'John Doe',
-          amount: 150000,
-          payment_date: '2024-01-15',
-          due_date: '2024-01-15',
-          status: 'paid' as const,
-          payment_method: 'Bank Transfer',
-          transaction_ref: 'TXN-001-2024',
-        },
-        {
-          id: 2,
-          policy_number: 'POL-2024-002',
-          client_name: 'Jane Smith',
-          amount: 95000,
-          payment_date: '2024-01-20',
-          due_date: '2024-01-20',
-          status: 'paid' as const,
-          payment_method: 'Card Payment',
-          transaction_ref: 'TXN-002-2024',
-        },
-        {
-          id: 3,
-          policy_number: 'POL-2024-003',
-          client_name: 'Mike Johnson',
-          amount: 50000,
-          payment_date: '',
-          due_date: '2024-01-25',
-          status: 'pending' as const,
-          payment_method: 'Pending',
-          transaction_ref: '',
-        },
-        {
-          id: 4,
-          policy_number: 'POL-2024-004',
-          client_name: 'Sarah Wilson',
-          amount: 75000,
-          payment_date: '',
-          due_date: '2024-01-10',
-          status: 'overdue' as const,
-          payment_method: 'Pending',
-          transaction_ref: '',
-        },
-        {
-          id: 5,
-          policy_number: 'POL-2024-005',
-          client_name: 'David Brown',
-          amount: 120000,
-          payment_date: '',
-          due_date: '2024-01-18',
-          status: 'failed' as const,
-          payment_method: 'Card Payment',
-          transaction_ref: 'TXN-005-2024',
-        },
-      ];
-    },
-  });
+  // Filter unpaid premiums
+  const unpaidPremiums = premiums?.filter(premium => 
+    premium.payment_status === 'PENDING' || premium.payment_status === 'OVERDUE'
+  ) || [];
 
-  const columns: ColumnDef<Payment>[] = [
-    {
-      accessorKey: 'policy_number',
-      header: 'Policy Number',
-      cell: ({ row }) => (
-        <div className="font-medium text-white">{row.original.policy_number}</div>
-      ),
-    },
-    {
-      accessorKey: 'client_name',
-      header: 'Client Name',
-      cell: ({ row }) => (
-        <div className="text-white">{row.original.client_name}</div>
-      ),
-    },
-    {
-      accessorKey: 'amount',
-      header: 'Amount',
-      cell: ({ row }) => (
-        <div className="text-right">
-          <div className="text-white font-medium">
-            ₦{(row.original.amount / 1000).toFixed(0)}K
-          </div>
-        </div>
-      ),
-    },
-    {
-      accessorKey: 'payment_date',
-      header: 'Payment Date',
-      cell: ({ row }) => (
-        <div className="text-center">
-          {row.original.payment_date ? (
-            <div className="text-white">
-              {new Date(row.original.payment_date).toLocaleDateString()}
-            </div>
-          ) : (
-            <div className="text-gray-400">-</div>
-          )}
-        </div>
-      ),
-    },
-    {
-      accessorKey: 'due_date',
-      header: 'Due Date',
-      cell: ({ row }) => (
-        <div className="text-center">
-          <div className="text-white">
-            {new Date(row.original.due_date).toLocaleDateString()}
-          </div>
-        </div>
-      ),
-    },
-    {
-      accessorKey: 'status',
-      header: 'Status',
-      cell: ({ row }) => {
-        const statusConfig = {
-          paid: { bg: 'bg-green-900/30', text: 'text-green-400', border: 'border-green-500/30' },
-          pending: { bg: 'bg-yellow-900/30', text: 'text-yellow-400', border: 'border-yellow-500/30' },
-          overdue: { bg: 'bg-red-900/30', text: 'text-red-400', border: 'border-red-500/30' },
-          failed: { bg: 'bg-gray-900/30', text: 'text-gray-400', border: 'border-gray-500/30' },
-        };
-        const config = statusConfig[row.original.status];
-        return (
-          <span className={`px-3 py-1 rounded-full text-sm font-medium ${config.bg} ${config.text} border ${config.border}`}>
-            {row.original.status.charAt(0).toUpperCase() + row.original.status.slice(1)}
-          </span>
-        );
-      },
-    },
-    {
-      accessorKey: 'payment_method',
-      header: 'Payment Method',
-      cell: ({ row }) => (
-        <div className="text-center">
-          <div className="text-white">{row.original.payment_method}</div>
-        </div>
-      ),
-    },
-    {
-      accessorKey: 'transaction_ref',
-      header: 'Transaction Ref',
-      cell: ({ row }) => (
-        <div className="text-center">
-          {row.original.transaction_ref ? (
-            <div className="text-white text-sm">{row.original.transaction_ref}</div>
-          ) : (
-            <div className="text-gray-400 text-sm">-</div>
-          )}
-        </div>
-      ),
-    },
-    {
-      id: 'actions',
-      header: 'Actions',
-      cell: ({ row }) => (
-        <div className="flex space-x-2">
-          <button className="px-3 py-1 text-sm bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors">
-            View
-          </button>
-          {row.original.status === 'pending' && (
-            <button className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600 transition-colors">
-              Mark Paid
-            </button>
-          )}
-        </div>
-      ),
-    },
-  ];
+  const handlePayPremium = async (premium: any) => {
+    if (isProcessing) return;
+    
+    setIsProcessing(true);
+    setSelectedPremium(premium);
 
-  const filteredPayments = payments.filter(payment => {
-    const matchesSearch = payment.policy_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         payment.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         payment.transaction_ref.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || payment.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+    try {
+      const response = await fetch(`/api/v1/payments/initiate/${premium.id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        }
+      });
 
-  const totalAmount = payments.reduce((sum, payment) => sum + payment.amount, 0);
-  const paidAmount = payments.filter(p => p.status === 'paid').reduce((sum, payment) => sum + payment.amount, 0);
-  const pendingAmount = payments.filter(p => p.status === 'pending').reduce((sum, payment) => sum + payment.amount, 0);
-  const overdueAmount = payments.filter(p => p.status === 'overdue').reduce((sum, payment) => sum + payment.amount, 0);
+      if (response.ok) {
+        const result = await response.json();
+        if (result.payment_url) {
+          // Redirect to Squad Co payment page
+          window.location.href = result.payment_url;
+        } else {
+          throw new Error('No payment URL received');
+        }
+      } else {
+        const error = await response.json();
+        throw new Error(error.detail || 'Payment initiation failed');
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      alert(`Payment failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsProcessing(false);
+      setSelectedPremium(null);
+    }
+  };
 
-  if (isLoading) {
+  const getPolicyForPremium = (premiumPolicyId: number) => {
+    return policies?.find(policy => policy.id === premiumPolicyId);
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return 'text-yellow-400 bg-yellow-400/10';
+      case 'overdue':
+        return 'text-red-400 bg-red-400/10';
+      case 'paid':
+        return 'text-green-400 bg-green-400/10';
+      default:
+        return 'text-gray-400 bg-gray-400/10';
+    }
+  };
+
+  if (policiesLoading || premiumsLoading) {
     return (
-      <Layout title="Payments">
-        <div className="w-full p-4 lg:p-6">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Payments</h1>
-            <p className="text-gray-400">Manage payment transactions</p>
-          </div>
-          <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
-            <div className="animate-pulse space-y-4">
-              <div className="h-4 bg-gray-700 rounded w-1/4"></div>
-              <div className="h-4 bg-gray-700 rounded w-1/2"></div>
-              <div className="h-4 bg-gray-700 rounded w-3/4"></div>
+      <div className="space-y-6">
+        <h1 className="text-white text-[28px] font-bold leading-tight tracking-[-0.015em]">Payments</h1>
+        <div className="animate-pulse">
+          <div className="bg-gray-800 rounded-xl p-6">
+            <div className="h-4 bg-gray-700 rounded w-1/4 mb-4"></div>
+            <div className="space-y-3">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="h-16 bg-gray-700 rounded"></div>
+              ))}
             </div>
           </div>
         </div>
-      </Layout>
+      </div>
     );
   }
 
   return (
-    <Layout title="Payments">
-      <div className="w-full p-4 lg:p-6">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Payments</h1>
-          <p className="text-gray-400">Manage payment transactions</p>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-white text-[28px] font-bold leading-tight tracking-[-0.015em]">Payments</h1>
+          <p className="text-gray-400 text-sm font-normal leading-normal">
+            Manage your premium payments and view payment history.
+          </p>
         </div>
+        <button
+          onClick={() => router.back()}
+          className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors"
+        >
+          ← Back
+        </button>
+      </div>
 
-        {/* Filters and Search */}
-        <div className="bg-gray-800 border border-gray-700 rounded-xl p-6 mb-6">
-          <div className="flex flex-col lg:flex-row gap-4">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Search Payments
-              </label>
-              <input
-                type="text"
-                placeholder="Search by policy number, client name, or transaction ref..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-white placeholder-gray-400"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Status Filter
-              </label>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as 'all' | 'paid' | 'pending' | 'overdue' | 'failed')}
-                className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-white"
-              >
-                <option value="all">All Payments</option>
-                <option value="paid">Paid</option>
-                <option value="pending">Pending</option>
-                <option value="overdue">Overdue</option>
-                <option value="failed">Failed</option>
-              </select>
-            </div>
-            <div className="flex items-end">
-              <button className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-colors">
-                Record Payment
-              </button>
-            </div>
+      {/* Unpaid Premiums */}
+      {unpaidPremiums.length > 0 && (
+        <div className="bg-gray-800 rounded-xl border border-gray-700">
+          <div className="p-6 border-b border-gray-700">
+            <h2 className="text-white text-xl font-semibold">Outstanding Payments</h2>
+            <p className="text-gray-400 text-sm mt-1">
+              You have {unpaidPremiums.length} pending payment(s)
+            </p>
           </div>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-blue-500/20 rounded-lg">
-                <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-400">Total Amount</p>
-                <p className="text-2xl font-bold text-white">₦{(totalAmount / 1000).toFixed(0)}K</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-green-500/20 rounded-lg">
-                <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-400">Paid Amount</p>
-                <p className="text-2xl font-bold text-white">₦{(paidAmount / 1000).toFixed(0)}K</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-yellow-500/20 rounded-lg">
-                <svg className="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-400">Pending Amount</p>
-                <p className="text-2xl font-bold text-white">₦{(pendingAmount / 1000).toFixed(0)}K</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-red-500/20 rounded-lg">
-                <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-400">Overdue Amount</p>
-                <p className="text-2xl font-bold text-white">₦{(overdueAmount / 1000).toFixed(0)}K</p>
-              </div>
-            </div>
+          
+          <div className="divide-y divide-gray-700">
+            {unpaidPremiums.map((premium) => {
+              const policy = getPolicyForPremium(premium.policy_id);
+              const isSelected = selectedPremium?.id === premium.id;
+              
+              return (
+                <div key={premium.id} className="p-6 hover:bg-gray-750 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="text-white font-semibold">
+                          {policy?.policy_name || 'Unknown Policy'}
+                        </h3>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(premium.payment_status)}`}>
+                          {premium.payment_status}
+                        </span>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        <div>
+                          <span className="text-gray-400">Policy Number:</span>
+                          <div className="text-white font-mono">
+                            {policy?.policy_number || 'N/A'}
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <span className="text-gray-400">Due Date:</span>
+                          <div className="text-white">
+                            {new Date(premium.due_date).toLocaleDateString()}
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <span className="text-gray-400">Amount:</span>
+                          <div className="text-white font-semibold">
+                            {formatNaira(premium.amount)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="ml-6">
+                      <button
+                        onClick={() => handlePayPremium(premium)}
+                        disabled={isProcessing}
+                        className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                          isSelected
+                            ? 'bg-orange-600 text-white cursor-not-allowed'
+                            : 'bg-orange-500 hover:bg-orange-600 text-white'
+                        }`}
+                      >
+                        {isSelected ? (
+                          <div className="flex items-center gap-2">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            Processing...
+                          </div>
+                        ) : (
+                          'Pay Now'
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
+      )}
 
-        {/* Payments Table */}
-        <div className="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
-          <DataTable columns={columns} data={filteredPayments} />
+      {/* No Unpaid Premiums */}
+      {unpaidPremiums.length === 0 && (
+        <div className="bg-gray-800 rounded-xl border border-gray-700 p-12 text-center">
+          <div className="text-green-400 text-6xl mb-4">✅</div>
+          <h2 className="text-white text-2xl font-bold mb-2">All Caught Up!</h2>
+          <p className="text-gray-400 mb-6">
+            You have no outstanding payments at this time.
+          </p>
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors"
+          >
+            Return to Dashboard
+          </button>
+        </div>
+      )}
+
+      {/* Payment History Section */}
+      <div className="bg-gray-800 rounded-xl border border-gray-700">
+        <div className="p-6 border-b border-gray-700">
+          <h2 className="text-white text-xl font-semibold">Recent Payment History</h2>
+        </div>
+        
+        <div className="p-6">
+          {premiums && premiums.length > 0 ? (
+            <div className="space-y-4">
+              {premiums.slice(0, 5).map((premium) => {
+                const policy = getPolicyForPremium(premium.policy_id);
+                
+                return (
+                  <div key={premium.id} className="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
+                    <div>
+                      <div className="text-white font-medium">
+                        {policy?.policy_name || 'Unknown Policy'}
+                      </div>
+                      <div className="text-gray-400 text-sm">
+                        {new Date(premium.due_date).toLocaleDateString()}
+                      </div>
+                    </div>
+                    
+                    <div className="text-right">
+                      <div className="text-white font-semibold">
+                        {formatNaira(premium.amount)}
+                      </div>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(premium.payment_status)}`}>
+                        {premium.payment_status}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <div className="text-gray-400 text-lg mb-2">No payment history</div>
+              <p className="text-gray-500 text-sm">Your payment history will appear here once you make payments.</p>
+            </div>
+          )}
         </div>
       </div>
-    </Layout>
+    </div>
   );
-};
-
-export default withAuth(PaymentsPage); 
+}

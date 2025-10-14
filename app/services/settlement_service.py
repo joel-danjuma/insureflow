@@ -53,12 +53,136 @@ class SettlementProcessor:
         """Process all pending settlements for the day"""
         
         try:
-            return {
-                "success": True,
-                "message": "Settlement processing implemented",
-                "settlements_processed": 0,
-                "total_amount": Decimal('0')
-            }
+            from app.crud.virtual_account import get_virtual_accounts_for_settlement
+            from app.models.company import InsuranceCompany
+            from app.core.config import settings
+            
+            # Get virtual accounts ready for settlement
+            virtual_accounts = get_virtual_accounts_for_settlement(db)
+            
+            if not virtual_accounts:
+                return {
+                    "success": True,
+                    "message": "No virtual accounts ready for settlement",
+                    "settlements_processed": 0,
+                    "total_amount": Decimal('0')
+                }
+            
+            logger.info(f"Processing daily settlements for {len(virtual_accounts)} virtual accounts")
+            
+            # Group settlements by insurance company
+            company_settlements = {}
+            total_settlement_amount = Decimal('0')
+            
+            for va in virtual_accounts:
+                # Get the insurance company for this virtual account
+                company = db.query(InsuranceCompany).filter(
+                    InsuranceCompany.id == va.company_id
+                ).first()
+                
+                if not company or not company.settlement_account_number:
+                    logger.warning(f"Skipping VA {va.account_number} - no settlement account for company")
+                    continue
+                
+                # Calculate net settlement amount (after platform commission)
+                net_amount = va.net_amount_after_commission
+                
+                if net_amount <= 0:
+                    continue
+                
+                company_id = company.id
+                if company_id not in company_settlements:
+                    company_settlements[company_id] = {
+                        "company": company,
+                        "total_amount": Decimal('0'),
+                        "virtual_accounts": []
+                    }
+                
+                company_settlements[company_id]["total_amount"] += net_amount
+                company_settlements[company_id]["virtual_accounts"].append(va)
+                total_settlement_amount += net_amount
+            
+            if not company_settlements:
+                return {
+                    "success": True,
+                    "message": "No settlements to process (no valid company accounts)",
+                    "settlements_processed": 0,
+                    "total_amount": Decimal('0')
+                }
+            
+            # Prepare bulk transfers for GAPS
+            transfers = []
+            for company_id, settlement_data in company_settlements.items():
+                company = settlement_data["company"]
+                amount = settlement_data["total_amount"]
+                
+                transfer = {
+                    "amount": amount,
+                    "vendor_account": company.settlement_account_number,
+                    "vendor_bank_code": company.settlement_bank_code,
+                    "vendor_name": company.settlement_account_name or company.name,
+                    "vendor_code": f"INS{company.id:03d}",
+                    "customer_account": settings.INSUREFLOW_SETTLEMENT_ACCOUNT or "1234567890",
+                    "reference": f"DAILY-SETTLE-{datetime.now().strftime('%Y%m%d')}-{company.id}",
+                    "remarks": f"Daily settlement for {company.name}",
+                    "payment_date": datetime.now().date()
+                }
+                
+                transfers.append(transfer)
+                logger.info(f"Prepared settlement: {company.name} → ₦{amount:,}")
+            
+            # Execute bulk transfer via GAPS
+            logger.info(f"Executing GAPS bulk transfer for {len(transfers)} companies, total: ₦{total_settlement_amount:,}")
+            
+            gaps_result = self.gaps_client.bulk_transfer(transfers)
+            
+            if gaps_result.get("success"):
+                # Update virtual account balances and create settlement records
+                settlements_processed = 0
+                
+                for company_id, settlement_data in company_settlements.items():
+                    for va in settlement_data["virtual_accounts"]:
+                        # Create settlement transaction record
+                        from app.models.virtual_account import VirtualAccountTransaction, TransactionType, TransactionIndicator, TransactionStatus
+                        
+                        settlement_transaction = VirtualAccountTransaction(
+                            virtual_account_id=va.id,
+                            transaction_reference=f"SETTLE_{va.id}_{int(datetime.now().timestamp())}",
+                            transaction_type=TransactionType.SETTLEMENT,
+                            transaction_indicator=TransactionIndicator.D,
+                            status=TransactionStatus.COMPLETED,
+                            principal_amount=va.net_amount_after_commission,
+                            settled_amount=va.net_amount_after_commission,
+                            transaction_date=datetime.utcnow(),
+                            remarks=f"Daily settlement via GAPS - Batch: {gaps_result.get('batch_reference', 'N/A')}"
+                        )
+                        
+                        db.add(settlement_transaction)
+                        
+                        # Reset virtual account balance
+                        va.current_balance = Decimal('0')
+                        va.last_settlement_at = datetime.utcnow()
+                        
+                        settlements_processed += 1
+                
+                db.commit()
+                
+                return {
+                    "success": True,
+                    "message": f"Daily settlements processed successfully via GAPS",
+                    "settlements_processed": settlements_processed,
+                    "total_amount": total_settlement_amount,
+                    "gaps_batch_reference": gaps_result.get("batch_reference"),
+                    "gaps_response_code": gaps_result.get("response_code")
+                }
+            else:
+                logger.error(f"GAPS bulk transfer failed: {gaps_result}")
+                return {
+                    "success": False,
+                    "error": f"GAPS transfer failed: {gaps_result.get('error', 'Unknown error')}",
+                    "settlements_processed": 0,
+                    "total_amount": Decimal('0')
+                }
             
         except Exception as e:
             logger.error(f"Daily settlement processing failed: {e}")
@@ -73,11 +197,117 @@ class SettlementProcessor:
         """Process manual settlement for specific company"""
         
         try:
-            return {
-                "success": True,
-                "message": f"Manual settlement for company {company_id}",
-                "company_id": company_id
+            from app.models.company import InsuranceCompany
+            from app.models.virtual_account import VirtualAccount
+            from app.core.config import settings
+            
+            # Get the company
+            company = db.query(InsuranceCompany).filter(
+                InsuranceCompany.id == company_id
+            ).first()
+            
+            if not company:
+                return {
+                    "success": False,
+                    "error": f"Company with ID {company_id} not found",
+                    "company_id": company_id
+                }
+            
+            if not company.settlement_account_number:
+                return {
+                    "success": False,
+                    "error": f"No settlement account configured for {company.name}",
+                    "company_id": company_id
+                }
+            
+            # Get virtual accounts for this company with balance above threshold
+            virtual_accounts = db.query(VirtualAccount).filter(
+                VirtualAccount.company_id == company_id,
+                VirtualAccount.current_balance > VirtualAccount.settlement_threshold,
+                VirtualAccount.status == "ACTIVE"
+            ).all()
+            
+            if not virtual_accounts:
+                return {
+                    "success": False,
+                    "error": f"No virtual accounts ready for settlement for {company.name}",
+                    "company_id": company_id
+                }
+            
+            # Calculate total settlement amount
+            total_amount = sum(va.net_amount_after_commission for va in virtual_accounts)
+            
+            if total_amount <= 0:
+                return {
+                    "success": False,
+                    "error": f"No settlement amount available for {company.name}",
+                    "company_id": company_id
+                }
+            
+            # Prepare single transfer for GAPS
+            transfer = {
+                "amount": total_amount,
+                "vendor_account": company.settlement_account_number,
+                "vendor_bank_code": company.settlement_bank_code,
+                "vendor_name": company.settlement_account_name or company.name,
+                "vendor_code": f"INS{company.id:03d}",
+                "customer_account": settings.INSUREFLOW_SETTLEMENT_ACCOUNT or "1234567890",
+                "reference": f"MANUAL-SETTLE-{datetime.now().strftime('%Y%m%d%H%M')}-{company.id}",
+                "remarks": f"Manual settlement for {company.name}",
+                "payment_date": datetime.now().date()
             }
+            
+            logger.info(f"Processing manual settlement: {company.name} → ₦{total_amount:,}")
+            
+            # Execute single transfer via GAPS
+            gaps_result = self.gaps_client.single_transfer(transfer)
+            
+            if gaps_result.get("success"):
+                # Update virtual account balances and create settlement records
+                settlements_processed = 0
+                
+                for va in virtual_accounts:
+                    # Create settlement transaction record
+                    from app.models.virtual_account import VirtualAccountTransaction, TransactionType, TransactionIndicator, TransactionStatus
+                    
+                    settlement_transaction = VirtualAccountTransaction(
+                        virtual_account_id=va.id,
+                        transaction_reference=f"MANUAL-SETTLE_{va.id}_{int(datetime.now().timestamp())}",
+                        transaction_type=TransactionType.SETTLEMENT,
+                        transaction_indicator=TransactionIndicator.D,
+                        status=TransactionStatus.COMPLETED,
+                        principal_amount=va.net_amount_after_commission,
+                        settled_amount=va.net_amount_after_commission,
+                        transaction_date=datetime.utcnow(),
+                        remarks=f"Manual settlement via GAPS - Ref: {gaps_result.get('transaction_reference', 'N/A')}"
+                    )
+                    
+                    db.add(settlement_transaction)
+                    
+                    # Reset virtual account balance
+                    va.current_balance = Decimal('0')
+                    va.last_settlement_at = datetime.utcnow()
+                    
+                    settlements_processed += 1
+                
+                db.commit()
+                
+                return {
+                    "success": True,
+                    "message": f"Manual settlement processed successfully for {company.name}",
+                    "company_id": company_id,
+                    "settlements_processed": settlements_processed,
+                    "total_amount": total_amount,
+                    "gaps_transaction_reference": gaps_result.get("transaction_reference"),
+                    "gaps_response_code": gaps_result.get("response_code")
+                }
+            else:
+                logger.error(f"GAPS single transfer failed: {gaps_result}")
+                return {
+                    "success": False,
+                    "error": f"GAPS transfer failed: {gaps_result.get('error', 'Unknown error')}",
+                    "company_id": company_id
+                }
             
         except Exception as e:
             logger.error(f"Manual settlement failed: {e}")

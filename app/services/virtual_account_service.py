@@ -344,34 +344,76 @@ class VirtualAccountService:
     def _initiate_auto_settlement(self, db: Session, virtual_account: VirtualAccount):
         """
         Initiate automatic settlement for a virtual account.
-        This would typically involve transferring funds to the user's main account.
+        This triggers the settlement service to process GAPS bulk transfer.
         """
         try:
+            from app.services.settlement_service import get_settlement_processor
+            
             # Calculate net amount after platform commission
             net_amount = virtual_account.net_amount_after_commission
             
             logger.info(f"Auto-settlement initiated for VA {virtual_account.virtual_account_number}: ₦{net_amount}")
             logger.info(f"Platform commission: ₦{virtual_account.total_platform_commission} (InsureFlow: ₦{virtual_account.insureflow_commission_amount}, Habari: ₦{virtual_account.habari_commission_amount})")
             
-            # Create settlement transaction record
-            settlement_transaction = VirtualAccountTransaction(
-                virtual_account_id=virtual_account.id,
-                transaction_reference=f"SETTLE_{virtual_account.id}_{int(datetime.now().timestamp())}",
-                transaction_type=TransactionType.SETTLEMENT,
-                transaction_indicator=TransactionIndicator.D,
-                status=TransactionStatus.PENDING,
-                principal_amount=net_amount,
-                settled_amount=net_amount,
-                transaction_date=datetime.utcnow(),
-                remarks=f"Auto-settlement for virtual account {virtual_account.virtual_account_number}"
-            )
+            # Get the insurance company for this virtual account
+            from app.models.company import InsuranceCompany
+            company = db.query(InsuranceCompany).filter(
+                InsuranceCompany.id == virtual_account.company_id
+            ).first()
             
-            db.add(settlement_transaction)
+            if not company:
+                logger.error(f"No company found for virtual account {virtual_account.virtual_account_number}")
+                return
             
-            # Update virtual account balance
-            virtual_account.current_balance -= net_amount
+            if not company.settlement_account_number:
+                logger.warning(f"No settlement account configured for {company.name} - creating pending settlement record")
+                
+                # Create pending settlement transaction record
+                settlement_transaction = VirtualAccountTransaction(
+                    virtual_account_id=virtual_account.id,
+                    transaction_reference=f"SETTLE_{virtual_account.id}_{int(datetime.now().timestamp())}",
+                    transaction_type=TransactionType.SETTLEMENT,
+                    transaction_indicator=TransactionIndicator.D,
+                    status=TransactionStatus.PENDING,
+                    principal_amount=net_amount,
+                    settled_amount=net_amount,
+                    transaction_date=datetime.utcnow(),
+                    remarks=f"Auto-settlement pending - no settlement account for {company.name}"
+                )
+                
+                db.add(settlement_transaction)
+                db.commit()
+                return
             
-            db.commit()
+            # Process settlement via settlement service
+            settlement_processor = get_settlement_processor()
+            
+            logger.info(f"Processing auto-settlement via GAPS for company: {company.name}")
+            
+            # Use manual settlement for individual virtual account
+            result = settlement_processor.process_manual_settlement(db, company.id)
+            
+            if result.get("success"):
+                logger.info(f"Auto-settlement completed successfully: {result.get('message')}")
+                logger.info(f"GAPS Reference: {result.get('gaps_transaction_reference', 'N/A')}")
+            else:
+                logger.error(f"Auto-settlement failed: {result.get('error')}")
+                
+                # Create failed settlement transaction record
+                settlement_transaction = VirtualAccountTransaction(
+                    virtual_account_id=virtual_account.id,
+                    transaction_reference=f"SETTLE-FAIL_{virtual_account.id}_{int(datetime.now().timestamp())}",
+                    transaction_type=TransactionType.SETTLEMENT,
+                    transaction_indicator=TransactionIndicator.D,
+                    status=TransactionStatus.FAILED,
+                    principal_amount=net_amount,
+                    settled_amount=Decimal('0'),
+                    transaction_date=datetime.utcnow(),
+                    remarks=f"Auto-settlement failed: {result.get('error', 'Unknown error')}"
+                )
+                
+                db.add(settlement_transaction)
+                db.commit()
             
         except Exception as e:
             logger.error(f"Error initiating auto-settlement: {str(e)}")
