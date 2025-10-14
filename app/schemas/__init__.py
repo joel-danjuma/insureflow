@@ -2,7 +2,7 @@
 
 # Import all schemas to make them available at package level
 from .auth import UserCreate as AuthUserCreate, UserResponse, Token, TokenData
-from .user import UserCreate, UserUpdate, User, UserInDB, UserBase, UserInDBBase
+from .user import UserCreate, UserUpdate, User, UserInDB, UserBase, UserInDBBase, BrokerUserCreate, BrokerUserCreateResponse
 from .broker import *
 from .dashboard import *
 from .payment import *
