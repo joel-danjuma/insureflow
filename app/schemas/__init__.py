@@ -8,6 +8,7 @@ from .dashboard import *
 from .payment import *
 from .policy import *
 from .premium import *
+from .testing import *
 
 # Make the auth UserCreate available as the default UserCreate
 # since that's what the CRUD is expecting

@@ -251,19 +251,33 @@ class VirtualAccountService:
             settled_amount = Decimal(webhook_data.get("settled_amount", "0"))
             fee_charged = Decimal(webhook_data.get("fee_charged", "0"))
             
+            # Enhanced logging for stakeholder visibility
+            logger.info(f"🔔 WEBHOOK RECEIVED: Virtual Account {virtual_account_number}")
+            logger.info(f"💰 PAYMENT AMOUNT: ₦{principal_amount:,} (settled: ₦{settled_amount:,})")
+            logger.info(f"📊 TRANSACTION REF: {transaction_ref}")
+            
             # Find the virtual account
             virtual_account = crud_virtual_account.get_virtual_account_by_number(
                 db, virtual_account_number=virtual_account_number
             )
             
             if not virtual_account:
-                logger.error(f"Virtual account not found: {virtual_account_number}")
+                logger.error(f"❌ VIRTUAL ACCOUNT NOT FOUND: {virtual_account_number}")
                 return {"error": "Virtual account not found"}
+            
+            logger.info(f"✅ VIRTUAL ACCOUNT FOUND: {virtual_account.account_name}")
             
             # Calculate platform commission split
             total_platform_commission = settled_amount * virtual_account.platform_commission_rate
             insureflow_commission = settled_amount * virtual_account.insureflow_commission_rate
             habari_commission = settled_amount * virtual_account.habari_commission_rate
+            
+            # Enhanced logging for commission calculations
+            logger.info(f"💼 COMMISSION CALCULATION:")
+            logger.info(f"   - Total Platform Commission: ₦{total_platform_commission:,}")
+            logger.info(f"   - InsureFlow Commission (0.75%): ₦{insureflow_commission:,}")
+            logger.info(f"   - Habari Commission (0.25%): ₦{habari_commission:,}")
+            logger.info(f"   - Net Settlement Amount: ₦{(settled_amount - total_platform_commission):,}")
             
             # Create transaction record
             transaction = VirtualAccountTransaction(
@@ -299,11 +313,18 @@ class VirtualAccountService:
             db.commit()
             
             # Check if auto-settlement is enabled and threshold is met
-            if virtual_account.auto_settlement and virtual_account.current_balance >= virtual_account.settlement_threshold:
-                self._initiate_auto_settlement(db, virtual_account)
+            logger.info(f"🎯 SETTLEMENT CHECK:")
+            logger.info(f"   - Current Balance: ₦{virtual_account.current_balance:,}")
+            logger.info(f"   - Settlement Threshold: ₦{virtual_account.settlement_threshold:,}")
+            logger.info(f"   - Auto-Settlement Enabled: {virtual_account.auto_settlement}")
             
-            logger.info(f"Webhook transaction processed successfully: {transaction_ref}")
-            logger.info(f"Commission split - InsureFlow: ₦{insureflow_commission}, Habari: ₦{habari_commission}")
+            if virtual_account.auto_settlement and virtual_account.current_balance >= virtual_account.settlement_threshold:
+                logger.info(f"🚀 SETTLEMENT TRIGGERED: Threshold exceeded, initiating auto-settlement")
+                self._initiate_auto_settlement(db, virtual_account)
+            else:
+                logger.info(f"⏳ SETTLEMENT NOT TRIGGERED: Threshold not met or auto-settlement disabled")
+            
+            logger.info(f"✅ WEBHOOK PROCESSING COMPLETE: {transaction_ref}")
             return {"success": True, "transaction": transaction}
             
         except Exception as e:

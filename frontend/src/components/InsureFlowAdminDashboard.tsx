@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/services/api';
+import PaymentTestingPanel from '@/components/PaymentTestingPanel';
 
 interface TransactionLog {
   id: number;
@@ -39,6 +40,7 @@ interface PlatformHealth {
 
 const InsureFlowAdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
+  const [showPaymentTesting, setShowPaymentTesting] = useState(false);
 
   // Fetch transaction logs
   const { data: transactionLogs, isLoading: logsLoading } = useQuery({
@@ -96,6 +98,7 @@ const InsureFlowAdminDashboard = () => {
             {[
               { id: 'overview', label: 'Overview' },
               { id: 'transactions', label: 'Transaction Logs' },
+              { id: 'testing', label: 'Payment Testing' },
               { id: 'commissions', label: 'Commission Analytics' },
               { id: 'platform', label: 'Platform Health' },
             ].map((tab) => (
@@ -289,6 +292,19 @@ const InsureFlowAdminDashboard = () => {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Payment Testing Tab */}
+          {activeTab === 'testing' && (
+            <div className="p-6">
+              <div className="mb-6">
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Payment Flow Testing</h3>
+                <p className="text-gray-600">
+                  Comprehensive testing interface for stakeholder demonstrations and system validation.
+                </p>
+              </div>
+              <PaymentTestingPanel />
             </div>
           )}
         </div>
