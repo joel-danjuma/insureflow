@@ -108,6 +108,72 @@ def list_policies(
                 due_date=date(2024, 11, 15),
                 payment_frequency="quarterly",
                 status="active"
+            ),
+            PolicySummary(
+                id=3,
+                policy_name="Health Insurance Policy",
+                policy_number="POL-003-2024-0003",
+                policy_type="health",
+                company_name="MedCare Insurance Ltd",
+                premium_amount=Decimal("120000.00"),
+                due_date=date(2024, 12, 15),
+                payment_frequency="monthly",
+                status="active"
+            ),
+            PolicySummary(
+                id=4,
+                policy_name="Property Insurance Policy",
+                policy_number="POL-004-2024-0004",
+                policy_type="property",
+                company_name="SafeGuard Properties Ltd",
+                premium_amount=Decimal("350000.00"),
+                due_date=date(2024, 12, 20),
+                payment_frequency="annual",
+                status="active"
+            ),
+            PolicySummary(
+                id=5,
+                policy_name="Business Insurance Policy",
+                policy_number="POL-005-2024-0005",
+                policy_type="business",
+                company_name="Enterprise Shield Ltd",
+                premium_amount=Decimal("500000.00"),
+                due_date=date(2024, 12, 10),
+                payment_frequency="quarterly",
+                status="active"
+            ),
+            PolicySummary(
+                id=6,
+                policy_name="Travel Insurance Policy",
+                policy_number="POL-006-2024-0006",
+                policy_type="travel",
+                company_name="Global Travel Insurance",
+                premium_amount=Decimal("75000.00"),
+                due_date=date(2024, 11, 30),
+                payment_frequency="annual",
+                status="active"
+            ),
+            PolicySummary(
+                id=7,
+                policy_name="Marine Insurance Policy",
+                policy_number="POL-007-2024-0007",
+                policy_type="marine",
+                company_name="Ocean Shield Insurance",
+                premium_amount=Decimal("450000.00"),
+                due_date=date(2024, 12, 25),
+                payment_frequency="quarterly",
+                status="active"
+            ),
+            PolicySummary(
+                id=8,
+                policy_name="Professional Indemnity",
+                policy_number="POL-008-2024-0008",
+                policy_type="professional",
+                company_name="Professional Cover Ltd",
+                premium_amount=Decimal("200000.00"),
+                due_date=date(2024, 12, 5),
+                payment_frequency="annual",
+                status="active"
             )
         ]
 

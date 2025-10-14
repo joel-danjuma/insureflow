@@ -252,51 +252,106 @@ const BrokerDashboard = () => {
     setShowPaymentModal(true);
   };
 
-  // Handle payment completion
+  // Handle payment completion - REAL GAPS-integrated payment flow
   const handleCompletePayment = async (paymentMethod: 'bank_transfer' | 'ussd') => {
-    // Set loading state for the modal
     setPaymentError(null);
     setPaymentSuccess(null);
     setPaymentSuccessState(false);
+    setModalLoading(true);
 
     try {
-      // Simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
       // Get selected policies data
       const selectedPoliciesData = clientPortfolio.filter(item => selectedPolicies.has(item.id));
       
-      // Create payment record
-      const paymentRecord = {
-        id: `payment-${Date.now()}`,
-        brokerId: user?.id || 0,
-        brokerName: brokerProfile?.name || 'Unknown Broker',
-        totalAmount: selectedPoliciesData.reduce((sum, item) => sum + item.premiumAmountRaw, 0),
-        policies: selectedPoliciesData.map(item => ({
-          policyId: item.policyId,
-          policyNumber: item.clientName.split(' ')[0] + '-POL-' + item.policyId,
-          customerName: item.clientName,
-          amount: item.premiumAmountRaw,
-        })),
-        paymentMethod,
-        status: 'completed' as const,
-        completedAt: new Date().toISOString(),
-      };
+      if (selectedPoliciesData.length === 0) {
+        setPaymentError('No policies selected for payment');
+        return;
+      }
 
-      // Add to payment store
-      addPayment(paymentRecord);
+      console.log('🚀 INITIATING REAL PAYMENT FLOW');
+      console.log(`💳 Payment Method: ${paymentMethod}`);
+      console.log(`📋 Policies: ${selectedPoliciesData.length}`);
+      console.log(`💰 Total Amount: ₦${selectedPoliciesData.reduce((sum, item) => sum + item.premiumAmountRaw, 0):,}`);
 
-      // Show success state in modal
-      setPaymentSuccessState(true);
+      // For bulk payments, use the bulk payment endpoint
+      if (selectedPoliciesData.length > 1) {
+        const premiumIds = selectedPoliciesData.map(item => item.premiumId).filter(id => id !== null);
+        
+        console.log('🔄 BULK PAYMENT: Initiating bulk payment via Squad Co...');
+        
+        const response = await fetch('/api/v1/payments/bulk-initiate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+          },
+          body: JSON.stringify({
+            premium_ids: premiumIds,
+            payment_method: paymentMethod
+          })
+        });
 
-      setTimeout(() => {
-        setPaymentSuccess(`Payment completed successfully! ${selectedPoliciesData.length} policies paid via ${paymentMethod === 'bank_transfer' ? 'Bank Transfer' : 'USSD'}.`);
-        setSelectedPolicies(new Set());
-        setShowPaymentModal(false);
-        setPaymentSuccessState(false);
-      }, 2000);
+        if (response.ok) {
+          const result = await response.json();
+          console.log('✅ BULK PAYMENT INITIATED:', result);
+          
+          if (result.payment_url) {
+            console.log('🌐 REDIRECTING TO SQUAD CO:', result.payment_url);
+            // Redirect to Squad Co payment page
+            window.location.href = result.payment_url;
+            return;
+          }
+        } else {
+          const error = await response.json();
+          throw new Error(error.detail || 'Bulk payment initiation failed');
+        }
+      } else {
+        // Single payment
+        const policy = selectedPoliciesData[0];
+        const premiumId = policy.premiumId;
+        
+        if (!premiumId) {
+          setPaymentError('No premium found for this policy');
+          return;
+        }
+
+        console.log('💳 SINGLE PAYMENT: Initiating single payment via Squad Co...');
+        
+        const response = await fetch(`/api/v1/payments/initiate/${premiumId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+          },
+          body: JSON.stringify({
+            payment_method: paymentMethod
+          })
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log('✅ SINGLE PAYMENT INITIATED:', result);
+          
+          if (result.payment_url) {
+            console.log('🌐 REDIRECTING TO SQUAD CO:', result.payment_url);
+            // Redirect to Squad Co payment page
+            window.location.href = result.payment_url;
+            return;
+          }
+        } else {
+          const error = await response.json();
+          throw new Error(error.detail || 'Payment initiation failed');
+        }
+      }
+
+      // If we reach here, something went wrong
+      throw new Error('No payment URL received from server');
+
     } catch (error) {
-      setPaymentError('Payment failed. Please try again.');
+      console.error('❌ PAYMENT ERROR:', error);
+      setPaymentError(`Payment failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setModalLoading(false);
     }
   };
 
@@ -648,7 +703,7 @@ const BrokerDashboard = () => {
           premiumAmountRaw: item.premiumAmountRaw,
         }))}
         totalAmount={selectedPoliciesData.selectedTotal}
-        isLoading={false}
+        isLoading={modalLoading}
         isSuccess={paymentSuccessState}
       />
     </>
