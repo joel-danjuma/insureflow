@@ -299,7 +299,7 @@ const BrokerDashboard = () => {
             'Authorization': `Bearer ${localStorage.getItem('access_token')}`
           },
           body: JSON.stringify({
-            premium_ids: premiumIds,
+            policy_ids: selectedPoliciesData.map(p => parseInt(p.policyId)),
             payment_method: paymentMethod
           })
         });

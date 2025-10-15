@@ -1,10 +1,24 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from typing import List
 from app import dependencies, models
 from app.crud import broker as crud_broker
 from app.schemas import broker as schemas_broker
 
 router = APIRouter()
+
+@router.get("/", response_model=List[schemas_broker.Broker])
+def list_brokers(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(dependencies.get_db),
+    current_user: models.user.User = Depends(dependencies.get_current_broker_or_admin_user)
+):
+    """
+    List all brokers. Requires broker or admin access.
+    """
+    brokers = crud_broker.get_brokers(db, skip=skip, limit=limit)
+    return brokers
 
 @router.get("/me", response_model=schemas_broker.Broker)
 def read_broker_me(
