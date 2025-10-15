@@ -9,15 +9,28 @@ Comprehensive fix for dashboard issues:
 
 import os
 import sys
-from sqlalchemy import create_engine, text, inspect
-from sqlalchemy.orm import sessionmaker
-from app.core.config import settings
-from app.models.user import User, UserRole
 
 # Add the project root to the Python path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, project_root)
 
-DATABASE_URL = settings.DATABASE_URL
+try:
+    # Try to import app modules
+    from sqlalchemy import create_engine, text, inspect
+    from sqlalchemy.orm import sessionmaker
+    from app.core.config import settings
+    from app.models.user import User, UserRole
+    DATABASE_URL = settings.DATABASE_URL
+except ImportError as e:
+    print(f"⚠️  Could not import app modules: {e}")
+    print("Using environment variables for database connection...")
+    
+    # Fallback to environment variables
+    DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://insureflow:insureflow123@db:5432/insureflow')
+    
+    # Import only what we can
+    from sqlalchemy import create_engine, text, inspect
+    from sqlalchemy.orm import sessionmaker
 
 def fix_database_schema():
     """Fix PostgreSQL numeric type issues."""
@@ -62,34 +75,34 @@ def fix_user_permissions():
     print("🔧 Fixing user permissions...")
     
     engine = create_engine(DATABASE_URL)
-    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     
-    db = SessionLocal()
     try:
-        # Update ADMIN and INSURANCE_ADMIN users to have can_make_payments = True
-        admin_users = db.query(User).filter(
-            (User.role == UserRole.ADMIN) | (User.role == UserRole.INSURANCE_ADMIN)
-        ).all()
-
-        for user in admin_users:
-            if not user.can_make_payments:
-                user.can_make_payments = True
-                print(f"✅ Updated user {user.email}: set can_make_payments to True")
-        
-        # Update BROKER users to have can_make_payments = True
-        broker_users = db.query(User).filter(User.role == UserRole.BROKER).all()
-        for user in broker_users:
-            if not user.can_make_payments:
-                user.can_make_payments = True
-                print(f"✅ Updated user {user.email}: set can_make_payments to True")
-
-        db.commit()
-        print("✅ Successfully updated user permissions for payment processing.")
+        with engine.connect() as conn:
+            # Update ADMIN and INSURANCE_ADMIN users to have can_make_payments = True
+            result = conn.execute(text("""
+                UPDATE users 
+                SET can_make_payments = true 
+                WHERE role IN ('ADMIN', 'INSURANCE_ADMIN') 
+                AND can_make_payments = false
+            """))
+            admin_updated = result.rowcount
+            print(f"✅ Updated {admin_updated} admin users: set can_make_payments to True")
+            
+            # Update BROKER users to have can_make_payments = True
+            result = conn.execute(text("""
+                UPDATE users 
+                SET can_make_payments = true 
+                WHERE role = 'BROKER' 
+                AND can_make_payments = false
+            """))
+            broker_updated = result.rowcount
+            print(f"✅ Updated {broker_updated} broker users: set can_make_payments to True")
+            
+            conn.commit()
+            print("✅ Successfully updated user permissions for payment processing.")
+            
     except Exception as e:
-        db.rollback()
         print(f"❌ Error updating user permissions: {e}")
-    finally:
-        db.close()
 
 def check_database_tables():
     """Check if all required tables exist."""
