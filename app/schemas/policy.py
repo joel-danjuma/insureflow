@@ -121,6 +121,12 @@ class Policy(PolicyBase):
     class Config:
         from_attributes = True
 
+class CustomerInfo(BaseModel):
+    """Customer information for policy listings."""
+    full_name: str
+    email: str
+    phone_number: Optional[str] = None
+
 class PolicySummary(BaseModel):
     """Simplified schema for policy listings."""
     id: int
@@ -132,6 +138,7 @@ class PolicySummary(BaseModel):
     due_date: date
     payment_frequency: str
     status: str
+    customer: Optional[CustomerInfo] = None
 
     class Config:
         from_attributes = True 

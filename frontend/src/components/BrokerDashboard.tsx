@@ -270,14 +270,27 @@ const BrokerDashboard = () => {
 
       console.log('🚀 INITIATING REAL PAYMENT FLOW');
       console.log(`💳 Payment Method: ${paymentMethod}`);
-      console.log(`📋 Policies: ${selectedPoliciesData.length}`);
-      console.log(`💰 Total Amount: ₦${selectedPoliciesData.reduce((sum, item) => sum + item.premiumAmountRaw, 0):,}`);
+      console.log(`📋 Selected Policies:`, selectedPoliciesData.map(p => ({
+        id: p.id,
+        policyId: p.policyId,
+        clientName: p.clientName,
+        premiumAmount: p.premiumAmount,
+        premiumAmountRaw: p.premiumAmountRaw
+      })));
+      
+      const totalAmount = selectedPoliciesData.reduce((sum, item) => sum + item.premiumAmountRaw, 0);
+      console.log(`💰 TOTAL PAYMENT AMOUNT: ₦${totalAmount.toLocaleString()}`);
 
       // For bulk payments, use the bulk payment endpoint
       if (selectedPoliciesData.length > 1) {
         const premiumIds = selectedPoliciesData.map(item => item.premiumId).filter(id => id !== null);
         
         console.log('🔄 BULK PAYMENT: Initiating bulk payment via Squad Co...');
+        console.log(`📊 Payment Details:`);
+        console.log(`   - Policy IDs: ${selectedPoliciesData.map(p => p.policyId)}`);
+        console.log(`   - Premium IDs: ${premiumIds}`);
+        console.log(`   - Total Amount: ₦${totalAmount.toLocaleString()}`);
+        console.log(`   - Customer: ${selectedPoliciesData[0]?.clientName || 'Unknown'}`);
         
         const response = await fetch('/api/v1/payments/bulk-initiate', {
           method: 'POST',
@@ -293,16 +306,29 @@ const BrokerDashboard = () => {
 
         if (response.ok) {
           const result = await response.json();
-          console.log('✅ BULK PAYMENT INITIATED:', result);
+          console.log('✅ BULK PAYMENT INITIATED SUCCESSFULLY');
+          console.log('📊 Payment Response:', result);
+          console.log(`🔗 Checkout URL: ${result.checkout_url}`);
+          console.log(`📝 Transaction Ref: ${result.transaction_ref}`);
+          console.log(`💰 Amount: ₦${result.amount?.toLocaleString()}`);
+          console.log(`🏦 Customer VA: ${result.customer_va}`);
+          console.log(`📋 Policies Count: ${result.policies_count}`);
+          console.log(`💳 Premiums Count: ${result.premiums_count}`);
           
-          if (result.payment_url) {
-            console.log('🌐 REDIRECTING TO SQUAD CO:', result.payment_url);
+          if (result.checkout_url) {
+            console.log('🌐 REDIRECTING TO SQUAD CO PAYMENT PAGE...');
             // Redirect to Squad Co payment page
-            window.location.href = result.payment_url;
+            window.open(result.checkout_url, '_blank');
+            
+            setPaymentSuccess('Payment initiated successfully! Please complete payment on the Squad Co page.');
+            setPaymentSuccessState(true);
             return;
+          } else {
+            throw new Error('No checkout URL received from payment service');
           }
         } else {
           const error = await response.json();
+          console.error('❌ BULK PAYMENT INITIATION FAILED:', error);
           throw new Error(error.detail || 'Bulk payment initiation failed');
         }
       } else {

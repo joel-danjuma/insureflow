@@ -44,14 +44,35 @@ class VirtualAccountService:
         customer_identifier: Optional[str] = None
     ) -> Dict[str, Any]:
         """
-        Create an individual virtual account for a user.
+        Create an individual virtual account for a user with comprehensive logging.
         """
+        logger.info("🏦 CREATING INDIVIDUAL VIRTUAL ACCOUNT")
+        logger.info(f"👤 User: {user.full_name} ({user.email})")
+        logger.info(f"🆔 User ID: {user.id}")
+        
         if not self.secret_key:
+            logger.error("❌ Virtual account service not configured - missing secret key")
             return {"error": "Virtual account service not configured"}
+        
+        # Check if user already has a virtual account
+        existing_va = crud_virtual_account.get_virtual_account_by_user(db, user_id=user.id)
+        if existing_va:
+            logger.info(f"✅ User already has virtual account: {existing_va.account_number}")
+            return {
+                "success": True,
+                "virtual_account": {
+                    "account_number": existing_va.account_number,
+                    "account_name": existing_va.account_name,
+                    "bank_name": existing_va.bank_name,
+                    "status": existing_va.status.value
+                }
+            }
         
         # Generate customer identifier if not provided
         if not customer_identifier:
             customer_identifier = f"INSURE_USER_{user.id}_{int(datetime.now().timestamp())}"
+        
+        logger.info(f"🆔 Customer Identifier: {customer_identifier}")
         
         url = f"{self.base_url}/virtual-account"
         
@@ -73,7 +94,8 @@ class VirtualAccountService:
         if user.address:
             payload["address"] = user.address
         
-        logger.info(f"Creating individual virtual account for user {user.id}: {customer_identifier}")
+        logger.info("📞 CALLING SQUAD CO API FOR VIRTUAL ACCOUNT CREATION")
+        logger.info(f"📋 Virtual Account Request Data: {payload}")
         
         async with httpx.AsyncClient(timeout=30.0) as client:
             try:
@@ -85,6 +107,11 @@ class VirtualAccountService:
                 if result.get("success"):
                     # Save virtual account to database
                     va_data = result.get("data", {})
+                    logger.info("✅ SQUAD CO VIRTUAL ACCOUNT CREATED SUCCESSFULLY")
+                    logger.info(f"🏦 Account Number: {va_data.get('virtual_account_number')}")
+                    logger.info(f"👤 Account Name: {va_data.get('first_name')} {va_data.get('last_name')}")
+                    logger.info(f"🏛️ Bank Code: {va_data.get('bank_code', '058')}")
+                    
                     virtual_account = VirtualAccount(
                         user_id=user.id,
                         customer_identifier=customer_identifier,
@@ -99,14 +126,26 @@ class VirtualAccountService:
                         squad_updated_at=datetime.fromisoformat(va_data.get("updated_at", "").replace("Z", "+00:00")) if va_data.get("updated_at") else None,
                     )
                     
+                    logger.info("💾 SAVING VIRTUAL ACCOUNT TO DATABASE")
                     db.add(virtual_account)
                     db.commit()
                     db.refresh(virtual_account)
                     
-                    logger.info(f"Individual virtual account created successfully: {virtual_account.virtual_account_number}")
-                    return {"success": True, "virtual_account": virtual_account, "squad_response": result}
+                    logger.info(f"✅ Virtual account saved to database with ID: {virtual_account.id}")
+                    logger.info(f"🎉 VIRTUAL ACCOUNT CREATION COMPLETED SUCCESSFULLY")
+                    
+                    return {
+                        "success": True, 
+                        "virtual_account": {
+                            "account_number": virtual_account.virtual_account_number,
+                            "account_name": f"{virtual_account.first_name} {virtual_account.last_name}",
+                            "bank_name": "GTBank",  # Default bank name
+                            "status": "active"
+                        }, 
+                        "squad_response": result
+                    }
                 else:
-                    logger.error(f"Squad API returned unsuccessful response: {result}")
+                    logger.error(f"❌ Squad API returned unsuccessful response: {result}")
                     return {"error": f"Squad API error: {result.get('message', 'Unknown error')}"}
                 
             except httpx.HTTPStatusError as e:

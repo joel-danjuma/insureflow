@@ -86,6 +86,7 @@ def list_policies(
         from app.schemas.policy import PolicySummary
         from decimal import Decimal
         from datetime import date
+        from app.schemas.policy import CustomerInfo
         return [
             PolicySummary(
                 id=1,
@@ -96,7 +97,12 @@ def list_policies(
                 premium_amount=Decimal("250000.00"),
                 due_date=date(2024, 12, 31),
                 payment_frequency="monthly",
-                status="active"
+                status="active",
+                customer=CustomerInfo(
+                    full_name="John Doe",
+                    email="john.doe@example.com",
+                    phone_number="08012345678"
+                )
             ),
             PolicySummary(
                 id=2,
@@ -107,7 +113,12 @@ def list_policies(
                 premium_amount=Decimal("180000.00"),
                 due_date=date(2024, 11, 15),
                 payment_frequency="quarterly",
-                status="active"
+                status="active",
+                customer=CustomerInfo(
+                    full_name="Jane Smith",
+                    email="jane.smith@example.com",
+                    phone_number="08023456789"
+                )
             ),
             PolicySummary(
                 id=3,
@@ -118,7 +129,12 @@ def list_policies(
                 premium_amount=Decimal("120000.00"),
                 due_date=date(2024, 12, 15),
                 payment_frequency="monthly",
-                status="active"
+                status="active",
+                customer=CustomerInfo(
+                    full_name="Michael Johnson",
+                    email="michael.johnson@example.com",
+                    phone_number="08034567890"
+                )
             ),
             PolicySummary(
                 id=4,
@@ -129,7 +145,12 @@ def list_policies(
                 premium_amount=Decimal("350000.00"),
                 due_date=date(2024, 12, 20),
                 payment_frequency="annual",
-                status="active"
+                status="active",
+                customer=CustomerInfo(
+                    full_name="Sarah Williams",
+                    email="sarah.williams@example.com",
+                    phone_number="08045678901"
+                )
             ),
             PolicySummary(
                 id=5,
@@ -140,7 +161,12 @@ def list_policies(
                 premium_amount=Decimal("500000.00"),
                 due_date=date(2024, 12, 10),
                 payment_frequency="quarterly",
-                status="active"
+                status="active",
+                customer=CustomerInfo(
+                    full_name="David Brown",
+                    email="david.brown@example.com",
+                    phone_number="08056789012"
+                )
             ),
             PolicySummary(
                 id=6,
@@ -151,7 +177,12 @@ def list_policies(
                 premium_amount=Decimal("75000.00"),
                 due_date=date(2024, 11, 30),
                 payment_frequency="annual",
-                status="active"
+                status="active",
+                customer=CustomerInfo(
+                    full_name="Emily Davis",
+                    email="emily.davis@example.com",
+                    phone_number="08067890123"
+                )
             ),
             PolicySummary(
                 id=7,
@@ -162,7 +193,12 @@ def list_policies(
                 premium_amount=Decimal("450000.00"),
                 due_date=date(2024, 12, 25),
                 payment_frequency="quarterly",
-                status="active"
+                status="active",
+                customer=CustomerInfo(
+                    full_name="Robert Wilson",
+                    email="robert.wilson@example.com",
+                    phone_number="08078901234"
+                )
             ),
             PolicySummary(
                 id=8,
@@ -173,7 +209,12 @@ def list_policies(
                 premium_amount=Decimal("200000.00"),
                 due_date=date(2024, 12, 5),
                 payment_frequency="annual",
-                status="active"
+                status="active",
+                customer=CustomerInfo(
+                    full_name="Lisa Anderson",
+                    email="lisa.anderson@example.com",
+                    phone_number="08089012345"
+                )
             )
         ]
 

@@ -50,7 +50,9 @@ class SettlementProcessor:
         self.commission_calculator = CommissionCalculator()
     
     def process_daily_settlements(self, db: Session) -> Dict[str, Any]:
-        """Process all pending settlements for the day"""
+        """Process all pending settlements for the day with comprehensive logging"""
+        
+        logger.info("💰 STARTING DAILY SETTLEMENT PROCESS")
         
         try:
             from app.crud.virtual_account import get_virtual_accounts_for_settlement
@@ -58,9 +60,11 @@ class SettlementProcessor:
             from app.core.config import settings
             
             # Get virtual accounts ready for settlement
+            logger.info("📊 FETCHING SETTLEMENT-READY VIRTUAL ACCOUNTS")
             virtual_accounts = get_virtual_accounts_for_settlement(db)
             
             if not virtual_accounts:
+                logger.info("ℹ️ No virtual accounts ready for settlement")
                 return {
                     "success": True,
                     "message": "No virtual accounts ready for settlement",
@@ -68,9 +72,10 @@ class SettlementProcessor:
                     "total_amount": Decimal('0')
                 }
             
-            logger.info(f"Processing daily settlements for {len(virtual_accounts)} virtual accounts")
+            logger.info(f"📋 Found {len(virtual_accounts)} virtual accounts ready for settlement")
             
             # Group settlements by insurance company
+            logger.info("🏢 GROUPING SETTLEMENTS BY INSURANCE COMPANY")
             company_settlements = {}
             total_settlement_amount = Decimal('0')
             
@@ -81,13 +86,14 @@ class SettlementProcessor:
                 ).first()
                 
                 if not company or not company.settlement_account_number:
-                    logger.warning(f"Skipping VA {va.account_number} - no settlement account for company")
+                    logger.warning(f"⚠️ Skipping VA {va.account_number} - no settlement account for company")
                     continue
                 
                 # Calculate net settlement amount (after platform commission)
                 net_amount = va.net_amount_after_commission
                 
                 if net_amount <= 0:
+                    logger.warning(f"⚠️ Skipping VA {va.account_number} - net amount is {net_amount}")
                     continue
                 
                 company_id = company.id
@@ -101,6 +107,13 @@ class SettlementProcessor:
                 company_settlements[company_id]["total_amount"] += net_amount
                 company_settlements[company_id]["virtual_accounts"].append(va)
                 total_settlement_amount += net_amount
+                
+                logger.info(f"✅ VA {va.account_number}: ₦{net_amount:,.2f} → {company.name}")
+            
+            logger.info(f"💰 SETTLEMENT SUMMARY:")
+            logger.info(f"   - Total Amount to Companies: ₦{total_settlement_amount:,.2f}")
+            logger.info(f"   - Companies: {len(company_settlements)}")
+            logger.info(f"   - Virtual Accounts: {len(virtual_accounts)}")
             
             if not company_settlements:
                 return {
@@ -111,6 +124,7 @@ class SettlementProcessor:
                 }
             
             # Prepare bulk transfers for GAPS
+            logger.info("🏦 PREPARING GAPS BULK TRANSFERS")
             transfers = []
             for company_id, settlement_data in company_settlements.items():
                 company = settlement_data["company"]
@@ -129,15 +143,26 @@ class SettlementProcessor:
                 }
                 
                 transfers.append(transfer)
-                logger.info(f"Prepared settlement: {company.name} → ₦{amount:,}")
+                logger.info(f"✅ Prepared settlement: {company.name} → ₦{amount:,.2f}")
+                logger.info(f"   - Account: {company.settlement_account_number}")
+                logger.info(f"   - Bank: {company.settlement_bank_code}")
+                logger.info(f"   - Reference: {transfer['reference']}")
             
             # Execute bulk transfer via GAPS
-            logger.info(f"Executing GAPS bulk transfer for {len(transfers)} companies, total: ₦{total_settlement_amount:,}")
+            logger.info("📞 CALLING GAPS API FOR BULK TRANSFER")
+            logger.info(f"📊 Transfer Details:")
+            logger.info(f"   - Companies: {len(transfers)}")
+            logger.info(f"   - Total Amount: ₦{total_settlement_amount:,.2f}")
             
             gaps_result = self.gaps_client.bulk_transfer(transfers)
             
             if gaps_result.get("success"):
+                logger.info("✅ GAPS BULK TRANSFER SUCCESSFUL")
+                logger.info(f"📝 GAPS Batch Reference: {gaps_result.get('batch_reference', 'N/A')}")
+                logger.info(f"💰 Total Transferred: ₦{gaps_result.get('total_amount', total_settlement_amount):,.2f}")
+                
                 # Update virtual account balances and create settlement records
+                logger.info("💾 UPDATING VIRTUAL ACCOUNT BALANCES AND CREATING SETTLEMENT RECORDS")
                 settlements_processed = 0
                 
                 for company_id, settlement_data in company_settlements.items():
@@ -162,6 +187,8 @@ class SettlementProcessor:
                         # Reset virtual account balance
                         va.current_balance = Decimal('0')
                         va.last_settlement_at = datetime.utcnow()
+                        
+                        logger.info(f"✅ Settlement record created for VA {va.account_number}: ₦{va.net_amount_after_commission:,.2f}")
                         
                         settlements_processed += 1
                 
