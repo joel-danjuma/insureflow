@@ -9,7 +9,7 @@ from typing import List
 
 from app import dependencies
 from app.core.security import create_access_token, verify_password, get_password_hash
-from app.crud import user as crud_user
+from app.crud import user as crud_user, broker as crud_broker
 from app.schemas.auth import (
     UserCreate, Token, UserResponse, UserUpdate, PasswordUpdate,
     BrokerOnboardingRequest, UserInvitation, UserRolePermissions
@@ -199,10 +199,18 @@ def onboard_broker(
     )
     
     new_broker = crud_user.create_user(db, user=user_data)
-    
+
+    # Create the broker profile
+    broker_profile_data = {
+        "name": new_broker.full_name,
+        "agency_name": new_broker.organization_name,
+        # Add any other broker-specific fields here
+    }
+    crud_broker.create_broker_profile(db, user_id=new_broker.id, broker_data=broker_profile_data)
+
     # TODO: Send invitation email with temporary password
     # email_service.send_broker_invitation(new_broker.email, "TempPassword123!")
-    
+
     return new_broker
 
 @router.get("/users", response_model=List[UserResponse])
