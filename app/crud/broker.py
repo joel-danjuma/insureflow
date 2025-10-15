@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from app.models.broker import Broker
 from app.schemas.broker import BrokerCreate
+from app.schemas import broker as schemas_broker
 
 
 def get_broker_by_user_id(db: Session, user_id: int):
