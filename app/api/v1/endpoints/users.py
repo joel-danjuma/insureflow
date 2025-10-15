@@ -167,12 +167,19 @@ async def create_broker_user_with_virtual_account(
     *,
     db: Session = Depends(get_db),
     user_data: schemas.BrokerUserCreate,
-    current_user: User = Depends(get_current_insurance_admin)
+    current_user: User = Depends(get_current_broker_or_admin_user)
 ):
     """
     Create a new broker user with auto-generated password and virtual account.
-    Insurance Admin only.
+    Admin or Insurance Admin only.
     """
+    # Check if user has permission to create broker users
+    if not (current_user.role == UserRole.ADMIN or current_user.role == UserRole.INSURANCE_ADMIN):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin or Insurance Admin access required to create broker users"
+        )
+    
     try:
         # Check if user already exists
         existing_user = crud.user.get_user_by_email(db, email=user_data.email)
