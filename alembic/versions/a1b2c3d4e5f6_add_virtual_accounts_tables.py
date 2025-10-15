@@ -46,15 +46,15 @@ def upgrade() -> None:
     if not result.fetchone():
         op.execute("CREATE TYPE transactionindicator AS ENUM ('credit', 'debit')")
 
-    # Create virtual_accounts table
+    # Create virtual_accounts table with string columns first
     op.create_table('virtual_accounts',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('user_id', sa.Integer(), nullable=False),
         sa.Column('customer_identifier', sa.String(length=100), nullable=False),
         sa.Column('virtual_account_number', sa.String(length=20), nullable=False),
         sa.Column('bank_code', sa.String(length=10), nullable=False),
-        sa.Column('account_type', postgresql.ENUM('individual', 'business', name='virtualaccounttype'), nullable=False),
-        sa.Column('status', postgresql.ENUM('active', 'inactive', 'suspended', 'closed', name='virtualaccountstatus'), nullable=False),
+        sa.Column('account_type', sa.String(length=20), nullable=False),
+        sa.Column('status', sa.String(length=20), nullable=False),
         sa.Column('first_name', sa.String(length=100), nullable=True),
         sa.Column('last_name', sa.String(length=100), nullable=True),
         sa.Column('middle_name', sa.String(length=100), nullable=True),
@@ -87,14 +87,14 @@ def upgrade() -> None:
     op.create_index(op.f('ix_virtual_accounts_customer_identifier'), 'virtual_accounts', ['customer_identifier'], unique=True)
     op.create_index(op.f('ix_virtual_accounts_virtual_account_number'), 'virtual_accounts', ['virtual_account_number'], unique=True)
 
-    # Create virtual_account_transactions table
+    # Create virtual_account_transactions table with string columns first
     op.create_table('virtual_account_transactions',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('virtual_account_id', sa.Integer(), nullable=False),
-        sa.Column('transaction_type', postgresql.ENUM('credit', 'debit', name='transactiontype'), nullable=False),
+        sa.Column('transaction_type', sa.String(length=20), nullable=False),
         sa.Column('amount', sa.Numeric(precision=15, scale=2), nullable=False),
-        sa.Column('status', postgresql.ENUM('pending', 'completed', 'failed', 'cancelled', name='transactionstatus'), nullable=False),
-        sa.Column('indicator', postgresql.ENUM('credit', 'debit', name='transactionindicator'), nullable=False),
+        sa.Column('status', sa.String(length=20), nullable=False),
+        sa.Column('indicator', sa.String(length=20), nullable=False),
         sa.Column('reference', sa.String(length=100), nullable=True),
         sa.Column('description', sa.Text(), nullable=True),
         sa.Column('squad_transaction_id', sa.String(length=100), nullable=True),
@@ -107,6 +107,13 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_virtual_account_transactions_id'), 'virtual_account_transactions', ['id'], unique=False)
     op.create_index(op.f('ix_virtual_account_transactions_virtual_account_id'), 'virtual_account_transactions', ['virtual_account_id'], unique=False)
+
+    # Now alter the columns to use enum types
+    op.alter_column('virtual_accounts', 'account_type', type_=postgresql.ENUM('individual', 'business', name='virtualaccounttype'))
+    op.alter_column('virtual_accounts', 'status', type_=postgresql.ENUM('active', 'inactive', 'suspended', 'closed', name='virtualaccountstatus'))
+    op.alter_column('virtual_account_transactions', 'transaction_type', type_=postgresql.ENUM('credit', 'debit', name='transactiontype'))
+    op.alter_column('virtual_account_transactions', 'status', type_=postgresql.ENUM('pending', 'completed', 'failed', 'cancelled', name='transactionstatus'))
+    op.alter_column('virtual_account_transactions', 'indicator', type_=postgresql.ENUM('credit', 'debit', name='transactionindicator'))
 
 
 def downgrade() -> None:
