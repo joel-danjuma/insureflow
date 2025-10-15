@@ -104,16 +104,7 @@ def get_current_broker_or_admin_user(
     """
     Get current user who is either a broker or admin.
     """
-    allowed_roles = [
-        UserRole.ADMIN,
-        UserRole.BROKER,
-        UserRole.BROKER_ADMIN,
-        UserRole.BROKER_ACCOUNTANT,
-        UserRole.INSURANCE_ADMIN,
-        UserRole.INSURANCE_ACCOUNTANT
-    ]
-    
-    if current_user.role not in allowed_roles:
+    if not (current_user.is_broker_user or current_user.can_perform_admin_actions):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Broker or admin access required"
