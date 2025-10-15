@@ -220,6 +220,43 @@ async def handle_virtual_account_webhook(
             detail=f"Error processing webhook: {str(e)}"
         )
 
+@router.post("/create-test-account", response_model=VirtualAccount)
+async def create_test_virtual_account(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_broker_or_admin_user)
+):
+    """
+    Create a test virtual account for stakeholder demonstrations.
+    """
+    try:
+        # Check if user already has a virtual account
+        existing_accounts = crud_virtual_account.get_virtual_accounts_by_user(db, current_user.id)
+        if existing_accounts:
+            return existing_accounts[0]  # Return existing account
+        
+        # Create new virtual account
+        result = await virtual_account_service.create_individual_virtual_account(
+            db=db,
+            user=current_user,
+            customer_identifier=f"test_{current_user.id}"
+        )
+        
+        if "error" in result:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=result["error"]
+            )
+        
+        return result["virtual_account"]
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Test virtual account creation failed: {str(e)}"
+        )
+
 @router.post("/simulate-payment", response_model=PaymentSimulationResponse)
 async def simulate_payment(
     payment_request: PaymentSimulationRequest,
