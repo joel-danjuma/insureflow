@@ -104,6 +104,39 @@ def fix_user_permissions():
     except Exception as e:
         print(f"❌ Error updating user permissions: {e}")
 
+def normalize_enum_cases():
+    """Ensure enum values in the database are uppercase to match Python enums."""
+    print("🔧 Normalizing enum case in the database...")
+    
+    engine = create_engine(DATABASE_URL)
+    
+    try:
+        with engine.connect() as conn:
+            # List of columns and tables to update
+            updates = {
+                'policies': ['status', 'policy_type', 'payment_frequency']
+                # Add other tables and columns here if needed in the future
+            }
+            
+            total_updated_rows = 0
+            for table, columns in updates.items():
+                for column in columns:
+                    statement = text(f"UPDATE {table} SET {column} = UPPER({column}) WHERE {column} IS NOT NULL AND {column} != UPPER({column})")
+                    result = conn.execute(statement)
+                    if result.rowcount > 0:
+                        print(f"✅ Normalized {result.rowcount} rows for '{column}' in '{table}' table.")
+                        total_updated_rows += result.rowcount
+            
+            conn.commit()
+            if total_updated_rows == 0:
+                print("✅ All enum values are already in the correct case.")
+            else:
+                print("✅ Successfully normalized all enum values.")
+
+    except Exception as e:
+        print(f"❌ Error normalizing enum cases: {e}")
+
+
 def check_database_tables():
     """Check if all required tables exist."""
     print("🔍 Checking database tables...")
@@ -130,6 +163,7 @@ def main():
     
     try:
         check_database_tables()
+        normalize_enum_cases() # Add this call here
         fix_database_schema()
         fix_user_permissions()
         
