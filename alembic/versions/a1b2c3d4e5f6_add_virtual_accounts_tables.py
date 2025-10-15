@@ -108,12 +108,12 @@ def upgrade() -> None:
     op.create_index(op.f('ix_virtual_account_transactions_id'), 'virtual_account_transactions', ['id'], unique=False)
     op.create_index(op.f('ix_virtual_account_transactions_virtual_account_id'), 'virtual_account_transactions', ['virtual_account_id'], unique=False)
 
-    # Now alter the columns to use enum types
-    op.alter_column('virtual_accounts', 'account_type', type_=postgresql.ENUM('individual', 'business', name='virtualaccounttype'))
-    op.alter_column('virtual_accounts', 'status', type_=postgresql.ENUM('active', 'inactive', 'suspended', 'closed', name='virtualaccountstatus'))
-    op.alter_column('virtual_account_transactions', 'transaction_type', type_=postgresql.ENUM('credit', 'debit', name='transactiontype'))
-    op.alter_column('virtual_account_transactions', 'status', type_=postgresql.ENUM('pending', 'completed', 'failed', 'cancelled', name='transactionstatus'))
-    op.alter_column('virtual_account_transactions', 'indicator', type_=postgresql.ENUM('credit', 'debit', name='transactionindicator'))
+    # Now alter the columns to use enum types with explicit casting
+    op.execute("ALTER TABLE virtual_accounts ALTER COLUMN account_type TYPE virtualaccounttype USING account_type::virtualaccounttype")
+    op.execute("ALTER TABLE virtual_accounts ALTER COLUMN status TYPE virtualaccountstatus USING status::virtualaccountstatus")
+    op.execute("ALTER TABLE virtual_account_transactions ALTER COLUMN transaction_type TYPE transactiontype USING transaction_type::transactiontype")
+    op.execute("ALTER TABLE virtual_account_transactions ALTER COLUMN status TYPE transactionstatus USING status::transactionstatus")
+    op.execute("ALTER TABLE virtual_account_transactions ALTER COLUMN indicator TYPE transactionindicator USING indicator::transactionindicator")
 
 
 def downgrade() -> None:
