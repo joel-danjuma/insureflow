@@ -1,8 +1,8 @@
-"""add virtual_accounts table
+"""add virtual_accounts_tables
 
-Revision ID: add_virtual_accounts_table
-Revises: 9a8b7c6d5e4f
-Create Date: 2024-12-19 10:00:00.000000
+Revision ID: a1b2c3d4e5f6
+Revises: add_insureflow_admin_enum
+Create Date: 2024-12-19 11:00:00.000000
 
 """
 from alembic import op
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = 'add_virtual_accounts_table'
-down_revision = '9a8b7c6d5e4f'
+revision = 'a1b2c3d4e5f6'
+down_revision = 'add_insureflow_admin_enum'
 branch_labels = None
 depends_on = None
 
@@ -58,8 +58,32 @@ def upgrade() -> None:
     op.create_index(op.f('ix_virtual_accounts_customer_identifier'), 'virtual_accounts', ['customer_identifier'], unique=True)
     op.create_index(op.f('ix_virtual_accounts_virtual_account_number'), 'virtual_accounts', ['virtual_account_number'], unique=True)
 
+    # Create virtual_account_transactions table
+    op.create_table('virtual_account_transactions',
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('virtual_account_id', sa.Integer(), nullable=False),
+        sa.Column('transaction_type', postgresql.ENUM('credit', 'debit', name='transactiontype'), nullable=False),
+        sa.Column('amount', sa.Numeric(precision=15, scale=2), nullable=False),
+        sa.Column('status', postgresql.ENUM('pending', 'completed', 'failed', 'cancelled', name='transactionstatus'), nullable=False),
+        sa.Column('indicator', postgresql.ENUM('credit', 'debit', name='transactionindicator'), nullable=False),
+        sa.Column('reference', sa.String(length=100), nullable=True),
+        sa.Column('description', sa.Text(), nullable=True),
+        sa.Column('squad_transaction_id', sa.String(length=100), nullable=True),
+        sa.Column('squad_reference', sa.String(length=100), nullable=True),
+        sa.Column('processed_at', sa.DateTime(), nullable=True),
+        sa.Column('created_at', sa.DateTime(), nullable=False),
+        sa.Column('updated_at', sa.DateTime(), nullable=False),
+        sa.ForeignKeyConstraint(['virtual_account_id'], ['virtual_accounts.id'], ),
+        sa.PrimaryKeyConstraint('id')
+    )
+    op.create_index(op.f('ix_virtual_account_transactions_id'), 'virtual_account_transactions', ['id'], unique=False)
+    op.create_index(op.f('ix_virtual_account_transactions_virtual_account_id'), 'virtual_account_transactions', ['virtual_account_id'], unique=False)
+
 
 def downgrade() -> None:
+    op.drop_index(op.f('ix_virtual_account_transactions_virtual_account_id'), table_name='virtual_account_transactions')
+    op.drop_index(op.f('ix_virtual_account_transactions_id'), table_name='virtual_account_transactions')
+    op.drop_table('virtual_account_transactions')
     op.drop_index(op.f('ix_virtual_accounts_virtual_account_number'), table_name='virtual_accounts')
     op.drop_index(op.f('ix_virtual_accounts_customer_identifier'), table_name='virtual_accounts')
     op.drop_index(op.f('ix_virtual_accounts_user_id'), table_name='virtual_accounts')
@@ -68,3 +92,6 @@ def downgrade() -> None:
     # Drop the enums
     op.execute('DROP TYPE IF EXISTS virtualaccounttype')
     op.execute('DROP TYPE IF EXISTS virtualaccountstatus')
+    op.execute('DROP TYPE IF EXISTS transactiontype')
+    op.execute('DROP TYPE IF EXISTS transactionstatus')
+    op.execute('DROP TYPE IF EXISTS transactionindicator')
