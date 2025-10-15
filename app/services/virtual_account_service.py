@@ -18,6 +18,7 @@ from app.models.virtual_account import VirtualAccount, VirtualAccountType, Virtu
 from app.models.virtual_account_transaction import VirtualAccountTransaction, TransactionType, TransactionStatus, TransactionIndicator
 from app.models.user import User
 from app.crud import virtual_account as crud_virtual_account
+from app.services.settlement_service import settlement_service
 
 logger = logging.getLogger(__name__)
 
@@ -359,7 +360,7 @@ class VirtualAccountService:
             
             if virtual_account.auto_settlement and virtual_account.current_balance >= virtual_account.settlement_threshold:
                 logger.info(f"🚀 SETTLEMENT TRIGGERED: Threshold exceeded, initiating auto-settlement")
-                self._initiate_auto_settlement(db, virtual_account)
+                await settlement_service.process_settlement(db, virtual_account.id)
             else:
                 logger.info(f"⏳ SETTLEMENT NOT TRIGGERED: Threshold not met or auto-settlement disabled")
             
