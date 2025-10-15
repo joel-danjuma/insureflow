@@ -8,6 +8,7 @@ Create Date: 2024-12-19 11:00:00.000000
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+from sqlalchemy import text
 
 # revision identifiers, used by Alembic.
 revision = 'a1b2c3d4e5f6'
@@ -17,6 +18,34 @@ depends_on = None
 
 
 def upgrade() -> None:
+    # Create enums if they don't exist
+    conn = op.get_bind()
+    
+    # Check and create virtualaccounttype enum
+    result = conn.execute(text("SELECT 1 FROM pg_type WHERE typname = 'virtualaccounttype'"))
+    if not result.fetchone():
+        op.execute("CREATE TYPE virtualaccounttype AS ENUM ('individual', 'business')")
+    
+    # Check and create virtualaccountstatus enum
+    result = conn.execute(text("SELECT 1 FROM pg_type WHERE typname = 'virtualaccountstatus'"))
+    if not result.fetchone():
+        op.execute("CREATE TYPE virtualaccountstatus AS ENUM ('active', 'inactive', 'suspended', 'closed')")
+    
+    # Check and create transactiontype enum
+    result = conn.execute(text("SELECT 1 FROM pg_type WHERE typname = 'transactiontype'"))
+    if not result.fetchone():
+        op.execute("CREATE TYPE transactiontype AS ENUM ('credit', 'debit')")
+    
+    # Check and create transactionstatus enum
+    result = conn.execute(text("SELECT 1 FROM pg_type WHERE typname = 'transactionstatus'"))
+    if not result.fetchone():
+        op.execute("CREATE TYPE transactionstatus AS ENUM ('pending', 'completed', 'failed', 'cancelled')")
+    
+    # Check and create transactionindicator enum
+    result = conn.execute(text("SELECT 1 FROM pg_type WHERE typname = 'transactionindicator'"))
+    if not result.fetchone():
+        op.execute("CREATE TYPE transactionindicator AS ENUM ('credit', 'debit')")
+
     # Create virtual_accounts table
     op.create_table('virtual_accounts',
         sa.Column('id', sa.Integer(), nullable=False),
