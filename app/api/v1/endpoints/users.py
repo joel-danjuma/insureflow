@@ -12,7 +12,7 @@ from redis.asyncio import Redis
 from app import crud, schemas
 from app.core.database import get_db
 from app.core.cache import get_redis_client
-from app.dependencies import get_current_admin_user, get_current_active_user, get_current_insurance_admin
+from app.dependencies import get_current_admin_user, get_current_active_user, get_current_insurance_admin, get_current_broker_or_admin_user
 from app.models.user import User, UserRole
 from app.services.virtual_account_service import virtual_account_service
 
