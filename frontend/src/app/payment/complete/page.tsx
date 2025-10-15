@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 interface PaymentResult {
@@ -15,7 +15,7 @@ interface PaymentResult {
 
 type PaymentStatus = 'loading' | 'success' | 'failed' | 'cancelled';
 
-export default function PaymentComplete() {
+function PaymentCompleteContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<PaymentStatus>('loading');
@@ -265,5 +265,20 @@ export default function PaymentComplete() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function PaymentComplete() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <div className="text-white text-lg">Loading payment result...</div>
+        </div>
+      </div>
+    }>
+      <PaymentCompleteContent />
+    </Suspense>
   );
 }
