@@ -58,8 +58,8 @@ def fix_database_schema():
                         if 'NUMERIC' not in str(col['type']).upper():
                             print(f"   ⚠️  Column {col['name']} has incorrect type: {col['type']}")
                             try:
-                                # Try to alter the column type
-                                conn.execute(text(f"ALTER TABLE policies ALTER COLUMN {col['name']} TYPE NUMERIC(15,2)"))
+                                # Try to alter the column type with an explicit USING clause for casting
+                                conn.execute(text(f"ALTER TABLE policies ALTER COLUMN {col['name']} TYPE NUMERIC(15,2) USING {col['name']}::numeric"))
                                 conn.commit()
                                 print(f"   ✅ Fixed column {col['name']} type")
                             except Exception as e:
