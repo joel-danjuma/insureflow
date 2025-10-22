@@ -1,6 +1,5 @@
 import axios, { AxiosError } from 'axios';
-import { LoginFormData } from '@/components/LoginForm';
-import { SignUpFormData } from '@/components/SignUpForm';
+import { LoginFormData, SignUpFormData } from '@/types/user';
 
 // Centralized error handler
 const errorHandler = (error: any, context: string): never => {

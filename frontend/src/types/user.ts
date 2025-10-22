@@ -85,4 +85,19 @@ export interface Premium {
   billing_period_start: string;
   billing_period_end: string;
   policy?: Policy;
+}
+
+// Form Data Types
+export interface LoginFormData {
+  email?: string;
+  password?: string;
+}
+
+export interface SignUpFormData {
+  email?: string;
+  password?: string;
+  confirmPassword?: string;
+  full_name?: string;
+  username?: string;
+  role?: string;
 } 
