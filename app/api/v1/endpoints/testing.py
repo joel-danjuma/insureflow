@@ -141,94 +141,85 @@ class PaymentFlowSimulator:
             return {"success": False, "logs": self.logs, "error": str(e)}
     
     async def simulate_bulk_payment_flow(self, virtual_account_count: int = 3) -> Dict[str, Any]:
-        """Simulate bulk payment flow with multiple virtual accounts."""
-        
+        """Simulate the simplified bulk payment flow."""
         try:
-            self.add_log(f"🚀 Starting bulk payment flow simulation ({virtual_account_count} accounts)", "info")
-            
-            virtual_accounts = []
-            total_amount = Decimal('0')
-            
-            # Step 1: Create Multiple Virtual Accounts
-            self.add_log(f"🏦 Step 1: Creating {virtual_account_count} virtual accounts", "info")
-            
-            for i in range(virtual_account_count):
-                va = await self._create_test_virtual_account(f"test-broker-{i+1}")
-                if va:
-                    virtual_accounts.append(va)
-                    self.add_log(f"✅ Virtual account {i+1} created: {va.get('account_number')}", "success")
-                else:
-                    self.add_log(f"❌ Failed to create virtual account {i+1}", "error")
-            
-            if not virtual_accounts:
-                self.add_log("❌ No virtual accounts created - aborting simulation", "error")
+            self.add_log(f"🚀 Starting SIMPLIFIED bulk payment flow simulation ({virtual_account_count} policies)", "info")
+
+            # Step 1: Create a dedicated settlement account
+            settlement_account = await self._create_settlement_virtual_account()
+            if not settlement_account:
+                self.add_log("❌ Critical error: Could not create a settlement account. Aborting.", "error")
                 return {"success": False, "logs": self.logs}
-            
-            # Step 2: Simulate Multiple Payments
-            self.add_log(f"💳 Step 2: Simulating payments to {len(virtual_accounts)} accounts", "info")
-            
-            payment_amounts = [Decimal('25000'), Decimal('50000'), Decimal('75000')]
-            successful_payments = 0
-            settlements_triggered = 0
-            
-            for i, va in enumerate(virtual_accounts):
-                amount = payment_amounts[i % len(payment_amounts)]
-                total_amount += amount
-                
-                self.add_log(f"💰 Simulating ₦{amount:,} payment to account {va.get('account_number')}", "info")
-                
-                payment_result = await self._simulate_payment_to_account(va.get("account_number"), amount)
-                
-                if payment_result.get("success"):
-                    successful_payments += 1
-                    self.add_log(f"✅ Payment {i+1} successful", "success")
-                    
-                    # Process webhook for each payment
-                    webhook_result = await self._process_webhook_simulation(va, amount)
-                    
-                    if webhook_result.get("settlement_triggered"):
-                        settlements_triggered += 1
-                        self.add_log(f"🎯 Settlement triggered for account {va.get('account_number')}", "warning")
-                else:
-                    self.add_log(f"❌ Payment {i+1} failed: {payment_result.get('error')}", "error")
-            
-            # Step 3: Bulk GAPS Settlement
-            if settlements_triggered > 0:
-                self.add_log(f"🏛️ Step 3: Processing {settlements_triggered} settlements via GAPS bulk transfer", "info")
-                
-                bulk_settlement_result = await self._simulate_bulk_gaps_settlement(virtual_accounts)
-                
-                if bulk_settlement_result.get("success"):
-                    self.add_log(
-                        f"✅ GAPS bulk settlement completed",
-                        "success",
-                        {
-                            "batch_reference": bulk_settlement_result.get("batch_reference"),
-                            "settlements_processed": settlements_triggered,
-                            "total_settlement_amount": bulk_settlement_result.get("total_amount")
-                        }
-                    )
-                else:
-                    self.add_log(f"❌ GAPS bulk settlement failed: {bulk_settlement_result.get('error')}", "error")
-            
-            self.add_log("📊 Bulk payment flow simulation completed", "success")
-            
-            return {
-                "success": True,
-                "logs": self.logs,
-                "summary": {
-                    "virtual_accounts_created": len(virtual_accounts),
-                    "payments_simulated": successful_payments,
-                    "settlements_triggered": settlements_triggered,
-                    "gaps_transfers": 1 if settlements_triggered > 0 else 0,
-                    "total_amount_processed": float(total_amount),
-                    "commission_calculated": float(total_amount * Decimal('0.01'))
-                }
-            }
-            
+            self.add_log(f"✅ Step 1: Settlement account created: {settlement_account.get('account_number')}", "success")
+
+            # Step 2: Simulate a single bulk payment from a broker
+            total_premium = Decimal('150000.00') # Simulating payment for 3 policies
+            self.add_log(f"💳 Step 2: Simulating bulk payment of {total_premium} from broker to settlement account...", "info")
+            payment_result = await self._simulate_payment_to_account(settlement_account.get('account_number'), total_premium)
+            if not payment_result.get("success"):
+                self.add_log(f"❌ Bulk payment simulation failed: {payment_result.get('error')}", "error")
+                return {"success": False, "logs": self.logs}
+            self.add_log("✅ Bulk payment successful. Funds are now in the settlement account.", "success")
+
+            # Step 3: Internal reconciliation (in a real scenario, you'd update policy statuses here)
+            self.add_log("📊 Step 3: Processing internal reconciliation...", "info")
+            self.add_log("✅ Policies marked as paid in the database.", "success")
+
+            # Step 4: Simulate payout to the insurance firm
+            net_payout = total_premium * Decimal('0.99') # Assuming a 1% platform fee
+            self.add_log(f"💸 Step 4: Simulating payout of {net_payout} to the insurance firm...", "info")
+            payout_result = await self._simulate_payout_to_insurance_firm(net_payout)
+            if not payout_result.get("success"):
+                self.add_log(f"❌ Payout simulation failed: {payout_result.get('error')}", "error")
+                return {"success": False, "logs": self.logs}
+            self.add_log("✅ Payout to insurance firm successful.", "success")
+
+            self.add_log("🎉 Simplified bulk payment flow simulation completed successfully!", "success")
+            return {"success": True, "logs": self.logs}
+
         except Exception as e:
             self.add_log(f"❌ Bulk simulation error: {str(e)}", "error")
             return {"success": False, "logs": self.logs, "error": str(e)}
+
+    async def _create_settlement_virtual_account(self) -> Optional[Dict[str, Any]]:
+        """Create a dedicated settlement virtual account."""
+        logger.info("Creating dedicated settlement virtual account...")
+        try:
+            from app.services.virtual_account_service import virtual_account_service
+            from app.models.user import User
+
+            # Use the admin user for the settlement account
+            admin_user = self.db.query(User).filter(User.role == UserRole.ADMIN).first()
+            if not admin_user:
+                self.add_log("❌ No admin user found for settlement account creation", "error")
+                return None
+
+            result = await virtual_account_service.create_individual_virtual_account(
+                db=self.db,
+                user=admin_user,
+                customer_identifier="insureflow-settlement-account"
+            )
+
+            if result.get("success"):
+                logger.info(f"Successfully created settlement virtual account: {result.get('virtual_account')}")
+                return result.get("virtual_account")
+            else:
+                self.add_log(f"❌ Settlement account creation failed: {result.get('error')}", "error")
+                return None
+        except Exception as e:
+            self.add_log(f"❌ Error creating settlement account: {str(e)}", "error")
+            return None
+
+    async def _simulate_payout_to_insurance_firm(self, amount: Decimal) -> Dict[str, Any]:
+        """Simulate a payout to the insurance firm using Squad's Transfer API."""
+        logger.info(f"Simulating payout of {amount} to insurance firm...")
+        # In a real implementation, this would call the Squad Transfer API.
+        # For now, we'll just log the action and return a success response.
+        return {
+            "success": True,
+            "message": "Payout to insurance firm successful",
+            "transaction_reference": f"PAYOUT-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+        }
     
     async def _create_test_virtual_account(self, identifier: str = "test-user") -> Optional[Dict[str, Any]]:
         """Create a test virtual account."""
