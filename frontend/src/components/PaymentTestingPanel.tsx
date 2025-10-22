@@ -107,7 +107,7 @@ const PaymentTestingPanel = () => {
     addLog('🏦 Creating virtual account for testing...', 'info');
 
     try {
-      const response = await fetch('/api/v1/virtual_accounts/create-test-account', {
+      const response = await fetch('/api/v1/testing/create-test-virtual-account', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -136,7 +136,7 @@ const PaymentTestingPanel = () => {
     addLog('💳 Simulating direct payment to virtual account...', 'info');
 
     try {
-      const response = await fetch('/api/v1/virtual_accounts/simulate-payment', {
+      const response = await fetch('/api/v1/testing/simulate-payment', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

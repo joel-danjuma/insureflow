@@ -385,6 +385,22 @@ async def simulate_complete_payment_flow(
             detail=f"Simulation failed: {str(e)}"
         )
 
+@router.post("/simulate-payment")
+async def simulate_payment(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_broker_or_admin_user)
+):
+    """Simulate a direct payment to a test virtual account."""
+    simulator = PaymentFlowSimulator(db)
+    # For simplicity, we simulate a single payment flow with a default amount
+    result = await simulator.simulate_single_payment_flow(Decimal('75000'))
+    if not result.get("success"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=result.get("error", "Payment simulation failed")
+        )
+    return result
+
 
 @router.post("/create-test-virtual-account")
 async def create_test_virtual_account(
