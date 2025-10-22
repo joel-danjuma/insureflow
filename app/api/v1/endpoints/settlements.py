@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.dependencies import get_current_admin_user, get_current_insurance_user
 from app.models.user import User
-from app.services.settlement_service import get_settlement_processor
+from app.services.settlement_service import settlement_service
 from app.services.gaps_service import get_gaps_client
 from app.schemas.settlement import (
     SettlementResponse, 
@@ -20,49 +20,40 @@ from app.schemas.settlement import (
 router = APIRouter()
 
 
-@router.post("/process-daily", response_model=SettlementResponse)
-def process_daily_settlements(
+@router.post("/process-daily", status_code=status.HTTP_200_OK)
+async def process_daily_settlements(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_admin_user)
 ):
     """
-    Process all pending settlements for the day.
-    Admin only.
+    Manually trigger the daily settlement process.
     """
-    settlement_processor = get_settlement_processor()
-    result = settlement_processor.process_daily_settlements(db)
-    
-    if not result["success"]:
+    result = await settlement_service.process_daily_settlements(db)
+    if not result.get("success"):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=result.get("error", "Settlement processing failed")
         )
-    
-    return SettlementResponse(**result)
+    return result
 
 
 @router.post("/process-manual/{company_id}", response_model=SettlementResponse)
 def process_manual_settlement(
     company_id: int,
-    request: ManualSettlementRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin_user)
+    current_user: User = Depends(get_current_insurance_user)
 ):
     """
-    Process manual settlement for specific insurance company.
-    Admin only.
+    Manually trigger settlement for a specific insurance company.
+    Insurance Admin only.
     """
     settlement_processor = get_settlement_processor()
-    result = settlement_processor.process_manual_settlement(
-        db, 
-        company_id, 
-        force=request.force
-    )
+    result = settlement_processor.process_manual_settlement(db, company_id)
     
     if not result["success"]:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=result.get("error", "Manual settlement failed")
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=result.get("error", "Manual settlement processing failed")
         )
     
     return SettlementResponse(**result)

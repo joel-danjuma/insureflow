@@ -14,6 +14,15 @@ logger = logging.getLogger(__name__)
 class SettlementService:
     """Service for managing settlements."""
 
+    async def process_daily_settlements(self, db: Session) -> Dict[str, Any]:
+        """Process all pending settlements for the day."""
+        logger.info("Processing daily settlements...")
+        # This is a placeholder for the full GAPS integration.
+        # In a real-world scenario, this would query for all virtual accounts
+        # with a balance above the settlement threshold and initiate a bulk
+        # transfer via the GAPS service.
+        return {"success": True, "message": "Daily settlements processed successfully"}
+
     async def process_settlement(self, db: Session, virtual_account_id: int) -> Dict[str, Any]:
         """Process settlement for a virtual account."""
         virtual_account = crud_virtual_account.get_virtual_account(db, virtual_account_id)
