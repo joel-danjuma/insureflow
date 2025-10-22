@@ -421,6 +421,12 @@ async def create_test_virtual_account(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="No broker users found for virtual account creation"
             )
+
+        if not test_user.full_name:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Test broker user (ID: {test_user.id}) is missing a full_name, which is required."
+            )
         
         # Create virtual account
         result = await virtual_account_service.create_individual_virtual_account(
