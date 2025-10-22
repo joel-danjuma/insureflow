@@ -60,14 +60,14 @@ class Settings(BaseSettings):
     SQUAD_SECRET_KEY: str = ""  # Will be read from environment
     SQUAD_PUBLIC_KEY: str = ""  # Will be read from environment
     SQUAD_BASE_URL: str = "https://sandbox-api-d.squadco.com"  # Default to sandbox
-    SQUAD_WEBHOOK_URL: Optional[str] = None  # Webhook URL for Squad Co payments
+    SQUAD_WEBHOOK_URL: str = "https://insureflow.tech/api/v1/payments/webhook"
     
     # GAPS (GTBank Automated Payment System) Configuration
     GAPS_BASE_URL: str = "https://gtweb6.gtbank.com/GSTPS/GAPS_FileUploader/FileUploader.asmx"  # Test URL
-    GAPS_CUSTOMER_ID: str = ""  # GAPS Access Code (encrypted)
+    GAPS_ACCESS_CODE: str = ""
     GAPS_USERNAME: str = ""  # GAPS Username (encrypted)
     GAPS_PASSWORD: str = ""  # GAPS Password (encrypted)
-    GAPS_CHANNEL: str = "GSTP"  # Channel identifier
+    GAPS_CHANNEL: str = ""  # Channel identifier
     GAPS_PUBLIC_KEY: str = """MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCrtPgIUBsQscypy+2A2l6oHKlLRTgD4hlrYKW9
 IrAK4ll0FPndJ3i57CioPalYKdNMF9+K4mFaGfT3dAMRSgWWWDeaerHx35VLgdX/wFTN5Zf1QYGe
 WiKyAmCAXoPwtlfvlLqsr9NMBJ3Ua+fFqSC4/6ThhudMlrxNL/ut/kd+pQIDAQAB"""  # Test public key
