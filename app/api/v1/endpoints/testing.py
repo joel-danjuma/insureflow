@@ -296,7 +296,7 @@ class PaymentFlowSimulator:
             }
             
             # Process webhook
-            result = virtual_account_service.process_webhook_transaction(self.db, webhook_data)
+            result = await virtual_account_service.process_webhook_transaction(self.db, webhook_data)
             
             # Check if settlement threshold was reached (simulate threshold of ₦50,000)
             settlement_triggered = amount >= Decimal('50000')
