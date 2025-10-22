@@ -419,11 +419,15 @@ async def create_test_virtual_account(
         if not test_user:
             logger.info("Creating a new, guaranteed-valid test broker user...")
             from app.schemas.auth import UserCreate
+            from app.core.security import get_password_hash
+
+            # Use a pre-hashed password to avoid issues with the create_user function
+            hashed_password = get_password_hash("a-secure-password")
             test_user = crud_user.create_user(db, user=UserCreate(
                 email=test_user_email,
                 full_name="Virtual Account Test Broker",
                 username="vabroker",
-                password="a-secure-password",
+                password=hashed_password,  # Pass the hashed password directly
                 role=UserRole.BROKER
             ))
         
