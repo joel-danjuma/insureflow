@@ -16,12 +16,12 @@ from app.dependencies import (
 from app.models.user import User
 from app.schemas.policy import Policy, PolicyCreate, PolicyUpdate, PolicySummary
 from app.schemas.virtual_account import PaymentSimulationResponse
-from app.services.virtual_account_service import simulate_policy_payment
+from app.services.virtual_account_service import simulate_policy_payment, virtual_account_service
 
 router = APIRouter()
 
 @router.post("/", response_model=Policy, status_code=status.HTTP_201_CREATED)
-def create_policy(
+async def create_policy(
     policy: PolicyCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_policy_creator)
@@ -60,7 +60,14 @@ def create_policy(
             detail="Coverage amount must be greater than 0"
         )
     
-    return policy_crud.create_policy(db=db, policy=policy)
+    new_policy = policy_crud.create_policy(db=db, policy=policy)
+
+    # Automatically create a virtual account for the new policy
+    await virtual_account_service.create_individual_virtual_account(
+        db=db, user=new_policy.user, policy_id=new_policy.id
+    )
+
+    return new_policy
 
 @router.get("/", response_model=List[PolicySummary])
 def list_policies(

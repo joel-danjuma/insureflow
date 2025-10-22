@@ -42,6 +42,7 @@ class VirtualAccountService:
         self, 
         db: Session,
         user: User,
+        policy_id: Optional[int] = None,
         customer_identifier: Optional[str] = None
     ) -> Dict[str, Any]:
         """
@@ -115,6 +116,7 @@ class VirtualAccountService:
                     
                     virtual_account = VirtualAccount(
                         user_id=user.id,
+                        policy_id=policy_id,
                         customer_identifier=customer_identifier,
                         virtual_account_number=va_data.get("virtual_account_number"),
                         bank_code=va_data.get("bank_code", "058"),

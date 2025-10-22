@@ -110,10 +110,11 @@ class Policy(Base):
     broker = relationship("Broker", back_populates="policies")
     premiums = relationship("Premium", back_populates="policy", cascade="all, delete-orphan")
     notifications = relationship("Notification", back_populates="policy")
+    virtual_accounts = relationship("VirtualAccount", back_populates="policy")
     
     merchant_reference = Column(String, unique=True, index=True, nullable=True)
     payment_status = Column(String, default="pending")
     transaction_reference = Column(String, unique=True, index=True, nullable=True)
     
     def __repr__(self):
-        return f"<Policy(id={self.id}, name='{self.policy_name}', number='{self.policy_number}', type='{self.policy_type.value}', status='{self.status.value}')>" 
+        return f"<Policy(id={self.id}, policy_number='{self.policy_number}')>" 

@@ -9,6 +9,8 @@ from sqlalchemy.orm import relationship
 import enum
 
 from app.core.database import Base
+from . import user
+from . import policy
 
 
 class VirtualAccountType(enum.Enum):
@@ -83,6 +85,10 @@ class VirtualAccount(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     last_activity_at = Column(DateTime, nullable=True)
     
+    # Add policy_id and relationship
+    policy_id = Column(Integer, ForeignKey("policies.id"), nullable=True, index=True)
+    policy = relationship("Policy", back_populates="virtual_accounts")
+
     # Relationships
     user = relationship("User", back_populates="virtual_accounts")
     transactions = relationship("VirtualAccountTransaction", back_populates="virtual_account", cascade="all, delete-orphan")
