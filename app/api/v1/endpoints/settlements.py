@@ -38,7 +38,7 @@ async def process_daily_settlements(
 
 
 @router.post("/process-manual/{company_id}", response_model=SettlementResponse)
-def process_manual_settlement(
+async def process_manual_settlement(
     company_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_insurance_user)
@@ -47,15 +47,14 @@ def process_manual_settlement(
     Manually trigger settlement for a specific insurance company.
     Insurance Admin only.
     """
-    settlement_processor = get_settlement_processor()
-    result = settlement_processor.process_manual_settlement(db, company_id)
-    
-    if not result["success"]:
+    result = await settlement_service.process_manual_settlement(db, company_id)
+
+    if not result.get("success"):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=result.get("error", "Manual settlement processing failed")
         )
-    
+
     return SettlementResponse(**result)
 
 

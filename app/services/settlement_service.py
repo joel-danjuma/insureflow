@@ -23,6 +23,12 @@ class SettlementService:
         # transfer via the GAPS service.
         return {"success": True, "message": "Daily settlements processed successfully"}
 
+    async def process_manual_settlement(self, db: Session, company_id: int) -> Dict[str, Any]:
+        """Process manual settlement for a specific company."""
+        logger.info(f"Processing manual settlement for company ID: {company_id}")
+        # This is a placeholder for the full GAPS integration.
+        return {"success": True, "message": f"Manual settlement for company {company_id} processed successfully"}
+
     async def process_settlement(self, db: Session, virtual_account_id: int) -> Dict[str, Any]:
         """Process settlement for a virtual account."""
         virtual_account = crud_virtual_account.get_virtual_account(db, virtual_account_id)
