@@ -409,38 +409,48 @@ async def create_test_virtual_account(
 ):
     """Create a test virtual account for stakeholder demonstrations."""
     
+    logger.info("Starting virtual account creation test")
     try:
         from app.services.virtual_account_service import virtual_account_service
         from app.models.user import User
         
         # Get a test broker user
+        logger.info("Querying for a test broker user...")
         test_user = db.query(User).filter(User.role == UserRole.BROKER).first()
         
         if not test_user:
+            logger.error("No broker users found in the database.")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="No broker users found for virtual account creation"
             )
+        logger.info(f"Found test broker user: {test_user.email}")
 
         if not test_user.full_name:
+            logger.error(f"Test broker user (ID: {test_user.id}) is missing a full_name.")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Test broker user (ID: {test_user.id}) is missing a full_name, which is required."
             )
+        logger.info(f"Test broker user has a full_name: {test_user.full_name}")
         
         # Create virtual account
+        logger.info("Calling virtual_account_service.create_individual_virtual_account...")
         result = await virtual_account_service.create_individual_virtual_account(
             db=db,
             user=test_user
         )
+        logger.info(f"Received result from virtual_account_service: {result}")
         
         if result.get("success"):
+            logger.info("Virtual account creation successful.")
             return {
                 "success": True,
                 "virtual_account": result.get("virtual_account"),
                 "message": "Test virtual account created successfully"
             }
         else:
+            logger.error(f"Virtual account creation failed: {result.get('error')}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=result.get("error", "Failed to create virtual account")
@@ -449,7 +459,7 @@ async def create_test_virtual_account(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Test virtual account creation failed: {str(e)}")
+        logger.error(f"Test virtual account creation failed with an unexpected error: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Virtual account creation failed: {str(e)}"
