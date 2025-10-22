@@ -66,7 +66,7 @@ const BrokerDashboard = () => {
   }
 
   // Early return for critical errors
-  if (brokerError && policiesError && premiumsError) {
+  if (brokerError || policiesError || premiumsError) {
     return (
       <div className="min-h-screen bg-gray-900 p-6 flex items-center justify-center">
         <div className="text-center">
