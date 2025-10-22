@@ -277,7 +277,7 @@ class VirtualAccountService:
                 logger.error(f"Unexpected error during payment simulation: {str(e)}")
                 return {"error": f"Unexpected error: {str(e)}"}
     
-    def process_webhook_transaction(
+    async def process_webhook_transaction(
         self,
         db: Session,
         webhook_data: Dict[str, Any]

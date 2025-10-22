@@ -62,7 +62,7 @@ async def handle_squad_co_webhook(
         virtual_account_number = webhook_data.get("virtual_account_number")
         if virtual_account_number:
             # Process as virtual account transaction
-            result = virtual_account_service.process_webhook_transaction(db, webhook_data)
+            result = await virtual_account_service.process_webhook_transaction(db, webhook_data)
             if "error" in result:
                 raise HTTPException(status_code=400, detail=result["error"])
         else:
