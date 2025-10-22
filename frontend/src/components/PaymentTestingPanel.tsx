@@ -229,4 +229,92 @@ const PaymentTestingPanel = () => {
             isSimulating
               ? 'bg-gray-600 cursor-not-allowed text-gray-400'
               : 'bg-gray-600 hover:bg-gray-700 text-white'
-          }`
+          }`}
+        >
+          Clear Logs
+        </button>
+      </div>
+
+      {/* Simulation Summary */}
+      {simulationSummary && (
+        <div className="bg-gray-900 rounded-lg p-4 mb-4 border border-gray-600">
+          <h4 className="text-white font-semibold mb-3">Simulation Summary</h4>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+            <div>
+              <span className="text-gray-400">Virtual Accounts:</span>
+              <div className="text-white font-medium">{simulationSummary.virtual_accounts_created}</div>
+            </div>
+            <div>
+              <span className="text-gray-400">Payments:</span>
+              <div className="text-white font-medium">{simulationSummary.payments_simulated}</div>
+            </div>
+            <div>
+              <span className="text-gray-400">Settlements:</span>
+              <div className="text-white font-medium">{simulationSummary.settlements_triggered}</div>
+            </div>
+            <div>
+              <span className="text-gray-400">GAPS Transfers:</span>
+              <div className="text-white font-medium">{simulationSummary.gaps_transfers}</div>
+            </div>
+            <div>
+              <span className="text-gray-400">Total Amount:</span>
+              <div className="text-white font-medium">{formatNaira(simulationSummary.total_amount_processed)}</div>
+            </div>
+            <div>
+              <span className="text-gray-400">Commission:</span>
+              <div className="text-white font-medium">{formatNaira(simulationSummary.commission_calculated)}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Real-time Logs */}
+      <div className="bg-gray-900 rounded-lg border border-gray-600">
+        <div className="flex justify-between items-center p-3 border-b border-gray-600">
+          <h4 className="text-white font-medium">Real-time Logs</h4>
+          <span className="text-gray-400 text-sm">{simulationLogs.length} entries</span>
+        </div>
+        
+        <div className="p-4 h-80 overflow-y-auto">
+          {simulationLogs.length === 0 ? (
+            <div className="text-gray-500 text-center py-8">
+              No logs yet. Start a simulation to see real-time updates.
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {simulationLogs.map((log) => (
+                <div key={log.id} className="flex items-start gap-3 font-mono text-sm">
+                  <span className="text-gray-500 text-xs mt-1 min-w-[80px]">
+                    {log.timestamp}
+                  </span>
+                  <span className="mt-1">{getLogIcon(log.level)}</span>
+                  <div className={`flex-1 ${getLogColor(log.level)}`}>
+                    {log.message}
+                    {log.data && (
+                      <div className="mt-1 text-xs text-gray-400 bg-gray-800 p-2 rounded">
+                        {JSON.stringify(log.data, null, 2)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+              <div ref={logsEndRef} />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Scenario Descriptions */}
+      <div className="mt-4 p-4 bg-gray-900 rounded-lg border border-gray-600">
+        <h4 className="text-white font-medium mb-2">Scenario Descriptions</h4>
+        <div className="text-sm text-gray-400 space-y-1">
+          <div><strong>Single Payment:</strong> Tests one virtual account with ₦50,000 payment and settlement trigger</div>
+          <div><strong>Bulk Payments:</strong> Tests 3 virtual accounts with ₦25k, ₦50k, ₦75k payments simultaneously</div>
+          <div><strong>Settlement Flow:</strong> Tests complete flow including GAPS bulk transfer and commission calculations</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default PaymentTestingPanel;
