@@ -30,6 +30,7 @@ class PaymentFlowSimulator:
     def __init__(self, db: Session):
         self.db = db
         self.logs: List[Dict[str, Any]] = []
+        logger.info("PaymentFlowSimulator initialized.")
     
     def add_log(self, message: str, level: str = "info", data: Optional[Dict] = None):
         """Add a log entry with timestamp."""
@@ -231,6 +232,7 @@ class PaymentFlowSimulator:
     
     async def _create_test_virtual_account(self, identifier: str = "test-user") -> Optional[Dict[str, Any]]:
         """Create a test virtual account."""
+        logger.info("Attempting to create a test virtual account...")
         try:
             from app.services.virtual_account_service import virtual_account_service
             from app.models.user import User
@@ -240,8 +242,10 @@ class PaymentFlowSimulator:
             
             if not test_user:
                 self.add_log("❌ No broker users found for virtual account creation", "error")
+                logger.error("No broker users found for virtual account creation in simulator.")
                 return None
             
+            logger.info(f"Found test user: {test_user.email} for virtual account creation.")
             # Create virtual account
             result = await virtual_account_service.create_individual_virtual_account(
                 db=self.db,
@@ -249,13 +253,16 @@ class PaymentFlowSimulator:
             )
             
             if result.get("success"):
+                logger.info(f"Successfully created virtual account: {result.get('virtual_account')}")
                 return result.get("virtual_account")
             else:
                 self.add_log(f"❌ Virtual account creation failed: {result.get('error')}", "error")
+                logger.error(f"Virtual account creation failed in simulator: {result.get('error')}")
                 return None
                 
         except Exception as e:
             self.add_log(f"❌ Error creating virtual account: {str(e)}", "error")
+            logger.error(f"Exception in _create_test_virtual_account: {str(e)}", exc_info=True)
             return None
     
     async def _simulate_payment_to_account(self, account_number: str, amount: Decimal) -> Dict[str, Any]:
