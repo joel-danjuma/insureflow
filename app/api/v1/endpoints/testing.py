@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.dependencies import get_current_admin_user, get_current_insurance_admin, get_current_broker_or_admin_user
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.schemas.testing import (
     PaymentFlowSimulationRequest,
     PaymentFlowSimulationResponse,
@@ -236,7 +236,7 @@ class PaymentFlowSimulator:
             from app.models.user import User
             
             # Get or create a test user
-            test_user = self.db.query(User).filter(User.role == "BROKER").first()
+            test_user = self.db.query(User).filter(User.role == UserRole.BROKER).first()
             
             if not test_user:
                 self.add_log("❌ No broker users found for virtual account creation", "error")
@@ -414,7 +414,7 @@ async def create_test_virtual_account(
         from app.models.user import User
         
         # Get a test broker user
-        test_user = db.query(User).filter(User.role == "BROKER").first()
+        test_user = db.query(User).filter(User.role == UserRole.BROKER).first()
         
         if not test_user:
             raise HTTPException(
