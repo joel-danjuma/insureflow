@@ -93,6 +93,20 @@ def populate_minimal_data(engine):
                         ) ON CONFLICT (email) DO NOTHING
                     """))
                     logger.info("✅ Created admin user")
+
+                    logger.info("Creating minimal broker user...")
+                    conn.execute(text("""
+                        INSERT INTO users (
+                            username, email, hashed_password, full_name, role, 
+                            is_active, is_verified, created_at, updated_at
+                        ) VALUES (
+                            'broker', 'broker@insureflow.com', 
+                            '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj6hsxq5/H7S',
+                            'Test Broker', 'BROKER', 
+                            true, true, NOW(), NOW()
+                        ) ON CONFLICT (email) DO NOTHING
+                    """))
+                    logger.info("✅ Created broker user")
                 
                 # Check if we have insurance companies
                 company_count = conn.execute(text("SELECT COUNT(*) FROM insurance_companies")).scalar()
