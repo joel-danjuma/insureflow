@@ -6,7 +6,7 @@ import usePolicyStore from '@/store/policyStore';
 import usePaymentStore from '@/store/paymentStore';
 import PaymentModal from '@/components/PaymentModal';
 import PaymentTestingPanel from '@/components/PaymentTestingPanel';
-import { api } from '@/services/api';
+import api from '@/services/api';
 
 interface LogEntry {
   id: string;
