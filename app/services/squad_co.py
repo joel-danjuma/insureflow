@@ -7,6 +7,8 @@ import httpx
 import logging
 from app.core.config import settings
 from datetime import datetime
+from decimal import Decimal
+from typing import Dict, Any
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +25,84 @@ class SquadCoService:
             "Authorization": f"Bearer {self.secret_key}",
             "Content-Type": "application/json",
         }
+
+    def _extract_error_message(self, response) -> str:
+        """Extract error message from Squad API response."""
+        try:
+            error_data = response.json()
+            if 'message' in error_data:
+                return error_data['message']
+            elif 'errors' in error_data:
+                return str(error_data['errors'])
+            else:
+                return response.text
+        except:
+            return response.text
+
+    async def create_virtual_account(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Creates a virtual account with Squad Co.
+        """
+        if not self.secret_key:
+            logger.error("Squad secret key not configured - cannot create virtual account")
+            return {"error": "Virtual account service not configured"}
+
+        url = f"{self.base_url}/virtual-account"
+        logger.info("📞 Calling Squad Co API for Virtual Account Creation")
+        logger.info(f"📋 Virtual Account Request Payload: {payload}")
+
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            try:
+                response = await client.post(url, json=payload, headers=self.headers)
+                response.raise_for_status()
+                result = response.json()
+                logger.info(f"Squad API Response: {result}")
+                return result
+            except httpx.HTTPStatusError as e:
+                error_detail = self._extract_error_message(e.response)
+                logger.error(f"Squad API HTTP error: {error_detail}")
+                return {"error": f"Squad API error: {error_detail}"}
+            except Exception as e:
+                logger.error(f"Unexpected error creating virtual account: {str(e)}")
+                return {"error": f"Unexpected error: {str(e)}"}
+
+    async def simulate_payment(self, virtual_account_number: str, amount: Decimal) -> Dict[str, Any]:
+        """
+        Simulate a payment to a virtual account (sandbox only).
+        """
+        if not self.secret_key:
+            return {"error": "Virtual account service not configured"}
+        
+        url = f"{self.base_url}/virtual-account/simulate/payment"
+        
+        # Convert amount to kobo
+        amount_in_kobo = int(amount * 100)
+        
+        payload = {
+            "virtual_account_number": virtual_account_number,
+            "amount": str(amount_in_kobo)
+        }
+        
+        logger.info(f"Simulating payment: {amount} NGN to {virtual_account_number}")
+        logger.info(f"Simulate Payment Payload: {payload}")
+        
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            try:
+                response = await client.post(url, json=payload, headers=self.headers)
+                response.raise_for_status()
+                
+                result = response.json()
+                logger.info(f"Payment simulation result: {result}")
+                return result
+                
+            except httpx.HTTPStatusError as e:
+                error_detail = self._extract_error_message(e.response)
+                logger.error(f"Squad API HTTP error during payment simulation: {error_detail}")
+                return {"error": f"Squad API error: {error_detail}"}
+                
+            except Exception as e:
+                logger.error(f"Unexpected error during payment simulation: {str(e)}")
+                return {"error": f"Unexpected error: {str(e)}"}
 
     def verify_webhook_signature(self, request_body: bytes, signature: str) -> bool:
         """

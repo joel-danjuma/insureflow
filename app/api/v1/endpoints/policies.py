@@ -1,7 +1,7 @@
 """
 API endpoints for policy management.
 """
-from typing import List
+from typing import List, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -17,6 +17,8 @@ from app.models.user import User
 from app.schemas.policy import Policy, PolicyCreate, PolicyUpdate, PolicySummary
 from app.schemas.virtual_account import PaymentSimulationResponse
 from app.services.virtual_account_service import simulate_policy_payment, virtual_account_service
+from app.models.policy import Policy as PolicyModel
+from app.models.virtual_account import VirtualAccount as VirtualAccountModel
 
 router = APIRouter()
 
@@ -384,7 +386,26 @@ def get_policy_statistics(
     
     return stats 
 
-@router.post("/{policy_id}/simulate_payment", response_model=PaymentSimulationResponse)
+@router.post("/{policy_id}/simulate_payment", response_model=Dict[str, Any], tags=["Policies"])
 async def simulate_policy_payment_endpoint(policy_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_payment_processor)):
-    """Simulate a payment for a policy using Squad's virtual account simulation API."""
-    return await simulate_policy_payment(policy_id, db, current_user) 
+    """
+    Simulate a payment for a specific policy.
+    This is a test endpoint and should only be used in sandbox/development environments.
+    """
+    policy = db.query(PolicyModel).filter(PolicyModel.id == policy_id).first()
+    if not policy:
+        raise HTTPException(status_code=404, detail="Policy not found")
+    
+    virtual_account = db.query(VirtualAccountModel).filter(VirtualAccountModel.policy_id == policy_id).first()
+    if not virtual_account:
+        raise HTTPException(status_code=404, detail="Virtual account not found for this policy")
+
+    result = await virtual_account_service.simulate_payment(
+        virtual_account_number=virtual_account.virtual_account_number,
+        amount=policy.premium_amount
+    )
+    
+    if result.get("error"):
+        raise HTTPException(status_code=400, detail=result["error"])
+        
+    return result 

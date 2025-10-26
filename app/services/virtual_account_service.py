@@ -2,7 +2,6 @@
 Virtual Account Service for InsureFlow application.
 Handles Squad Co virtual account operations and fund distribution.
 """
-import httpx
 import logging
 import json
 from datetime import datetime
@@ -19,6 +18,7 @@ from app.models.virtual_account_transaction import VirtualAccountTransaction, Tr
 from app.models.user import User
 from app.crud import virtual_account as crud_virtual_account
 from app.services.settlement_service import settlement_service
+from app.services.squad_co import squad_co_service
 
 logger = logging.getLogger(__name__)
 
@@ -76,8 +76,6 @@ class VirtualAccountService:
         
         logger.info(f"🆔 Customer Identifier: {customer_identifier}")
         
-        url = f"{self.base_url}/virtual-account"
-        
         payload = {
             "customer_identifier": customer_identifier,
             "first_name": user.full_name.split()[0] if user.full_name else "User",
@@ -97,69 +95,55 @@ class VirtualAccountService:
         if user.address:
             payload["address"] = user.address
         
-        logger.info("📞 CALLING SQUAD CO API FOR VIRTUAL ACCOUNT CREATION")
-        logger.info(f"📋 Virtual Account Request Data: {payload}")
+        result = await squad_co_service.create_virtual_account(payload)
         
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            try:
-                response = await client.post(url, json=payload, headers=self.headers)
-                response.raise_for_status()
-                
-                result = response.json()
-                
-                if result.get("success"):
-                    # Save virtual account to database
-                    va_data = result.get("data", {})
-                    logger.info("✅ SQUAD CO VIRTUAL ACCOUNT CREATED SUCCESSFULLY")
-                    logger.info(f"🏦 Account Number: {va_data.get('virtual_account_number')}")
-                    logger.info(f"👤 Account Name: {va_data.get('first_name')} {va_data.get('last_name')}")
-                    logger.info(f"🏛️ Bank Code: {va_data.get('bank_code', '058')}")
-                    
-                    virtual_account = VirtualAccount(
-                        user_id=user.id,
-                        policy_id=policy_id,
-                        customer_identifier=customer_identifier,
-                        virtual_account_number=va_data.get("virtual_account_number"),
-                        bank_code=va_data.get("bank_code", "058"),
-                        account_type=VirtualAccountType.INDIVIDUAL,
-                        first_name=va_data.get("first_name"),
-                        last_name=va_data.get("last_name"),
-                        email=user.email,
-                        mobile_number=user.phone_number,
-                        squad_created_at=datetime.fromisoformat(va_data.get("created_at", "").replace("Z", "+00:00")) if va_data.get("created_at") else None,
-                        squad_updated_at=datetime.fromisoformat(va_data.get("updated_at", "").replace("Z", "+00:00")) if va_data.get("updated_at") else None,
-                    )
-                    
-                    logger.info("💾 SAVING VIRTUAL ACCOUNT TO DATABASE")
-                    db.add(virtual_account)
-                    db.commit()
-                    db.refresh(virtual_account)
-                    
-                    logger.info(f"✅ Virtual account saved to database with ID: {virtual_account.id}")
-                    logger.info(f"🎉 VIRTUAL ACCOUNT CREATION COMPLETED SUCCESSFULLY")
-                    
-                    return {
-                        "success": True, 
-                        "virtual_account": {
-                            "account_number": virtual_account.virtual_account_number,
-                            "account_name": f"{virtual_account.first_name} {virtual_account.last_name}",
-                            "bank_name": "GTBank",  # Default bank name
-                            "status": "active"
-                        }, 
-                        "squad_response": result
-                    }
-                else:
-                    logger.error(f"❌ Squad API returned unsuccessful response: {result}")
-                    return {"error": f"Squad API error: {result.get('message', 'Unknown error')}"}
-                
-            except httpx.HTTPStatusError as e:
-                error_detail = self._extract_error_message(e.response)
-                logger.error(f"Squad API HTTP error: {error_detail}")
-                return {"error": f"Squad API error: {error_detail}"}
-                
-            except Exception as e:
-                logger.error(f"Unexpected error creating virtual account: {str(e)}")
-                return {"error": f"Unexpected error: {str(e)}"}
+        if result.get("error"):
+            return result # Pass the error up
+        
+        if result.get("success"):
+            # Save virtual account to database
+            va_data = result.get("data", {})
+            logger.info("✅ SQUAD CO VIRTUAL ACCOUNT CREATED SUCCESSFULLY")
+            logger.info(f"🏦 Account Number: {va_data.get('virtual_account_number')}")
+            logger.info(f"👤 Account Name: {va_data.get('first_name')} {va_data.get('last_name')}")
+            logger.info(f"🏛️ Bank Code: {va_data.get('bank_code', '058')}")
+            
+            virtual_account = VirtualAccount(
+                user_id=user.id,
+                policy_id=policy_id,
+                customer_identifier=customer_identifier,
+                virtual_account_number=va_data.get("virtual_account_number"),
+                bank_code=va_data.get("bank_code", "058"),
+                account_type=VirtualAccountType.INDIVIDUAL,
+                first_name=va_data.get("first_name"),
+                last_name=va_data.get("last_name"),
+                email=user.email,
+                mobile_number=user.phone_number,
+                squad_created_at=datetime.fromisoformat(va_data.get("created_at", "").replace("Z", "+00:00")) if va_data.get("created_at") else None,
+                squad_updated_at=datetime.fromisoformat(va_data.get("updated_at", "").replace("Z", "+00:00")) if va_data.get("updated_at") else None,
+            )
+            
+            logger.info("💾 SAVING VIRTUAL ACCOUNT TO DATABASE")
+            db.add(virtual_account)
+            db.commit()
+            db.refresh(virtual_account)
+            
+            logger.info(f"✅ Virtual account saved to database with ID: {virtual_account.id}")
+            logger.info(f"🎉 VIRTUAL ACCOUNT CREATION COMPLETED SUCCESSFULLY")
+            
+            return {
+                "success": True, 
+                "virtual_account": {
+                    "account_number": virtual_account.virtual_account_number,
+                    "account_name": f"{virtual_account.first_name} {virtual_account.last_name}",
+                    "bank_name": "GTBank",  # Default bank name
+                    "status": "active"
+                }, 
+                "squad_response": result
+            }
+        else:
+            logger.error(f"❌ Squad API returned unsuccessful response: {result}")
+            return {"error": f"Squad API error: {result.get('message', 'Unknown error')}"}
     
     async def create_business_virtual_account(
         self,
@@ -178,8 +162,6 @@ class VirtualAccountService:
         if not customer_identifier:
             customer_identifier = f"INSURE_BIZ_{user.id}_{int(datetime.now().timestamp())}"
         
-        url = f"{self.base_url}/virtual-account/business"
-        
         payload = {
             "customer_identifier": customer_identifier,
             "business_name": business_name,
@@ -193,49 +175,38 @@ class VirtualAccountService:
         
         logger.info(f"Creating business virtual account for user {user.id}: {business_name}")
         
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            try:
-                response = await client.post(url, json=payload, headers=self.headers)
-                response.raise_for_status()
-                
-                result = response.json()
-                
-                if result.get("success"):
-                    # Save virtual account to database
-                    va_data = result.get("data", {})
-                    virtual_account = VirtualAccount(
-                        user_id=user.id,
-                        customer_identifier=customer_identifier,
-                        virtual_account_number=va_data.get("virtual_account_number"),
-                        bank_code=va_data.get("bank_code", "058"),
-                        account_type=VirtualAccountType.BUSINESS,
-                        business_name=business_name,
-                        first_name=va_data.get("first_name"),  # Squad returns business name split
-                        last_name=va_data.get("last_name"),
-                        email=user.email,
-                        mobile_number=user.phone_number,
-                        squad_created_at=datetime.fromisoformat(va_data.get("created_at", "").replace("Z", "+00:00")) if va_data.get("created_at") else None,
-                        squad_updated_at=datetime.fromisoformat(va_data.get("updated_at", "").replace("Z", "+00:00")) if va_data.get("updated_at") else None,
-                    )
-                    
-                    db.add(virtual_account)
-                    db.commit()
-                    db.refresh(virtual_account)
-                    
-                    logger.info(f"Business virtual account created successfully: {virtual_account.virtual_account_number}")
-                    return {"success": True, "virtual_account": virtual_account, "squad_response": result}
-                else:
-                    logger.error(f"Squad API returned unsuccessful response: {result}")
-                    return {"error": f"Squad API error: {result.get('message', 'Unknown error')}"}
-                
-            except httpx.HTTPStatusError as e:
-                error_detail = self._extract_error_message(e.response)
-                logger.error(f"Squad API HTTP error: {error_detail}")
-                return {"error": f"Squad API error: {error_detail}"}
-                
-            except Exception as e:
-                logger.error(f"Unexpected error creating business virtual account: {str(e)}")
-                return {"error": f"Unexpected error: {str(e)}"}
+        result = await squad_co_service.create_virtual_account(payload)
+
+        if result.get("error"):
+            return result
+
+        if result.get("success"):
+            # Save virtual account to database
+            va_data = result.get("data", {})
+            virtual_account = VirtualAccount(
+                user_id=user.id,
+                customer_identifier=customer_identifier,
+                virtual_account_number=va_data.get("virtual_account_number"),
+                bank_code=va_data.get("bank_code", "058"),
+                account_type=VirtualAccountType.BUSINESS,
+                business_name=business_name,
+                first_name=va_data.get("first_name"),  # Squad returns business name split
+                last_name=va_data.get("last_name"),
+                email=user.email,
+                mobile_number=user.phone_number,
+                squad_created_at=datetime.fromisoformat(va_data.get("created_at", "").replace("Z", "+00:00")) if va_data.get("created_at") else None,
+                squad_updated_at=datetime.fromisoformat(va_data.get("updated_at", "").replace("Z", "+00:00")) if va_data.get("updated_at") else None,
+            )
+            
+            db.add(virtual_account)
+            db.commit()
+            db.refresh(virtual_account)
+            
+            logger.info(f"Business virtual account created successfully: {virtual_account.virtual_account_number}")
+            return {"success": True, "virtual_account": virtual_account, "squad_response": result}
+        else:
+            logger.error(f"Squad API returned unsuccessful response: {result}")
+            return {"error": f"Squad API error: {result.get('message', 'Unknown error')}"}
     
     async def simulate_payment(
         self,
@@ -243,41 +214,9 @@ class VirtualAccountService:
         amount: Decimal
     ) -> Dict[str, Any]:
         """
-        Simulate a payment to a virtual account (sandbox only).
+        Simulate a payment to a virtual account using the Squad Co service.
         """
-        if not self.secret_key:
-            return {"error": "Virtual account service not configured"}
-        
-        url = f"{self.base_url}/virtual-account/simulate/payment"
-        
-        # Convert amount to kobo
-        amount_in_kobo = int(amount * 100)
-        
-        payload = {
-            "virtual_account_number": virtual_account_number,
-            "amount": str(amount_in_kobo)
-        }
-        
-        logger.info(f"Simulating payment: {amount} NGN to {virtual_account_number}")
-        logger.info(f"Simulate Payment Payload: {payload}")
-        
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            try:
-                response = await client.post(url, json=payload, headers=self.headers)
-                response.raise_for_status()
-                
-                result = response.json()
-                logger.info(f"Payment simulation result: {result}")
-                return result
-                
-            except httpx.HTTPStatusError as e:
-                error_detail = self._extract_error_message(e.response)
-                logger.error(f"Squad API HTTP error during payment simulation: {error_detail}")
-                return {"error": f"Squad API error: {error_detail}"}
-                
-            except Exception as e:
-                logger.error(f"Unexpected error during payment simulation: {str(e)}")
-                return {"error": f"Unexpected error: {str(e)}"}
+        return await squad_co_service.simulate_payment(virtual_account_number, amount)
     
     async def process_webhook_transaction(
         self,
