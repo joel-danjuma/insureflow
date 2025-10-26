@@ -84,6 +84,7 @@ class VirtualAccountService:
             "last_name": " ".join(user.full_name.split()[1:]) if len(user.full_name.split()) > 1 else "Customer",
             "mobile_num": user.phone_number or "08000000000",
             "email": user.email,
+            "beneficiary_account": "0123456789"  # Placeholder for testing
         }
         
         # Add optional fields if available
