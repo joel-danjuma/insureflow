@@ -258,6 +258,7 @@ class VirtualAccountService:
         }
         
         logger.info(f"Simulating payment: {amount} NGN to {virtual_account_number}")
+        logger.info(f"Simulate Payment Payload: {payload}")
         
         async with httpx.AsyncClient(timeout=30.0) as client:
             try:
