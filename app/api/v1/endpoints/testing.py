@@ -409,44 +409,21 @@ async def create_test_virtual_account(
     
     logger.info("Starting virtual account creation test")
     try:
-        from app.services.virtual_account_service import virtual_account_service
-        from app.models.user import User
-        from app.crud import user as crud_user
-
-        # Ensure a valid test user exists
-        test_user_email = "test.broker@insureflow.com"
-        test_user = crud_user.get_user_by_email(db, email=test_user_email)
-        if not test_user:
-            logger.info("Creating a new, guaranteed-valid test broker user...")
-            from app.schemas.auth import UserCreate
-            test_user = crud_user.create_user(db, user=UserCreate(
-                email=test_user_email,
-                full_name="Virtual Account Test Broker",
-                username="vabroker",
-                password="a-secure-password",  # Pass the plain-text password
-                role="BROKER"  # Pass the role as a string
-            ))
+        simulator = PaymentFlowSimulator(db)
+        virtual_account = await simulator._create_test_virtual_account()
         
-        # Create virtual account
-        logger.info("Calling virtual_account_service.create_individual_virtual_account...")
-        result = await virtual_account_service.create_individual_virtual_account(
-            db=db,
-            user=test_user
-        )
-        logger.info(f"Received result from virtual_account_service: {result}")
-        
-        if result.get("success"):
+        if virtual_account:
             logger.info("Virtual account creation successful.")
             return {
                 "success": True,
-                "virtual_account": result.get("virtual_account"),
+                "virtual_account": virtual_account,
                 "message": "Test virtual account created successfully"
             }
         else:
-            logger.error(f"Virtual account creation failed: {result.get('error')}")
+            logger.error("Virtual account creation failed.")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=result.get("error", "Failed to create virtual account")
+                detail="Failed to create virtual account"
             )
             
     except HTTPException:
