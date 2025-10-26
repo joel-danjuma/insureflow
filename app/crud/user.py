@@ -68,7 +68,7 @@ def create_user(db: Session, obj_in: schemas.UserCreate) -> User:
         email=obj_in.email,
         hashed_password=hashed_password,
         full_name=obj_in.full_name,
-        role=UserRole[obj_in.role.upper()],
+        role=obj_in.role if isinstance(obj_in.role, UserRole) else UserRole[obj_in.role.upper()],
         is_active=True,
         is_verified=True,  # Set to True for easier testing
     )
