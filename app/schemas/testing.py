@@ -9,6 +9,11 @@ from typing import List, Dict, Any, Optional, Literal
 from pydantic import BaseModel, Field
 
 
+class TestVAAccountCreationRequest(BaseModel):
+    """Payload for the direct VA creation test endpoint."""
+    user_id: int = Field(..., description="The ID of the user to create the virtual account for.")
+
+
 class TestingLogEntry(BaseModel):
     """Schema for individual log entries during testing."""
     timestamp: str
