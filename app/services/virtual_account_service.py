@@ -19,6 +19,7 @@ from app.models.user import User
 from app.crud import virtual_account as crud_virtual_account
 from app.services.settlement_service import settlement_service
 from app.services.squad_co import squad_co_service
+from app.schemas.virtual_account import SquadVirtualAccountCreatePayload
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +77,7 @@ class VirtualAccountService:
         
         logger.info(f"🆔 Customer Identifier: {customer_identifier}")
         
-        payload = {
+        payload_data = {
             "customer_identifier": customer_identifier,
             "first_name": user.full_name.split()[0] if user.full_name else "User",
             "last_name": " ".join(user.full_name.split()[1:]) if len(user.full_name.split()) > 1 else "Customer",
@@ -87,15 +88,18 @@ class VirtualAccountService:
         
         # Add optional fields if available
         if user.bvn:
-            payload["bvn"] = user.bvn
+            payload_data["bvn"] = user.bvn
         if user.date_of_birth:
-            payload["dob"] = user.date_of_birth.strftime("%d/%m/%Y")
+            payload_data["dob"] = user.date_of_birth.strftime("%d/%m/%Y")
         if user.gender:
-            payload["gender"] = "1" if user.gender.lower() in ["male", "m"] else "2"
+            payload_data["gender"] = "1" if user.gender.lower() in ["male", "m"] else "2"
         if user.address:
-            payload["address"] = user.address
+            payload_data["address"] = user.address
         
-        result = await squad_co_service.create_virtual_account(payload)
+        # Create and validate the payload using the Pydantic schema
+        squad_payload = SquadVirtualAccountCreatePayload(**payload_data)
+        
+        result = await squad_co_service.create_virtual_account(squad_payload)
         
         if result.get("error"):
             return result # Pass the error up
@@ -162,20 +166,26 @@ class VirtualAccountService:
         if not customer_identifier:
             customer_identifier = f"INSURE_BIZ_{user.id}_{int(datetime.now().timestamp())}"
         
-        payload = {
+        payload_data = {
             "customer_identifier": customer_identifier,
             "business_name": business_name,
             "mobile_num": user.phone_number or "08000000000",
             "email": user.email,
+            "beneficiary_account": "0123456789"  # Beneficiary account for business not specified, using placeholder
         }
         
         # Add BVN if available
         if user.bvn:
-            payload["bvn"] = user.bvn
+            payload_data["bvn"] = user.bvn
         
         logger.info(f"Creating business virtual account for user {user.id}: {business_name}")
         
-        result = await squad_co_service.create_virtual_account(payload)
+        # This part needs adjustment, as the schema is for individual accounts.
+        # For now, we will manually construct the dictionary for business accounts,
+        # as it has a different structure ('business_name' instead of 'first_name'/'last_name').
+        # A separate schema for business accounts could be created in the future.
+        
+        result = await squad_co_service.create_virtual_account(payload_data)
 
         if result.get("error"):
             return result

@@ -9,6 +9,7 @@ from app.core.config import settings
 from datetime import datetime
 from decimal import Decimal
 from typing import Dict, Any
+from app.schemas.virtual_account import SquadVirtualAccountCreatePayload
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +40,7 @@ class SquadCoService:
         except:
             return response.text
 
-    async def create_virtual_account(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+    async def create_virtual_account(self, payload: SquadVirtualAccountCreatePayload) -> Dict[str, Any]:
         """
         Creates a virtual account with Squad Co.
         """
@@ -48,12 +49,16 @@ class SquadCoService:
             return {"error": "Virtual account service not configured"}
 
         url = f"{self.base_url}/virtual-account"
+        
+        # Use .model_dump() to get a dictionary from the Pydantic model
+        request_payload = payload.model_dump(exclude_none=True)
+        
         logger.info("📞 Calling Squad Co API for Virtual Account Creation")
-        logger.info(f"📋 Virtual Account Request Payload: {payload}")
+        logger.info(f"📋 Virtual Account Request Payload: {request_payload}")
 
         async with httpx.AsyncClient(timeout=30.0) as client:
             try:
-                response = await client.post(url, json=payload, headers=self.headers)
+                response = await client.post(url, json=request_payload, headers=self.headers)
                 response.raise_for_status()
                 result = response.json()
                 logger.info(f"Squad API Response: {result}")

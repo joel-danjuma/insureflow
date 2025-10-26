@@ -6,6 +6,19 @@ from decimal import Decimal
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 
+class SquadVirtualAccountCreatePayload(BaseModel):
+    """Schema for Squad.co virtual account creation payload."""
+    customer_identifier: str
+    first_name: str
+    last_name: str
+    mobile_num: str
+    email: EmailStr
+    beneficiary_account: str  # Placeholder for testing, but required
+    bvn: Optional[str] = None
+    dob: Optional[str] = None  # DD/MM/YYYY
+    gender: Optional[str] = None  # "1" for Male, "2" for Female
+    address: Optional[str] = None
+
 class VirtualAccountBase(BaseModel):
     """Base schema for virtual account."""
     account_type: str

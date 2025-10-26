@@ -1,11 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { formatNaira } from '@/utils/currency';
-import usePolicyStore from '@/store/policyStore';
-import usePaymentStore from '@/store/paymentStore';
-import PaymentModal from '@/components/PaymentModal';
-import PaymentTestingPanel from '@/components/PaymentTestingPanel';
 import api from '@/services/api';
 
 interface LogEntry {
@@ -16,20 +11,9 @@ interface LogEntry {
   data?: any;
 }
 
-interface SimulationSummary {
-  virtual_accounts_created: number;
-  payments_simulated: number;
-  settlements_triggered: number;
-  gaps_transfers: number;
-  total_amount_processed: number;
-  commission_calculated: number;
-}
-
 const PaymentTestingPanel = () => {
   const [simulationLogs, setSimulationLogs] = useState<LogEntry[]>([]);
   const [isSimulating, setIsSimulating] = useState(false);
-  const [simulationSummary, setSimulationSummary] = useState<SimulationSummary | null>(null);
-  const [selectedScenario, setSelectedScenario] = useState<'single' | 'bulk' | 'settlement'>('single');
   const logsEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -53,95 +37,28 @@ const PaymentTestingPanel = () => {
 
   const clearLogs = () => {
     setSimulationLogs([]);
-    setSimulationSummary(null);
   };
 
-  const simulatePaymentFlow = async () => {
+  const runFullPaymentFlowTest = async () => {
     setIsSimulating(true);
-    setSimulationLogs([]);
-    setSimulationSummary(null);
+    clearLogs();
+    addLog('🚀 Starting full payment flow test...', 'info');
 
     try {
-      addLog('🚀 Starting payment flow simulation...', 'info');
-      addLog(`📋 Scenario: ${selectedScenario.toUpperCase()} payment simulation`, 'info');
-
-      const response = await api.post('/testing/simulate-payment-flow', {
-        scenario: selectedScenario,
-        amount: selectedScenario === 'bulk' ? 150000 : 50000,
-        virtual_account_count: selectedScenario === 'bulk' ? 3 : 1
-      });
-
-      if (response.status !== 200) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
+      const response = await api.post('/testing/test-full-payment-flow');
       const result = response.data;
 
       if (result.success) {
-        // Display logs from backend
-        result.logs?.forEach((log: any) => {
-          addLog(log.message, log.level, log.data);
-        });
-
-        // Display summary
-        if (result.summary) {
-          setSimulationSummary(result.summary);
-          addLog('📊 Simulation completed successfully!', 'success');
-        }
+        addLog('✅ Virtual account creation successful!', 'success', result.virtual_account_details);
+        addLog('✅ Payment simulation successful!', 'success', result.payment_simulation_details);
+        addLog('🎉 Full payment flow test completed successfully.', 'success');
       } else {
-        addLog(`❌ Simulation failed: ${result.error}`, 'error');
+        addLog(`❌ Test failed: ${result.message}`, 'error', result);
       }
-
-    } catch (error) {
-      console.error('Payment simulation error:', error);
-      addLog(`❌ Network error: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
-    } finally {
-      setIsSimulating(false);
-    }
-  };
-
-  const simulateVirtualAccountCreation = async () => {
-    setIsSimulating(true);
-    addLog('🏦 Creating virtual account for testing...', 'info');
-
-    try {
-      const response = await api.post('/testing/create-test-virtual-account');
-      const result = response.data;
-
-      if (result.success) {
-        addLog(`✅ Virtual account created: ${result.virtual_account.account_number}`, 'success');
-        addLog(`🏪 Bank: ${result.virtual_account.bank_name}`, 'info');
-        addLog(`👤 Account Name: ${result.virtual_account.account_name}`, 'info');
-      } else {
-        addLog(`❌ Failed to create virtual account: ${result.error}`, 'error');
-      }
-    } catch (error) {
-      addLog(`❌ Error creating virtual account: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
-    } finally {
-      setIsSimulating(false);
-    }
-  };
-
-  const simulateDirectPayment = async () => {
-    setIsSimulating(true);
-    addLog('💳 Simulating direct payment to virtual account...', 'info');
-
-    try {
-      const response = await api.post('/testing/simulate-payment', {
-        virtual_account_number: '1234567890', // This would be dynamic
-        amount: 75000
-      });
-
-      const result = response.data;
-
-      if (result.success) {
-        addLog(`✅ Payment simulation successful: ${formatNaira(75000)}`, 'success');
-        addLog(`📨 Webhook should be triggered shortly...`, 'info');
-      } else {
-        addLog(`❌ Payment simulation failed: ${result.message}`, 'error');
-      }
-    } catch (error) {
-      addLog(`❌ Error simulating payment: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
+    } catch (error: any) {
+      console.error('Full payment flow test error:', error);
+      const errorMessage = error.response?.data?.detail || error.message || 'An unknown network error occurred';
+      addLog(`❌ Test failed: ${errorMessage}`, 'error');
     } finally {
       setIsSimulating(false);
     }
@@ -169,25 +86,12 @@ const PaymentTestingPanel = () => {
     <div className="bg-gray-800 rounded-xl border border-gray-700 p-6">
       <div className="flex justify-between items-center mb-6">
         <h3 className="text-white text-xl font-semibold">Payment Flow Testing</h3>
-        <div className="flex items-center gap-2">
-          <span className="text-gray-400 text-sm">Scenario:</span>
-          <select
-            value={selectedScenario}
-            onChange={(e) => setSelectedScenario(e.target.value as any)}
-            disabled={isSimulating}
-            className="bg-gray-700 text-white px-3 py-1 rounded border border-gray-600 focus:border-orange-500 focus:outline-none"
-          >
-            <option value="single">Single Payment</option>
-            <option value="bulk">Bulk Payments</option>
-            <option value="settlement">Settlement Flow</option>
-          </select>
-        </div>
       </div>
 
       {/* Simulation Controls */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
         <button
-          onClick={simulatePaymentFlow}
+          onClick={runFullPaymentFlowTest}
           disabled={isSimulating}
           className={`px-4 py-2 rounded-lg font-medium transition-colors ${
             isSimulating
@@ -195,31 +99,7 @@ const PaymentTestingPanel = () => {
               : 'bg-orange-500 hover:bg-orange-600 text-white'
           }`}
         >
-          {isSimulating ? 'Simulating...' : 'Full Payment Flow'}
-        </button>
-
-        <button
-          onClick={simulateVirtualAccountCreation}
-          disabled={isSimulating}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-            isSimulating
-              ? 'bg-gray-600 cursor-not-allowed text-gray-400'
-              : 'bg-blue-500 hover:bg-blue-600 text-white'
-          }`}
-        >
-          Create Virtual Account
-        </button>
-
-        <button
-          onClick={simulateDirectPayment}
-          disabled={isSimulating}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-            isSimulating
-              ? 'bg-gray-600 cursor-not-allowed text-gray-400'
-              : 'bg-green-500 hover:bg-green-600 text-white'
-          }`}
-        >
-          Simulate Payment
+          {isSimulating ? 'Testing...' : 'Run Full Payment Flow Test'}
         </button>
 
         <button
@@ -234,39 +114,6 @@ const PaymentTestingPanel = () => {
           Clear Logs
         </button>
       </div>
-
-      {/* Simulation Summary */}
-      {simulationSummary && (
-        <div className="bg-gray-900 rounded-lg p-4 mb-4 border border-gray-600">
-          <h4 className="text-white font-semibold mb-3">Simulation Summary</h4>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-            <div>
-              <span className="text-gray-400">Virtual Accounts:</span>
-              <div className="text-white font-medium">{simulationSummary.virtual_accounts_created}</div>
-            </div>
-            <div>
-              <span className="text-gray-400">Payments:</span>
-              <div className="text-white font-medium">{simulationSummary.payments_simulated}</div>
-            </div>
-            <div>
-              <span className="text-gray-400">Settlements:</span>
-              <div className="text-white font-medium">{simulationSummary.settlements_triggered}</div>
-            </div>
-            <div>
-              <span className="text-gray-400">GAPS Transfers:</span>
-              <div className="text-white font-medium">{simulationSummary.gaps_transfers}</div>
-            </div>
-            <div>
-              <span className="text-gray-400">Total Amount:</span>
-              <div className="text-white font-medium">{formatNaira(simulationSummary.total_amount_processed)}</div>
-            </div>
-            <div>
-              <span className="text-gray-400">Commission:</span>
-              <div className="text-white font-medium">{formatNaira(simulationSummary.commission_calculated)}</div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Real-time Logs */}
       <div className="bg-gray-900 rounded-lg border border-gray-600">
@@ -301,16 +148,6 @@ const PaymentTestingPanel = () => {
               <div ref={logsEndRef} />
             </div>
           )}
-        </div>
-      </div>
-
-      {/* Scenario Descriptions */}
-      <div className="mt-4 p-4 bg-gray-900 rounded-lg border border-gray-600">
-        <h4 className="text-white font-medium mb-2">Scenario Descriptions</h4>
-        <div className="text-sm text-gray-400 space-y-1">
-          <div><strong>Single Payment:</strong> Tests one virtual account with ₦50,000 payment and settlement trigger</div>
-          <div><strong>Bulk Payments:</strong> Tests 3 virtual accounts with ₦25k, ₦50k, ₦75k payments simultaneously</div>
-          <div><strong>Settlement Flow:</strong> Tests complete flow including GAPS bulk transfer and commission calculations</div>
         </div>
       </div>
     </div>
