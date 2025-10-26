@@ -211,3 +211,11 @@ class TestingDashboardResponse(BaseModel):
     active_simulations: int = 0
     system_status: Literal["healthy", "warning", "error"] = "healthy"
     recommendations: List[str] = []
+
+
+class FullPaymentFlowTestResponse(BaseModel):
+    """Response model for the end-to-end payment flow test."""
+    success: bool
+    message: str
+    virtual_account_details: Dict[str, Any]
+    payment_simulation_details: Dict[str, Any]
