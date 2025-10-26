@@ -109,6 +109,33 @@ class SquadCoService:
                 logger.error(f"Unexpected error during payment simulation: {str(e)}")
                 return {"error": f"Unexpected error: {str(e)}"}
 
+    async def initiate_transfer(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Initiates a fund transfer with Squad Co.
+        """
+        if not self.secret_key:
+            logger.error("Squad secret key not configured - cannot initiate transfer")
+            return {"error": "Transfer service not configured"}
+
+        url = f"{self.base_url}/transfer"
+        logger.info("📞 Calling Squad Co API for Fund Transfer")
+        logger.info(f"📋 Fund Transfer Request Payload: {payload}")
+
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            try:
+                response = await client.post(url, json=payload, headers=self.headers)
+                response.raise_for_status()
+                result = response.json()
+                logger.info(f"Squad API Transfer Response: {result}")
+                return result
+            except httpx.HTTPStatusError as e:
+                error_detail = self._extract_error_message(e.response)
+                logger.error(f"Squad API HTTP error during transfer: {error_detail}")
+                return {"error": f"Squad API error: {error_detail}"}
+            except Exception as e:
+                logger.error(f"Unexpected error during transfer: {str(e)}")
+                return {"error": f"Unexpected error: {str(e)}"}
+
     def verify_webhook_signature(self, request_body: bytes, signature: str) -> bool:
         """
         Verifies the signature of a webhook request from Squad Co.

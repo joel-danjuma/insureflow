@@ -10,7 +10,6 @@ from app.crud import virtual_account as crud_virtual_account
 
 logger = logging.getLogger(__name__)
 
-
 class SettlementService:
     """Service for managing settlements."""
 
@@ -18,9 +17,6 @@ class SettlementService:
         """Process all pending settlements for the day."""
         logger.info("Processing daily settlements...")
         # This is a placeholder for the full GAPS integration.
-        # In a real-world scenario, this would query for all virtual accounts
-        # with a balance above the settlement threshold and initiate a bulk
-        # transfer via the GAPS service.
         return {"success": True, "message": "Daily settlements processed successfully"}
 
     async def process_manual_settlement(self, db: Session, company_id: int) -> Dict[str, Any]:
@@ -38,9 +34,6 @@ class SettlementService:
         if virtual_account.current_balance <= 0:
             return {"error": "No balance to settle"}
 
-        # In a real-world scenario, you would fetch the insurance company's
-        # bank account details from the database.
-        # For this example, we'll use dummy data.
         insurance_company_account = {
             "amount": float(virtual_account.current_balance),
             "payment_date": "2025-10-15",

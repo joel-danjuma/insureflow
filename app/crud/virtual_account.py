@@ -29,9 +29,9 @@ def get_virtual_account_by_customer_identifier(db: Session, customer_identifier:
     ).first()
 
 
-def get_virtual_accounts_by_user(db: Session, user_id: int) -> List[VirtualAccount]:
-    """Get all virtual accounts for a user."""
-    return db.query(VirtualAccount).filter(VirtualAccount.user_id == user_id).all()
+def get_virtual_account_by_user(db: Session, user_id: int) -> Optional[VirtualAccount]:
+    """Get the first virtual account for a user."""
+    return db.query(VirtualAccount).filter(VirtualAccount.user_id == user_id).first()
 
 
 def get_active_virtual_accounts(db: Session, skip: int = 0, limit: int = 100) -> List[VirtualAccount]:
@@ -201,7 +201,7 @@ def get_total_platform_commission(db: Session) -> Decimal:
 
 def get_broker_performance_metrics(db: Session, user_id: int) -> dict:
     """Get performance metrics for a broker's virtual accounts."""
-    virtual_accounts = get_virtual_accounts_by_user(db, user_id)
+    virtual_accounts = get_virtual_account_by_user(db, user_id)
     
     total_credits = sum(va.total_credits for va in virtual_accounts)
     # Note: Broker commission would be separate from platform commission

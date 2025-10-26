@@ -14,6 +14,19 @@ class TestVAAccountCreationRequest(BaseModel):
     user_id: int = Field(..., description="The ID of the user to create the virtual account for.")
 
 
+class TestVAFundingRequest(BaseModel):
+    """Payload for the VA funding simulation endpoint."""
+    virtual_account_number: str = Field(..., description="The virtual account number to fund.")
+    amount: Decimal = Field(..., gt=0, description="The amount to fund in Naira.")
+
+
+class TestVATransferRequest(BaseModel):
+    """Payload for the VA to VA transfer test endpoint."""
+    from_account: str = Field(..., description="The virtual account number to transfer from.")
+    to_account: str = Field(..., description="The virtual account number to transfer to.")
+    amount: Decimal = Field(..., gt=0, description="The amount to transfer in Naira.")
+
+
 class TestingLogEntry(BaseModel):
     """Schema for individual log entries during testing."""
     timestamp: str
