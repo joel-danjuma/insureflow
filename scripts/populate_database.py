@@ -252,10 +252,21 @@ def create_policies(db: Session, companies, brokers, customers):
                 PolicyType.BUSINESS: random.randint(10000000, 100000000), PolicyType.TRAVEL: random.randint(100000, 1000000),
             }
             
+            # Match the billing cycle enum from the premium model for consistency
+            billing_cycle = random.choices([BillingCycle.MONTHLY, BillingCycle.QUARTERLY, BillingCycle.ANNUAL], weights=[60, 30, 10])[0]
+            
             policy = Policy(
-                policy_number=policy_number, policy_type=policy_type, user_id=customer.id, company_id=company.id,
-                broker_id=broker.id, status=random.choices([PolicyStatus.ACTIVE, PolicyStatus.PENDING], weights=[85, 15])[0],
-                start_date=start_date, end_date=end_date, coverage_amount=str(coverage_amounts[policy_type]),
+                policy_number=policy_number, 
+                policy_type=policy_type, 
+                user_id=customer.id, 
+                company_id=company.id,
+                broker_id=broker.id, 
+                status=random.choices([PolicyStatus.ACTIVE, PolicyStatus.PENDING], weights=[85, 15])[0],
+                start_date=start_date, 
+                end_date=end_date, 
+                coverage_amount=str(coverage_amounts[policy_type]),
+                # Use the billing cycle enum value directly
+                payment_frequency=billing_cycle.value,
                 coverage_details=f'{{"type": "{policy_type.value}", "coverage": {coverage_amounts[policy_type]}, "currency": "NGN"}}',
                 notes=f"Policy sold by {broker.name} for {policy_type.value} insurance coverage."
             )
