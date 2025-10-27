@@ -21,7 +21,7 @@ from app.core.security import get_password_hash
 from app.models.user import User, UserRole
 from app.models.company import InsuranceCompany as Company
 from app.models.broker import Broker
-from app.models.policy import Policy, PolicyType, PolicyStatus
+from app.models.policy import Policy, PolicyType, PolicyStatus, PaymentFrequency
 from app.models.premium import Premium, PaymentStatus, BillingCycle
 from app.models.payment import Payment, PaymentMethod, PaymentTransactionStatus
 
@@ -252,8 +252,11 @@ def create_policies(db: Session, companies, brokers, customers):
                 PolicyType.BUSINESS: random.randint(10000000, 100000000), PolicyType.TRAVEL: random.randint(100000, 1000000),
             }
             
-            # Match the billing cycle enum from the premium model for consistency
-            billing_cycle = random.choices([BillingCycle.MONTHLY, BillingCycle.QUARTERLY, BillingCycle.ANNUAL], weights=[60, 30, 10])[0]
+            # Use the correct PaymentFrequency enum directly
+            payment_frequency = random.choices(
+                [PaymentFrequency.MONTHLY, PaymentFrequency.QUARTERLY, PaymentFrequency.ANNUALLY], 
+                weights=[60, 30, 10]
+            )[0]
             
             policy = Policy(
                 policy_number=policy_number, 
@@ -265,8 +268,8 @@ def create_policies(db: Session, companies, brokers, customers):
                 start_date=start_date, 
                 end_date=end_date, 
                 coverage_amount=str(coverage_amounts[policy_type]),
-                # Use the billing cycle enum value directly
-                payment_frequency=billing_cycle.value,
+                # Pass the enum member directly to SQLAlchemy
+                payment_frequency=payment_frequency,
                 coverage_details=f'{{"type": "{policy_type.value}", "coverage": {coverage_amounts[policy_type]}, "currency": "NGN"}}',
                 notes=f"Policy sold by {broker.name} for {policy_type.value} insurance coverage."
             )
