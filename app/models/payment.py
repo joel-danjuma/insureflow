@@ -43,11 +43,19 @@ class Payment(Base):
     # Payment details
     amount_paid = Column(Numeric(10, 2), nullable=False)
     currency = Column(String(3), nullable=False, default="NGN")
-    payment_method = Column(Enum(PaymentMethod), nullable=False)
+    payment_method = Column(
+        Enum(PaymentMethod, values_callable=lambda obj: [e.value for e in obj]),
+        nullable=False
+    )
     
     # Payment processing
     payment_date = Column(DateTime, nullable=False, default=datetime.utcnow, index=True)
-    status = Column(Enum(PaymentTransactionStatus), nullable=False, default=PaymentTransactionStatus.PENDING, index=True)
+    status = Column(
+        Enum(PaymentTransactionStatus, values_callable=lambda obj: [e.value for e in obj]),
+        nullable=False,
+        default=PaymentTransactionStatus.PENDING.value,
+        index=True
+    )
     
     # External references (Squad Co and other gateways)
     transaction_reference = Column(String(255), unique=True, index=True, nullable=False)

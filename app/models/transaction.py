@@ -39,7 +39,11 @@ class Transaction(Base):
     id = Column(Integer, primary_key=True, index=True)
     
     # Transaction identification
-    transaction_type = Column(Enum(TransactionType), nullable=False, index=True)
+    transaction_type = Column(
+        Enum(TransactionType, values_callable=lambda obj: [e.value for e in obj]),
+        nullable=False,
+        index=True
+    )
     transaction_reference = Column(String(255), unique=True, index=True, nullable=False)
     
     # Financial details
@@ -48,7 +52,12 @@ class Transaction(Base):
     
     # Transaction processing
     transaction_date = Column(DateTime, nullable=False, default=datetime.utcnow, index=True)
-    status = Column(Enum(TransactionStatus), nullable=False, default=TransactionStatus.PENDING, index=True)
+    status = Column(
+        Enum(TransactionStatus, values_callable=lambda obj: [e.value for e in obj]),
+        nullable=False,
+        default=TransactionStatus.PENDING.value,
+        index=True
+    )
     
     # Related entities (optional foreign keys for flexible associations)
     related_user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)

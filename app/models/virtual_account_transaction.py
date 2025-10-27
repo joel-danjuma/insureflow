@@ -52,9 +52,19 @@ class VirtualAccountTransaction(Base):
     squad_transaction_reference = Column(String(100), nullable=True)  # Squad's internal reference
     
     # Transaction Information
-    transaction_type = Column(Enum(TransactionType), nullable=False)
-    transaction_indicator = Column(Enum(TransactionIndicator), nullable=False)
-    status = Column(Enum(TransactionStatus), nullable=False, default=TransactionStatus.PENDING)
+    transaction_type = Column(
+        Enum(TransactionType, values_callable=lambda obj: [e.value for e in obj]),
+        nullable=False
+    )
+    transaction_indicator = Column(
+        Enum(TransactionIndicator, values_callable=lambda obj: [e.value for e in obj]),
+        nullable=False
+    )
+    status = Column(
+        Enum(TransactionStatus, values_callable=lambda obj: [e.value for e in obj]),
+        nullable=False,
+        default=TransactionStatus.PENDING.value
+    )
     
     # Financial Details
     principal_amount = Column(Numeric(15, 2), nullable=False)  # Original amount

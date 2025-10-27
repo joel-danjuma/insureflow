@@ -44,10 +44,19 @@ class Premium(Base):
     
     # Payment scheduling
     due_date = Column(Date, nullable=False, index=True)
-    billing_cycle = Column(Enum(BillingCycle), nullable=False, default=BillingCycle.MONTHLY)
+    billing_cycle = Column(
+        Enum(BillingCycle, values_callable=lambda obj: [e.value for e in obj]),
+        nullable=False,
+        default=BillingCycle.MONTHLY.value
+    )
     
     # Status tracking
-    payment_status = Column(Enum(PaymentStatus), nullable=False, default=PaymentStatus.PENDING, index=True)
+    payment_status = Column(
+        Enum(PaymentStatus, values_callable=lambda obj: [e.value for e in obj]),
+        nullable=False,
+        default=PaymentStatus.PENDING.value,
+        index=True
+    )
     
     # Payment information
     paid_amount = Column(Numeric(10, 2), nullable=True, default=0)

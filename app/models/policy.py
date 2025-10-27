@@ -47,7 +47,10 @@ class Policy(Base):
     # Policy identification
     policy_name = Column(String(255), nullable=False)  # Human readable policy name
     policy_number = Column(String(100), unique=True, index=True, nullable=False)
-    policy_type = Column(Enum(PolicyType), nullable=False)
+    policy_type = Column(
+        Enum(PolicyType, values_callable=lambda obj: [e.value for e in obj]),
+        nullable=False
+    )
     
     # Relationships - Foreign Keys
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
@@ -55,7 +58,11 @@ class Policy(Base):
     broker_id = Column(Integer, ForeignKey("brokers.id"), nullable=True, index=True)
     
     # Policy details
-    status = Column(Enum(PolicyStatus), nullable=False, default=PolicyStatus.PENDING)
+    status = Column(
+        Enum(PolicyStatus, values_callable=lambda obj: [e.value for e in obj]),
+        nullable=False,
+        default=PolicyStatus.PENDING.value
+    )
     start_date = Column(Date, nullable=False)
     due_date = Column(Date, nullable=False)  # When policy expires or needs renewal
     end_date = Column(Date, nullable=False)
@@ -64,7 +71,11 @@ class Policy(Base):
     
     # Payment & Premium Details
     premium_amount = Column(Numeric(15, 2), nullable=False)  # Main premium amount
-    payment_frequency = Column(Enum(PaymentFrequency), nullable=False, default=PaymentFrequency.MONTHLY)
+    payment_frequency = Column(
+        Enum(PaymentFrequency, values_callable=lambda obj: [e.value for e in obj]),
+        nullable=False,
+        default=PaymentFrequency.MONTHLY.value
+    )
     first_payment_date = Column(Date, nullable=True)
     last_payment_date = Column(Date, nullable=True)
     grace_period_days = Column(Integer, nullable=False, default=30)
