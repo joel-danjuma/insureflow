@@ -168,7 +168,16 @@ def create_broker_users_and_profiles(db: Session, companies):
         print(f"✅ Creating broker user and profile: {data['user']['email']}")
         
         # Create user
-        user = User(**data["user"], hashed_password=get_password_hash("password123"), is_active=True, is_verified=True)
+        user = User(
+            **data["user"], 
+            hashed_password=get_password_hash("password123"), 
+            is_active=True, 
+            is_verified=True,
+            # Add address and phone from broker profile to main user model
+            address=data["broker"]["office_address"],
+            phone_number=data["broker"]["contact_phone"],
+            date_of_birth=fake.date_of_birth(minimum_age=25, maximum_age=65) # Add a realistic DOB
+        )
         db.add(user)
         db.flush()  # Get the user ID
         
@@ -193,9 +202,17 @@ def create_customer_users(db: Session, count=50):
     customers = []
     for _ in range(customers_to_create):
         customer = User(
-            username=fake.user_name(), email=fake.email(), full_name=fake.name(),
-            role=UserRole.CUSTOMER, hashed_password=get_password_hash("password123"),
-            is_active=True, is_verified=random.choice([True, False])
+            username=fake.user_name(), 
+            email=fake.email(), 
+            full_name=fake.name(),
+            role=UserRole.CUSTOMER, 
+            hashed_password=get_password_hash("password123"),
+            is_active=True, 
+            is_verified=random.choice([True, False]),
+            # Add missing fields required by Squad
+            phone_number=fake.phone_number(),
+            address=fake.address().replace('\n', ', '),
+            date_of_birth=fake.date_of_birth(minimum_age=18, maximum_age=80)
         )
         db.add(customer)
         customers.append(customer)

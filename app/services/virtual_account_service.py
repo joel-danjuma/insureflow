@@ -98,6 +98,9 @@ class VirtualAccountService:
             payload_data["gender"] = "1" if user.gender.lower() in ["male", "m"] else "2"
         if user.address:
             payload_data["address"] = user.address
+        else:
+            # Squad API requires Address, provide a default for testing if not present
+            payload_data["address"] = "123 Fictional Street, Lagos"
         
         # Create and validate the payload using the Pydantic schema
         squad_payload = SquadVirtualAccountCreatePayload(**payload_data)
