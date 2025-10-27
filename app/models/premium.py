@@ -11,20 +11,20 @@ from app.core.database import Base
 
 
 class PaymentStatus(enum.Enum):
-    """Payment status enumeration."""
-    PENDING = "pending"
-    PAID = "paid"
-    OVERDUE = "overdue"
-    CANCELLED = "cancelled"
-    REFUNDED = "refunded"
+    """Premium payment status enumeration."""
+    PAID = "PAID"
+    PENDING = "PENDING"
+    OVERDUE = "OVERDUE"
+    CANCELLED = "CANCELLED"
+    REFUNDED = "REFUNDED"
 
 
 class BillingCycle(enum.Enum):
     """Billing cycle enumeration."""
-    MONTHLY = "monthly"
-    QUARTERLY = "quarterly"
-    SEMI_ANNUAL = "semi_annual"
-    ANNUAL = "annual"
+    MONTHLY = "MONTHLY"
+    QUARTERLY = "QUARTERLY"
+    SEMI_ANNUAL = "SEMI_ANNUAL"
+    ANNUAL = "ANNUAL"
 
 
 class Premium(Base):

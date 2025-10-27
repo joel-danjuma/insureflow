@@ -11,29 +11,29 @@ from app.core.database import Base
 
 class PolicyStatus(enum.Enum):
     """Policy status enumeration."""
-    ACTIVE = "active"
-    INACTIVE = "inactive"
-    EXPIRED = "expired"
-    CANCELLED = "cancelled"
-    PENDING = "pending"
+    ACTIVE = "ACTIVE"
+    INACTIVE = "INACTIVE"
+    EXPIRED = "EXPIRED"
+    CANCELLED = "CANCELLED"
+    PENDING = "PENDING"
 
 
 class PolicyType(enum.Enum):
     """Policy type enumeration."""
-    LIFE = "life"
-    HEALTH = "health"
-    AUTO = "auto"
-    HOME = "home"
-    BUSINESS = "business"
-    TRAVEL = "travel"
+    LIFE = "LIFE"
+    HEALTH = "HEALTH"
+    AUTO = "AUTO"
+    HOME = "HOME"
+    BUSINESS = "BUSINESS"
+    TRAVEL = "TRAVEL"
 
 
 class PaymentFrequency(enum.Enum):
     """Payment frequency enumeration."""
-    MONTHLY = "monthly"
-    QUARTERLY = "quarterly"
-    ANNUALLY = "annually"
-    CUSTOM = "custom"
+    MONTHLY = "MONTHLY"
+    QUARTERLY = "QUARTERLY"
+    ANNUALLY = "ANNUALLY"
+    CUSTOM = "CUSTOM"
 
 
 class Policy(Base):

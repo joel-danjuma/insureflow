@@ -258,7 +258,7 @@ def create_policies(db: Session, companies, brokers, customers):
             )[0]
             
             policy = Policy(
-                policy_name=f"{policy_type.value.capitalize()} Insurance",
+                policy_name=f"{policy_type.name.capitalize()} Insurance",
                 policy_number=policy_number, 
                 policy_type=policy_type, 
                 user_id=customer.id, 
@@ -270,12 +270,12 @@ def create_policies(db: Session, companies, brokers, customers):
                 end_date=end_date, 
                 premium_amount=Decimal(str(round(coverage_amounts[policy_type] * 0.1, 2))),  # Calculate a premium
                 coverage_amount=str(coverage_amounts[policy_type]),
-                payment_frequency=payment_frequency.value,
+                payment_frequency=payment_frequency,
                 company_name=customer.full_name,  # Use customer's name as company name
                 contact_person=customer.full_name,  # Use customer's name
                 contact_email=customer.email,  # Use customer's email
-                coverage_details=f'{{"type": "{policy_type.value}", "coverage": {coverage_amounts[policy_type]}, "currency": "NGN"}}',
-                notes=f"Policy sold by {broker.name} for {policy_type.value} insurance coverage."
+                coverage_details=f'{{"type": "{policy_type.name}", "coverage": {coverage_amounts[policy_type]}, "currency": "NGN"}}',
+                notes=f"Policy sold by {broker.name} for {policy_type.name} insurance coverage."
             )
             db.add(policy)
             policies.append(policy)
@@ -323,8 +323,8 @@ def create_premiums_and_payments(db: Session, policies):
                 amount=Decimal(str(round(premium_amount, 2))), 
                 currency="NGN", 
                 due_date=premium_due_date,
-                billing_cycle=billing_cycle.value, 
-                payment_status=payment_status.value, 
+                billing_cycle=billing_cycle, 
+                payment_status=payment_status, 
                 premium_reference=premium_ref, 
                 grace_period_days=30
             )
@@ -350,9 +350,9 @@ def create_premiums_and_payments(db: Session, policies):
                     premium_id=premium.id, # Now premium.id is available
                     amount_paid=premium.paid_amount,
                     currency="NGN",
-                    payment_method=random.choice(list(PaymentMethod)).value,
+                    payment_method=random.choice(list(PaymentMethod)),
                     payment_date=premium.payment_date or datetime.now(),
-                    status=PaymentTransactionStatus.SUCCESS.value,
+                    status=PaymentTransactionStatus.SUCCESS,
                     transaction_reference=f"TXN-{fake.uuid4()[:8].upper()}",
                     external_reference=f"SQ-{fake.uuid4()[:12].upper()}",
                     squad_transaction_id=fake.uuid4(),

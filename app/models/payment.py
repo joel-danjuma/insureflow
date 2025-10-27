@@ -12,21 +12,21 @@ from app.core.database import Base
 
 class PaymentMethod(enum.Enum):
     """Payment method enumeration."""
-    CARD = "card"
-    BANK_TRANSFER = "bank_transfer"
-    USSD = "ussd"
-    WALLET = "wallet"
-    CASH = "cash"
+    CARD = "CARD"
+    BANK_TRANSFER = "BANK_TRANSFER"
+    USSD = "USSD"
+    WALLET = "WALLET"
+    CASH = "CASH"
 
 
 class PaymentTransactionStatus(enum.Enum):
     """Payment transaction status enumeration."""
-    PENDING = "pending"
-    PROCESSING = "processing"
-    SUCCESS = "success"
-    FAILED = "failed"
-    CANCELLED = "cancelled"
-    REFUNDED = "refunded"
+    PENDING = "PENDING"
+    PROCESSING = "PROCESSING"
+    SUCCESS = "SUCCESS"
+    FAILED = "FAILED"
+    CANCELLED = "CANCELLED"
+    REFUNDED = "REFUNDED"
 
 
 class Payment(Base):
