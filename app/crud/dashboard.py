@@ -180,9 +180,14 @@ def get_enhanced_dashboard_kpis(db: Session, current_user: User) -> EnhancedDash
 
 def get_recent_policies(db: Session, current_user: User, limit: int = 5) -> List[RecentPolicy]:
     """
-    Retrieve the most recent policies with enhanced information.
+    Retrieve the most recent policies with enhanced information using efficient loading.
     """
-    query = db.query(policy.Policy)
+    from sqlalchemy.orm import joinedload
+
+    query = db.query(policy.Policy).options(
+        joinedload(policy.Policy.user),
+        joinedload(policy.Policy.premiums)
+    )
     
     if current_user.is_broker_user and not current_user.can_perform_admin_actions:
         broker_profile = current_user.broker_profile
@@ -197,21 +202,17 @@ def get_recent_policies(db: Session, current_user: User, limit: int = 5) -> List
     
     recent_policies = []
     for p in policies:
-        # Calculate total premium amount
-        total_premium = db.query(func.sum(premium.Premium.amount)).filter(
-            premium.Premium.policy_id == p.id
-        ).scalar() or Decimal('0')
+        # Calculate total premium from the eagerly loaded premiums
+        total_premium = sum(pr.amount for pr in p.premiums) if p.premiums else Decimal('0')
         
         # Calculate days until due
-        days_until_due = None
-        if p.due_date:
-            days_until_due = (p.due_date - date.today()).days
+        days_until_due = (p.due_date - date.today()).days if p.due_date else None
         
         recent_policies.append(RecentPolicy(
             id=p.id,
             policy_number=p.policy_number,
             policy_name=p.policy_name or p.policy_number,
-            customer_name=p.user.full_name if p.user else "Unknown",
+            customer_name=p.user.full_name if p.user else "Unknown Client",
             company_name=p.company_name or "N/A",
             broker=p.broker.name if p.broker else "N/A",
             premium_amount=float(total_premium),

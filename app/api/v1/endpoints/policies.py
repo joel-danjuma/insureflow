@@ -408,4 +408,51 @@ async def simulate_policy_payment_endpoint(policy_id: int, db: Session = Depends
     if result.get("error"):
         raise HTTPException(status_code=400, detail=result["error"])
         
-    return result 
+    return result
+
+@router.get("/{policy_id}/get-or-create-va", response_model=Dict[str, Any], tags=["Policies"])
+async def get_or_create_policy_va(
+    policy_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Retrieves the virtual account for a policy's user, creating one if it doesn't exist.
+    This endpoint is used by the frontend to populate the 'Pay Now' modal.
+    """
+    # 1. Find the policy
+    policy = db.query(PolicyModel).filter(PolicyModel.id == policy_id).first()
+    if not policy:
+        raise HTTPException(status_code=404, detail="Policy not found")
+
+    # 2. Get the associated user
+    user = policy.user
+    if not user:
+        raise HTTPException(status_code=404, detail="User for this policy not found")
+
+    # 3. Check for an existing VA for the user
+    existing_va = db.query(VirtualAccountModel).filter(VirtualAccountModel.user_id == user.id).first()
+    if existing_va:
+        return {
+            "success": True,
+            "virtual_account": {
+                "account_number": existing_va.virtual_account_number,
+                "account_name": f"{existing_va.first_name} {existing_va.last_name}",
+                "bank_name": "Squad Bank",  # Or lookup from bank_code if available
+            }
+        }
+    
+    # 4. If no VA exists, create one
+    result = await virtual_account_service.create_individual_virtual_account(db=db, user=user, policy_id=policy.id)
+    if not result.get("success"):
+        raise HTTPException(status_code=400, detail=result.get("error", "Failed to create VA for payment"))
+    
+    va_data = result.get("virtual_account", {})
+    return {
+        "success": True,
+        "virtual_account": {
+            "account_number": va_data.get("account_number"),
+            "account_name": va_data.get("account_name"),
+            "bank_name": va_data.get("bank_name"),
+        }
+    } 

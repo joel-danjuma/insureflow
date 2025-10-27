@@ -55,20 +55,12 @@ async def test_transfer_va(request: TestVATransferRequest):
     """Initiates a transfer between two virtual accounts."""
     logger.info(f"--- 🧪 Test: Transfer ₦{request.amount} from {request.from_account} to {request.to_account} ---")
     
-    # Note: This uses the standard bank transfer endpoint, assuming VAs can be used.
-    # The payload structure is based on Squad's transfer documentation.
-    payload = {
-        "bank_code": "000000", # Placeholder, assuming Squad handles VA-to-VA internally
-        "account_number": request.to_account,
-        "amount": int(request.amount * 100), # Amount in kobo
-        "remark": f"Test transfer from {request.from_account}"
-    }
-    
-    # This is a conceptual implementation. We may need to adjust the payload 
-    # based on how Squad's API handles transfers between VAs they provisioned.
-    # The `from_account` would likely be identified by the API key's scope.
-    
-    result = await squad_co_service.initiate_transfer(payload)
+    # For sandbox testing, a "transfer" between VAs is simulated by crediting the destination account.
+    # This uses the same logic as the "Fund VA" step, which is the correct approach according to Squad's docs.
+    result = await squad_co_service.simulate_payment(
+        virtual_account_number=request.to_account,
+        amount=request.amount
+    )
     if not result.get("success"):
-        raise HTTPException(status_code=400, detail=result.get("message", "Transfer failed"))
+        raise HTTPException(status_code=400, detail=result.get("message", "Failed to transfer to VA"))
     return result
