@@ -44,8 +44,15 @@ class VirtualAccount(Base):
     bank_code = Column(String(10), nullable=False, default="058")  # Squad's bank code
     
     # Account Information
-    account_type = Column(Enum(VirtualAccountType), nullable=False)
-    status = Column(Enum(VirtualAccountStatus), nullable=False, default=VirtualAccountStatus.ACTIVE.value)
+    account_type = Column(
+        Enum(VirtualAccountType, values_callable=lambda obj: [e.value for e in obj]),
+        nullable=False
+    )
+    status = Column(
+        Enum(VirtualAccountStatus, values_callable=lambda obj: [e.value for e in obj]),
+        nullable=False,
+        default=VirtualAccountStatus.ACTIVE.value
+    )
     
     # Individual Account Fields (when account_type = INDIVIDUAL)
     first_name = Column(String(100), nullable=True)

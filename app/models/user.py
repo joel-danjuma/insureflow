@@ -36,7 +36,11 @@ class User(Base):
     
     # User information
     full_name = Column(String(255), nullable=False)
-    role = Column(Enum(UserRole), nullable=False, default=UserRole.CUSTOMER.value)
+    role = Column(
+        Enum(UserRole, values_callable=lambda obj: [e.value for e in obj]),
+        nullable=False,
+        default=UserRole.CUSTOMER.value
+    )
     
     # Additional user details for enhanced registration
     phone_number = Column(String(50), nullable=True)
