@@ -126,7 +126,7 @@ if not sarah:
         username='sarah.johnson',
         full_name='Sarah Johnson',
         hashed_password=get_password_hash('password123'),
-        role=UserRole.INSURANCE_ADMIN,
+        role=UserRole.ADMIN,
         is_active=True,
         is_verified=True
     )
