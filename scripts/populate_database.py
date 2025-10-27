@@ -14,7 +14,7 @@ import random
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from faker import Faker
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.core.database import SessionLocal, engine
 from app.core.security import get_password_hash
@@ -283,7 +283,8 @@ def create_policies(db: Session, companies, brokers, customers):
     
     print(f"✅ Creating {len(policies) - db.query(Policy).count()} new policies...")
     db.commit()
-    return policies
+    # Eager load relationships for use in other functions
+    return db.query(Policy).options(joinedload(Policy.user), joinedload(Policy.broker)).all()
 
 def create_premiums_and_payments(db: Session, policies):
     """Create premiums and payment records for policies. This function is idempotent."""
@@ -376,19 +377,19 @@ def update_broker_statistics(db: Session, brokers):
     """Update broker performance statistics based on their policies and payments."""
     if not brokers: return
     for broker in brokers:
-        policies = db.query(Policy).filter(Policy.broker_id == broker.id).all()
+        # Eager load policies and their associated premiums
+        policies = db.query(Policy).filter(Policy.broker_id == broker.id).options(joinedload(Policy.premiums)).all()
         
         total_policies = len(policies)
         total_premiums = Decimal("0")
         total_commission = Decimal("0")
         
         for policy in policies:
-            policy_premiums = db.query(Premium).filter(Premium.policy_id == policy.id).all()
-            for premium in policy_premiums:
-                if premium.payment_status == PaymentStatus.PAID and premium.amount:
-                    total_premiums += premium.amount
+            for premium in policy.premiums:
+                if premium.payment_status == PaymentStatus.PAID and premium.paid_amount:
+                    total_premiums += premium.paid_amount
                     if broker.default_commission_rate:
-                        commission = premium.amount * broker.default_commission_rate
+                        commission = premium.paid_amount * broker.default_commission_rate
                         total_commission += commission
         
         broker.total_policies_sold = total_policies
@@ -397,6 +398,7 @@ def update_broker_statistics(db: Session, brokers):
         broker.last_activity = datetime.utcnow()
     
     db.commit()
+
 
 def main():
     """Main function to populate the database with dummy data."""
@@ -431,7 +433,9 @@ def main():
         print("✅ Created premiums and payment records")
         
         print("📈 Updating broker statistics...")
-        update_broker_statistics(db, brokers)
+        # Re-fetch brokers with their relationships to ensure data is fresh
+        all_brokers = db.query(Broker).options(joinedload(Broker.user)).all()
+        update_broker_statistics(db, all_brokers)
         print("✅ Updated broker performance metrics")
         
         print("\n🎉 Database population completed successfully!")
@@ -448,7 +452,7 @@ def main():
         for admin in admins:
             print(f"     • {admin.email} / password123")
         print("   Broker Users:")
-        for broker in brokers:
+        for broker in all_brokers:
             print(f"     • {broker.user.email} / password123")
         
         print("\n🌟 Sample Dashboard Data Created:")
