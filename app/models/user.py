@@ -38,8 +38,8 @@ class User(Base):
     role = Column(Enum(UserRole), nullable=False, default=UserRole.CUSTOMER)
     
     # Additional user details for enhanced registration
-    phone_number = Column(String(20), nullable=True)
-    organization_name = Column(String(255), nullable=True)  # Company/Organization name
+    phone_number = Column(String(50), nullable=True)
+    organization_name = Column(String(100), nullable=True)  # Company/Organization name
     bvn = Column(String(11), nullable=True)  # Bank Verification Number for Nigerian users
     date_of_birth = Column(DateTime, nullable=True)
     gender = Column(String(10), nullable=True)
