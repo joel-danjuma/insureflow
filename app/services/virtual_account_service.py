@@ -91,6 +91,9 @@ class VirtualAccountService:
             payload_data["bvn"] = user.bvn
         if user.date_of_birth:
             payload_data["dob"] = user.date_of_birth.strftime("%d/%m/%Y")
+        else:
+            # Squad API requires DOB, provide a default for testing if not present
+            payload_data["dob"] = "01/01/1990"
         if user.gender:
             payload_data["gender"] = "1" if user.gender.lower() in ["male", "m"] else "2"
         if user.address:
