@@ -43,9 +43,9 @@ def upgrade() -> None:
     # Add payment_frequency if it doesn't exist
     if 'payment_frequency' not in columns:
         # Create enum type if it doesn't exist
-        payment_frequency_enum = postgresql.ENUM('monthly', 'quarterly', 'annually', 'custom', name='paymentfrequency')
+        payment_frequency_enum = postgresql.ENUM('MONTHLY', 'QUARTERLY', 'ANNUALLY', 'CUSTOM', name='paymentfrequency')
         payment_frequency_enum.create(conn, checkfirst=True)
-        op.add_column('policies', sa.Column('payment_frequency', payment_frequency_enum, nullable=False, server_default='monthly'))
+        op.add_column('policies', sa.Column('payment_frequency', payment_frequency_enum, nullable=False, server_default='MONTHLY'))
     
     # Add first_payment_date if it doesn't exist
     if 'first_payment_date' not in columns:
@@ -171,4 +171,5 @@ def downgrade() -> None:
     op.drop_column('policies', 'policy_name')
     
     # Drop enum type
-    sa.Enum(name='paymentfrequency').drop(op.get_bind(), checkfirst=True)
+    payment_frequency_enum = postgresql.ENUM('MONTHLY', 'QUARTERLY', 'ANNUALLY', 'CUSTOM', name='paymentfrequency')
+    payment_frequency_enum.drop(op.get_bind(), checkfirst=True)
