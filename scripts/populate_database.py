@@ -22,7 +22,7 @@ from app.models.user import User, UserRole
 from app.models.company import InsuranceCompany as Company
 from app.models.broker import Broker
 from app.models.policy import Policy, PolicyType, PolicyStatus, PaymentFrequency
-from app.models.premium import Premium, PaymentStatus as PremiumPaymentStatus, BillingCycle
+from app.models.premium import Premium, PaymentStatus, BillingCycle
 from app.models.payment import Payment, PaymentMethod, PaymentTransactionStatus
 
 fake = Faker()
@@ -253,8 +253,8 @@ def create_policies(db: Session, companies, brokers, customers):
             }
             
             payment_frequency = random.choices(
-                [pf.name for pf in PaymentFrequency], 
-                weights=[60, 30, 10, 5]
+                [PaymentFrequency.MONTHLY, PaymentFrequency.QUARTERLY, PaymentFrequency.ANNUALLY], 
+                weights=[60, 30, 10]
             )[0]
             
             policy = Policy(
@@ -264,18 +264,11 @@ def create_policies(db: Session, companies, brokers, customers):
                 user_id=customer.id, 
                 company_id=company.id,
                 broker_id=broker.id, 
-                status=random.choices([ps.name for ps in PolicyStatus if ps.name != 'INACTIVE'], weights=[85, 15, 5, 5])[0],
+                status=random.choices([PolicyStatus.ACTIVE, PolicyStatus.PENDING], weights=[85, 15])[0],
                 start_date=start_date, 
-                due_date=end_date,
                 end_date=end_date, 
-                duration_months=12,
-                premium_amount=str(coverage_amounts[policy_type]),
-                payment_frequency=payment_frequency,
-                company_name=customer.full_name,
-                contact_person=customer.full_name,
-                contact_email=customer.email,
-                contact_phone=customer.phone_number,
                 coverage_amount=str(coverage_amounts[policy_type]),
+                payment_frequency=payment_frequency.value,
                 coverage_details=f'{{"type": "{policy_type.value}", "coverage": {coverage_amounts[policy_type]}, "currency": "NGN"}}',
                 notes=f"Policy sold by {broker.name} for {policy_type.value} insurance coverage."
             )
@@ -301,8 +294,8 @@ def create_premiums_and_payments(db: Session, policies):
         }
         annual_premium = coverage_amount * premium_rates[policy.policy_type]
         
-        billing_cycle = random.choices([bc.name for bc in BillingCycle], weights=[60, 30, 5, 5])[0]
-        cycle_divisors = { "MONTHLY": 12, "QUARTERLY": 4, "SEMI_ANNUAL": 2, "ANNUAL": 1 }
+        billing_cycle = random.choices([BillingCycle.MONTHLY, BillingCycle.QUARTERLY, BillingCycle.ANNUAL], weights=[60, 30, 10])[0]
+        cycle_divisors = { BillingCycle.MONTHLY: 12, BillingCycle.QUARTERLY: 4, BillingCycle.SEMI_ANNUAL: 2, BillingCycle.ANNUAL: 1 }
         premium_amount = annual_premium / cycle_divisors[billing_cycle]
         
         premium_due_date = policy.start_date
@@ -314,28 +307,28 @@ def create_premiums_and_payments(db: Session, policies):
             premium_ref = f"PREM-{policy.policy_number}-{premium_count:03d}"
             
             if premium_due_date < current_date - timedelta(days=30):
-                payment_status = random.choices([ps.name for ps in PremiumPaymentStatus], weights=[80, 5, 5, 5, 5])[0]
+                payment_status = random.choices([PaymentStatus.PAID, PaymentStatus.OVERDUE, PaymentStatus.CANCELLED], weights=[80, 15, 5])[0]
             elif premium_due_date < current_date:
-                payment_status = random.choices([ps.name for ps in PremiumPaymentStatus if ps.name != 'CANCELLED'], weights=[50, 35, 15, 5])[0]
+                payment_status = random.choices([PaymentStatus.PAID, PaymentStatus.PENDING, PaymentStatus.OVERDUE], weights=[50, 35, 15])[0]
             else:
-                payment_status = PremiumPaymentStatus.PENDING.name
+                payment_status = PaymentStatus.PENDING
             
             premium = Premium(
                 policy_id=policy.id, 
                 amount=Decimal(str(round(premium_amount, 2))), 
                 currency="NGN", 
                 due_date=premium_due_date,
-                billing_cycle=billing_cycle, 
-                payment_status=payment_status, 
+                billing_cycle=billing_cycle.value, 
+                payment_status=payment_status.value, 
                 premium_reference=premium_ref, 
                 grace_period_days=30
             )
             
-            if payment_status == PremiumPaymentStatus.PAID.name:
+            if payment_status == PaymentStatus.PAID:
                 premium.paid_amount = premium.amount
                 premium.payment_date = premium_due_date + timedelta(days=random.randint(-5, 10))
                 premium.payment_reference = f"PAY-{premium_ref}"
-            elif payment_status == PremiumPaymentStatus.OVERDUE.name:
+            elif payment_status == PaymentStatus.OVERDUE:
                 partial_payment = premium.amount * Decimal(str(random.uniform(0.0, 0.8)))
                 premium.paid_amount = partial_payment
                 premium.payment_date = premium_due_date + timedelta(days=random.randint(1, 20))
@@ -347,14 +340,14 @@ def create_premiums_and_payments(db: Session, policies):
             db.flush()
 
             # If a payment was made, create the payment record and link it
-            if payment_status in [PremiumPaymentStatus.PAID.name, PremiumPaymentStatus.OVERDUE.name] and premium.paid_amount and premium.paid_amount > 0:
+            if payment_status in [PaymentStatus.PAID, PaymentStatus.OVERDUE] and premium.paid_amount and premium.paid_amount > 0:
                 payment = Payment(
                     premium_id=premium.id, # Now premium.id is available
                     amount_paid=premium.paid_amount,
                     currency="NGN",
-                    payment_method=random.choice([pm.name for pm in PaymentMethod]),
+                    payment_method=random.choice(list(PaymentMethod)).value,
                     payment_date=premium.payment_date or datetime.now(),
-                    status=PaymentTransactionStatus.SUCCESS.name,
+                    status=PaymentTransactionStatus.SUCCESS.value,
                     transaction_reference=f"TXN-{fake.uuid4()[:8].upper()}",
                     external_reference=f"SQ-{fake.uuid4()[:12].upper()}",
                     squad_transaction_id=fake.uuid4(),
@@ -366,9 +359,9 @@ def create_premiums_and_payments(db: Session, policies):
                 )
                 db.add(payment)
             
-            if billing_cycle == "MONTHLY": premium_due_date += timedelta(days=30)
-            elif billing_cycle == "QUARTERLY": premium_due_date += timedelta(days=90)
-            elif billing_cycle == "SEMI_ANNUAL": premium_due_date += timedelta(days=180)
+            if billing_cycle == BillingCycle.MONTHLY: premium_due_date += timedelta(days=30)
+            elif billing_cycle == BillingCycle.QUARTERLY: premium_due_date += timedelta(days=90)
+            elif billing_cycle == BillingCycle.SEMI_ANNUAL: premium_due_date += timedelta(days=180)
             else: premium_due_date += timedelta(days=365)
     
     db.commit()
@@ -386,7 +379,7 @@ def update_broker_statistics(db: Session, brokers):
         for policy in policies:
             policy_premiums = db.query(Premium).filter(Premium.policy_id == policy.id).all()
             for premium in policy_premiums:
-                if premium.payment_status == PremiumPaymentStatus.PAID.name and premium.amount:
+                if premium.payment_status == PaymentStatus.PAID and premium.amount:
                     total_premiums += premium.amount
                     if broker.default_commission_rate:
                         commission = premium.amount * broker.default_commission_rate
