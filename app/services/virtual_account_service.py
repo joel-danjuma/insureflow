@@ -130,7 +130,7 @@ class VirtualAccountService:
                 customer_identifier=customer_identifier,
                 virtual_account_number=va_data.get("virtual_account_number"),
                 bank_code=va_data.get("bank_code", "058"),
-                account_type=VirtualAccountType.INDIVIDUAL,
+                account_type=VirtualAccountType.INDIVIDUAL.value,
                 first_name=va_data.get("first_name"),
                 last_name=va_data.get("last_name"),
                 email=user.email,
