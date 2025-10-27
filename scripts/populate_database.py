@@ -212,7 +212,8 @@ def create_customer_users(db: Session, count=50):
             # Add missing fields required by Squad
             phone_number=fake.phone_number(),
             address=fake.address().replace('\n', ', '),
-            date_of_birth=fake.date_of_birth(minimum_age=18, maximum_age=80)
+            date_of_birth=fake.date_of_birth(minimum_age=18, maximum_age=80),
+            gender=random.choice(["male", "female"])
         )
         db.add(customer)
         customers.append(customer)

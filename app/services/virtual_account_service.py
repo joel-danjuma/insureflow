@@ -96,6 +96,8 @@ class VirtualAccountService:
             payload_data["dob"] = "01/01/1990"
         if user.gender:
             payload_data["gender"] = "1" if user.gender.lower() in ["male", "m"] else "2"
+        else:
+            payload_data["gender"] = "1"  # Default to Male if not provided
         if user.address:
             payload_data["address"] = user.address
         else:
