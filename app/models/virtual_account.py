@@ -45,7 +45,7 @@ class VirtualAccount(Base):
     
     # Account Information
     account_type = Column(Enum(VirtualAccountType), nullable=False)
-    status = Column(Enum(VirtualAccountStatus), nullable=False, default=VirtualAccountStatus.ACTIVE)
+    status = Column(Enum(VirtualAccountStatus), nullable=False, default=VirtualAccountStatus.ACTIVE.value)
     
     # Individual Account Fields (when account_type = INDIVIDUAL)
     first_name = Column(String(100), nullable=True)
