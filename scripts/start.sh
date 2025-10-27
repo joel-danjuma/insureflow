@@ -33,8 +33,8 @@ echo "📋 Running database migrations..."
 alembic upgrade head
 
 # Populate database with comprehensive demo data
-# echo "👥 Populating database..."
-# python3 scripts/populate_database.py
+echo "👥 Populating database..."
+python3 scripts/populate_database.py
 
 echo "✅ Database setup complete!"
 echo "🚀 Starting FastAPI application..."
