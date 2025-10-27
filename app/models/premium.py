@@ -28,7 +28,7 @@ class BillingCycle(enum.Enum):
 
 
 class Premium(Base):
-    """Premium model for managing premium payments."""
+    """Premium model for managing policy premiums."""
     
     __tablename__ = "premiums"
     

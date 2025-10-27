@@ -30,7 +30,7 @@ class PaymentTransactionStatus(enum.Enum):
 
 
 class Payment(Base):
-    """Payment model for tracking actual payments made."""
+    """Payment model for tracking transactions."""
     
     __tablename__ = "payments"
     
