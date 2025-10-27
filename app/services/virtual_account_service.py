@@ -87,8 +87,12 @@ class VirtualAccountService:
         }
         
         # Add optional fields if available
-        if user.bvn:
+        # Use a hardcoded valid test BVN for sandbox environment to ensure successful VA creation
+        if settings.SQUAD_BASE_URL and "sandbox" in settings.SQUAD_BASE_URL.lower():
+            payload_data["bvn"] = "22222222222"
+        elif user.bvn:
             payload_data["bvn"] = user.bvn
+        
         if user.date_of_birth:
             payload_data["dob"] = user.date_of_birth.strftime("%d/%m/%Y")
         else:
