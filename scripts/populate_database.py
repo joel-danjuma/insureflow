@@ -252,7 +252,7 @@ def create_policies(db: Session, companies, brokers, customers):
                 PolicyType.BUSINESS: random.randint(10000000, 100000000), PolicyType.TRAVEL: random.randint(100000, 1000000),
             }
             
-            # Use the correct PaymentFrequency enum directly
+            # CORRECT FIX: Use the PaymentFrequency enum that belongs to the Policy model
             payment_frequency = random.choices(
                 [PaymentFrequency.MONTHLY, PaymentFrequency.QUARTERLY, PaymentFrequency.ANNUALLY], 
                 weights=[60, 30, 10]
@@ -268,7 +268,7 @@ def create_policies(db: Session, companies, brokers, customers):
                 start_date=start_date, 
                 end_date=end_date, 
                 coverage_amount=str(coverage_amounts[policy_type]),
-                # Pass the enum member directly to SQLAlchemy
+                # CORRECT FIX: Pass the enum member directly
                 payment_frequency=payment_frequency,
                 coverage_details=f'{{"type": "{policy_type.value}", "coverage": {coverage_amounts[policy_type]}, "currency": "NGN"}}',
                 notes=f"Policy sold by {broker.name} for {policy_type.value} insurance coverage."
@@ -295,6 +295,7 @@ def create_premiums_and_payments(db: Session, policies):
         }
         annual_premium = coverage_amount * premium_rates[policy.policy_type]
         
+        # CORRECT FIX: Use the BillingCycle enum that belongs to the Premium model
         billing_cycle = random.choices([BillingCycle.MONTHLY, BillingCycle.QUARTERLY, BillingCycle.ANNUAL], weights=[60, 30, 10])[0]
         cycle_divisors = { BillingCycle.MONTHLY: 12, BillingCycle.QUARTERLY: 4, BillingCycle.SEMI_ANNUAL: 2, BillingCycle.ANNUAL: 1 }
         premium_amount = annual_premium / cycle_divisors[billing_cycle]
@@ -315,8 +316,15 @@ def create_premiums_and_payments(db: Session, policies):
                 payment_status = PaymentStatus.PENDING
             
             premium = Premium(
-                policy_id=policy.id, amount=Decimal(str(round(premium_amount, 2))), currency="NGN", due_date=premium_due_date,
-                billing_cycle=billing_cycle, payment_status=payment_status, premium_reference=premium_ref, grace_period_days=30
+                policy_id=policy.id, 
+                amount=Decimal(str(round(premium_amount, 2))), 
+                currency="NGN", 
+                due_date=premium_due_date,
+                # CORRECT FIX: Pass the enum members directly
+                billing_cycle=billing_cycle, 
+                payment_status=payment_status, 
+                premium_reference=premium_ref, 
+                grace_period_days=30
             )
             
             if payment_status == PaymentStatus.PAID:
