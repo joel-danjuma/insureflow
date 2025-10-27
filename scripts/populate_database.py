@@ -183,6 +183,7 @@ def create_broker_users_and_profiles(db: Session, companies):
         
         # Create broker profile
         broker = Broker(**data["broker"], user_id=user.id, company_id=random.choice(companies).id)
+        user.broker_profile = broker
         db.add(broker)
         final_brokers.append(broker)
     

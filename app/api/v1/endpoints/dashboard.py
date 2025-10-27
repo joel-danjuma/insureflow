@@ -178,13 +178,9 @@ def get_broker_dashboard(
         
         return schemas_dashboard.BrokerDashboard(
             kpis=kpis,
-            recent_policies=recent_policies,
-            virtual_accounts=virtual_accounts,
+            virtual_account_summary=virtual_accounts,
             commission_trends=commission_trends,
-            payment_trends=payment_trends,
-            client_portfolio=client_portfolio,
-            performance_metrics=performance_metrics,
-            upcoming_renewals=upcoming_renewals
+            individual_performance=performance_metrics,
         )
     except Exception as e:
         # Return mock broker dashboard if database fails
