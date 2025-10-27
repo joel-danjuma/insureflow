@@ -39,7 +39,7 @@ class User(Base):
     
     # Additional user details for enhanced registration
     phone_number = Column(String(50), nullable=True)
-    organization_name = Column(String(100), nullable=True)  # Company/Organization name
+    organization_name = Column(String(255), nullable=True)  # Company/Organization name
     bvn = Column(String(11), nullable=True)  # Bank Verification Number for Nigerian users
     date_of_birth = Column(DateTime, nullable=True)
     gender = Column(String(10), nullable=True)
