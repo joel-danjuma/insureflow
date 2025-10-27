@@ -266,6 +266,7 @@ def create_policies(db: Session, companies, brokers, customers):
                 broker_id=broker.id, 
                 status=random.choices([PolicyStatus.ACTIVE, PolicyStatus.PENDING], weights=[85, 15])[0],
                 start_date=start_date, 
+                due_date=end_date,
                 end_date=end_date, 
                 coverage_amount=str(coverage_amounts[policy_type]),
                 payment_frequency=payment_frequency.value,
