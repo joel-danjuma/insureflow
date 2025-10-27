@@ -268,8 +268,12 @@ def create_policies(db: Session, companies, brokers, customers):
                 start_date=start_date, 
                 due_date=end_date,
                 end_date=end_date, 
+                premium_amount=Decimal(str(round(coverage_amounts[policy_type] * 0.1, 2))),  # Calculate a premium
                 coverage_amount=str(coverage_amounts[policy_type]),
                 payment_frequency=payment_frequency.value,
+                company_name=customer.full_name,  # Use customer's name as company name
+                contact_person=customer.full_name,  # Use customer's name
+                contact_email=customer.email,  # Use customer's email
                 coverage_details=f'{{"type": "{policy_type.value}", "coverage": {coverage_amounts[policy_type]}, "currency": "NGN"}}',
                 notes=f"Policy sold by {broker.name} for {policy_type.value} insurance coverage."
             )
