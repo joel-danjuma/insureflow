@@ -233,12 +233,12 @@ export const useBrokerProfile = () => {
 };
 
 // Policies hook for both dashboards
-export const usePolicies = () => {
+export const usePolicies = (skip: number = 0, limit: number = 10) => {
   return useReactQuery<Policy[]>({
-    queryKey: ['policies'],
+    queryKey: ['policies', skip, limit],
     queryFn: async () => {
       try {
-        return await policyService.getPolicies();
+        return await policyService.getPolicies(skip, limit);
       } catch (error) {
         console.warn('Policies API failed, using mock data:', error);
         return mockPolicies;

@@ -30,8 +30,10 @@ type ClientPortfolioItem = {
 };
 
 const BrokerDashboard = () => {
+  const [currentPage, setCurrentPage] = useState(0);
+  const pageSize = 10;
   const { data: brokerProfile, isLoading: brokerLoading, error: brokerError } = useBrokerProfile();
-  const { data: policies, isLoading: policiesLoading, error: policiesError } = usePolicies();
+  const { data: policies, isLoading: policiesLoading, error: policiesError } = usePolicies(currentPage * pageSize, pageSize);
   const { data: premiums, isLoading: premiumsLoading, error: premiumsError } = usePremiums();
   const { user } = useAuthStore();
   const getRemindersForBroker = useReminderStore((state) => state.getRemindersForBroker);
@@ -687,6 +689,24 @@ const BrokerDashboard = () => {
       
       <div className="w-full overflow-hidden rounded-xl border border-gray-700 bg-gray-800">
         <DataTable columns={portfolioColumns} data={clientPortfolio} />
+      </div>
+
+      <div className="flex justify-center items-center space-x-4 mt-4">
+        <button
+          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 0))}
+          disabled={currentPage === 0 || policiesLoading}
+          className="px-4 py-2 text-sm font-medium text-white bg-gray-700 rounded-md hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed"
+        >
+          Previous
+        </button>
+        <span className="text-white">Page {currentPage + 1}</span>
+        <button
+          onClick={() => setCurrentPage(prev => prev + 1)}
+          disabled={!policies || policies.length < pageSize || policiesLoading}
+          className="px-4 py-2 text-sm font-medium text-white bg-gray-700 rounded-md hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed"
+        >
+          Next
+        </button>
       </div>
 
       {/* Payment Flow Testing Section - For Stakeholder Demos */}

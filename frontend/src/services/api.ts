@@ -210,9 +210,11 @@ export const userService = {
 };
 
 export const policyService = {
-  getPolicies: async () => {
+  getPolicies: async (skip: number = 0, limit: number = 100) => {
     try {
-      const response = await api.get('/policies/');
+      const response = await api.get('/policies/', {
+        params: { skip, limit },
+      });
       return response.data;
     } catch (error) {
       errorHandler(error, 'fetching policies');

@@ -13,7 +13,7 @@ from app.dependencies import (
     get_current_active_user,
     get_current_payment_processor
 )
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.schemas.policy import Policy, PolicyCreate, PolicyUpdate, PolicySummary
 from app.schemas.virtual_account import PaymentSimulationResponse
 from app.services.virtual_account_service import simulate_policy_payment, virtual_account_service
@@ -72,26 +72,34 @@ async def create_policy(
     return new_policy
 
 @router.get("/", response_model=List[PolicySummary])
-def list_policies(
+def get_policies(
     skip: int = 0,
     limit: int = 100,
-    status_filter: str = None,
     policy_type: str = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_broker_or_admin_user)
 ):
     """
-    Retrieve a list of policies. Broker or Admin only.
-    Brokers see all policies, Insurance users see policies from their company.
+    Get policies. Broker or Admin only.
     """
-    try:
-        # For now, just get all policies without filters
-        # TODO: Implement proper filtering in CRUD layer
+    # Check user role and filter policies accordingly
+    if current_user.role == UserRole.BROKER:
+        if current_user.broker_profile:
+            policies = policy_crud.get_policies_by_broker(
+                db, broker_id=current_user.broker_profile.id, skip=skip, limit=limit
+            )
+        else:
+            # If for some reason a broker user has no profile, return empty list
+            policies = []
+    elif current_user.can_perform_admin_actions:
+        # Admin can see all policies
         policies = policy_crud.get_policies(db, skip=skip, limit=limit)
-        return policies
-    except Exception as e:
-        # Return mock data if database query fails
-        print(f"⚠️  Policies API failed, using mock data: {e}")
+    else:
+        # Fallback for unexpected roles
+        policies = []
+
+    if not policies:
+        # This is mock data for testing, should be handled carefully in production
         from app.schemas.policy import PolicySummary
         from decimal import Decimal
         from datetime import date

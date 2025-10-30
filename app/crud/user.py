@@ -3,7 +3,7 @@ CRUD operations for the User model.
 """
 from typing import List, Optional
 from datetime import datetime
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app import schemas
 from app.models.user import User, UserRole
@@ -15,19 +15,19 @@ def get_user_by_email(db: Session, email: str) -> User:
     """
     Retrieves a user from the database by their email address.
     """
-    return db.query(User).filter(User.email == email).first()
+    return db.query(User).options(joinedload(User.broker_profile)).filter(User.email == email).first()
 
 def get_user_by_username(db: Session, username: str) -> User:
     """
     Retrieves a user from the database by their username.
     """
-    return db.query(User).filter(User.username == username).first()
+    return db.query(User).options(joinedload(User.broker_profile)).filter(User.username == username).first()
 
 def get_user_by_id(db: Session, user_id: int) -> User:
     """
     Retrieves a user from the database by their ID.
     """
-    return db.query(User).filter(User.id == user_id).first()
+    return db.query(User).options(joinedload(User.broker_profile)).filter(User.id == user_id).first()
 
 def get_users(db: Session, skip: int = 0, limit: int = 100) -> List[User]:
     """
