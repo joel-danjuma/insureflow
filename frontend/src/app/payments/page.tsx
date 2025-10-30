@@ -15,10 +15,13 @@ export default function PaymentsPage() {
   const { data: policies, isLoading: policiesLoading } = usePolicies();
   const { data: premiums, isLoading: premiumsLoading } = usePremiums();
 
-  // Filter unpaid premiums
-  const unpaidPremiums = premiums?.filter(premium => 
-    premium.payment_status === 'PENDING' || premium.payment_status === 'OVERDUE'
-  ) || [];
+  // Filter unpaid premiums with validation
+  const unpaidPremiums = premiums?.filter(premium => {
+    // Validate premium object exists and has required properties
+    if (!premium || !premium.payment_status) return false;
+    const status = premium.payment_status;
+    return status === 'PENDING' || status === 'OVERDUE';
+  }) || [];
 
   const handlePayPremium = async (premium: any) => {
     if (isProcessing) return;
@@ -60,7 +63,12 @@ export default function PaymentsPage() {
     return policies?.find(policy => policy.id === premiumPolicyId);
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string | undefined | null) => {
+    // Handle undefined/null status
+    if (!status || typeof status !== 'string') {
+      return 'text-gray-400 bg-gray-400/10';
+    }
+    
     switch (status.toLowerCase()) {
       case 'pending':
         return 'text-yellow-400 bg-yellow-400/10';
@@ -70,6 +78,20 @@ export default function PaymentsPage() {
         return 'text-green-400 bg-green-400/10';
       default:
         return 'text-gray-400 bg-gray-400/10';
+    }
+  };
+
+  // Helper function to safely format dates
+  const formatDate = (dateString: string | undefined | null): string => {
+    if (!dateString) return 'N/A';
+    try {
+      const date = new Date(dateString);
+      // Check if date is valid
+      if (isNaN(date.getTime())) return 'N/A';
+      return date.toLocaleDateString();
+    } catch (error) {
+      console.error('Error formatting date:', dateString, error);
+      return 'N/A';
     }
   };
 
@@ -120,6 +142,9 @@ export default function PaymentsPage() {
           
           <div className="divide-y divide-gray-700">
             {unpaidPremiums.map((premium) => {
+              // Skip invalid premium records
+              if (!premium || !premium.id) return null;
+              
               const policy = getPolicyForPremium(premium.policy_id);
               const isSelected = selectedPremium?.id === premium.id;
               
@@ -131,8 +156,8 @@ export default function PaymentsPage() {
                         <h3 className="text-white font-semibold">
                           {policy?.policy_name || 'Unknown Policy'}
                         </h3>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(premium.payment_status)}`}>
-                          {premium.payment_status}
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(premium?.payment_status)}`}>
+                          {premium?.payment_status || 'Unknown'}
                         </span>
                       </div>
                       
@@ -147,14 +172,14 @@ export default function PaymentsPage() {
                         <div>
                           <span className="text-gray-400">Due Date:</span>
                           <div className="text-white">
-                            {new Date(premium.due_date).toLocaleDateString()}
+                            {formatDate(premium?.due_date)}
                           </div>
                         </div>
                         
                         <div>
                           <span className="text-gray-400">Amount:</span>
                           <div className="text-white font-semibold">
-                            {formatNaira(premium.amount)}
+                            {formatNaira(premium?.amount || 0)}
                           </div>
                         </div>
                       </div>
@@ -215,6 +240,9 @@ export default function PaymentsPage() {
           {premiums && premiums.length > 0 ? (
             <div className="space-y-4">
               {premiums.slice(0, 5).map((premium) => {
+                // Skip invalid premium records
+                if (!premium || !premium.id) return null;
+                
                 const policy = getPolicyForPremium(premium.policy_id);
                 
                 return (
@@ -224,16 +252,16 @@ export default function PaymentsPage() {
                         {policy?.policy_name || 'Unknown Policy'}
                       </div>
                       <div className="text-gray-400 text-sm">
-                        {new Date(premium.due_date).toLocaleDateString()}
+                        {formatDate(premium?.due_date)}
                       </div>
                     </div>
                     
                     <div className="text-right">
                       <div className="text-white font-semibold">
-                        {formatNaira(premium.amount)}
+                        {formatNaira(premium?.amount || 0)}
                       </div>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(premium.payment_status)}`}>
-                        {premium.payment_status}
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(premium?.payment_status)}`}>
+                        {premium?.payment_status || 'Unknown'}
                       </span>
                     </div>
                   </div>
