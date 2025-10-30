@@ -5,8 +5,9 @@ import Layout from '@/components/Layout';
 import withAuth from '@/hocs/withAuth';
 import { DataTable } from '@/components/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
-import { useQuery } from '@tanstack/react-query';
-import api from '@/services/api';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { clientService } from '@/services/api';
+import ClientForm from '@/components/ClientForm';
 
 interface Client {
   id: number;
@@ -21,52 +22,41 @@ interface Client {
 }
 
 const ClientsPage = () => {
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [showModal, setShowModal] = useState(false);
+  const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create');
+  const [selectedClientId, setSelectedClientId] = useState<number | undefined>(undefined);
 
-  // Mock data - replace with actual API call
-  const { data: clients = [], isLoading } = useQuery({
+  // Fetch clients from API
+  const { data: clientsData = [], isLoading, refetch } = useQuery({
     queryKey: ['clients'],
     queryFn: async () => {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return [
-        {
-          id: 1,
-          full_name: 'John Doe',
-          email: 'john.doe@example.com',
-          phone_number: '+234 801 234 5678',
-          company_name: 'Doe Enterprises',
-          total_policies: 3,
-          total_premium: 1500000,
-          last_contact: '2024-01-15',
-          status: 'active' as const,
-        },
-        {
-          id: 2,
-          full_name: 'Jane Smith',
-          email: 'jane.smith@example.com',
-          phone_number: '+234 802 345 6789',
-          company_name: 'Smith & Co',
-          total_policies: 2,
-          total_premium: 950000,
-          last_contact: '2024-01-10',
-          status: 'active' as const,
-        },
-        {
-          id: 3,
-          full_name: 'Mike Johnson',
-          email: 'mike.johnson@example.com',
-          phone_number: '+234 803 456 7890',
-          company_name: 'Johnson Ltd',
-          total_policies: 1,
-          total_premium: 500000,
-          last_contact: '2024-01-05',
-          status: 'inactive' as const,
-        },
-      ];
+      try {
+        const users = await clientService.getClients();
+        // Transform user data to Client interface
+        // For now, we'll set default values for total_policies, total_premium, etc.
+        // In a real implementation, these would be calculated from policies
+        return users.map((user: any) => ({
+          id: user.id,
+          full_name: user.full_name || '',
+          email: user.email || '',
+          phone_number: user.phone_number || '',
+          company_name: user.organization_name || user.company_name || '',
+          total_policies: 0, // TODO: Calculate from actual policies
+          total_premium: 0, // TODO: Calculate from actual policies
+          last_contact: user.created_at || new Date().toISOString(),
+          status: (user.is_active ? 'active' : 'inactive') as 'active' | 'inactive',
+        }));
+      } catch (error) {
+        console.error('Error fetching clients:', error);
+        return [];
+      }
     },
   });
+
+  const clients = clientsData as Client[];
 
   const columns: ColumnDef<Client>[] = [
     {
@@ -138,10 +128,24 @@ const ClientsPage = () => {
       header: 'Actions',
       cell: ({ row }) => (
         <div className="flex space-x-2">
-          <button className="px-3 py-1 text-sm bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors">
+          <button 
+            onClick={() => {
+              setSelectedClientId(row.original.id);
+              setModalMode('view');
+              setShowModal(true);
+            }}
+            className="px-3 py-1 text-sm bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors"
+          >
             View
           </button>
-          <button className="px-3 py-1 text-sm bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors">
+          <button 
+            onClick={() => {
+              setSelectedClientId(row.original.id);
+              setModalMode('edit');
+              setShowModal(true);
+            }}
+            className="px-3 py-1 text-sm bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
+          >
             Edit
           </button>
         </div>
@@ -215,7 +219,14 @@ const ClientsPage = () => {
               </select>
             </div>
             <div className="flex items-end">
-              <button className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-colors">
+              <button 
+                onClick={() => {
+                  setSelectedClientId(undefined);
+                  setModalMode('create');
+                  setShowModal(true);
+                }}
+                className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-colors"
+              >
                 Add New Client
               </button>
             </div>
@@ -291,6 +302,24 @@ const ClientsPage = () => {
         <div className="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
           <DataTable columns={columns} data={filteredClients} />
         </div>
+
+        {/* Client Form Modal */}
+        {showModal && (
+          <ClientForm
+            mode={modalMode}
+            clientId={selectedClientId}
+            onSuccess={(result) => {
+              setShowModal(false);
+              // Refetch clients list
+              refetch();
+              queryClient.invalidateQueries({ queryKey: ['clients'] });
+            }}
+            onCancel={() => {
+              setShowModal(false);
+              setSelectedClientId(undefined);
+            }}
+          />
+        )}
       </div>
     </Layout>
   );

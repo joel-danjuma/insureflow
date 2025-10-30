@@ -209,6 +209,58 @@ export const userService = {
   },
 };
 
+export const clientService = {
+  createClient: async (clientData: any) => {
+    try {
+      // Create client using register endpoint with CUSTOMER role
+      const registerData = {
+        ...clientData,
+        role: 'CUSTOMER',
+        password: 'TempPassword123!', // Clients will need to set their password on first login
+      };
+      const response = await api.post('/auth/register', registerData);
+      return response.data;
+    } catch (error) {
+      errorHandler(error, 'creating client');
+      throw error;
+    }
+  },
+
+  getClient: async (clientId: number) => {
+    try {
+      const response = await api.get(`/users/${clientId}`);
+      return response.data;
+    } catch (error) {
+      errorHandler(error, 'fetching client');
+      throw error;
+    }
+  },
+
+  updateClient: async (clientId: number, clientData: any) => {
+    try {
+      const response = await api.put(`/users/${clientId}`, clientData);
+      return response.data;
+    } catch (error) {
+      errorHandler(error, 'updating client');
+      throw error;
+    }
+  },
+
+  getClients: async (skip: number = 0, limit: number = 100) => {
+    try {
+      // Get clients for current broker by fetching policies and extracting unique customers
+      // For now, we'll get all users with CUSTOMER role that are associated with broker's policies
+      const response = await api.get('/users/', {
+        params: { skip, limit, role: 'CUSTOMER' },
+      });
+      return response.data;
+    } catch (error) {
+      errorHandler(error, 'fetching clients');
+      throw error;
+    }
+  },
+};
+
 export const policyService = {
   getPolicies: async (skip: number = 0, limit: number = 100) => {
     try {
