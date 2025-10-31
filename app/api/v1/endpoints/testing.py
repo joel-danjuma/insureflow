@@ -11,7 +11,7 @@ from app.core.config import settings
 from app.core.database import get_db
 from app.dependencies import get_current_broker_or_admin_user
 from app.models.user import User
-from app.crud import user as crud_user, premium as crud_premium, virtual_account as crud_virtual_account
+from app.crud import user as crud_user, premium as crud_premium, virtual_account as crud_virtual_account, policy as crud_policy
 from app.schemas.testing import (
     TestVAAccountCreationRequest, 
     TestVAFundingRequest, 
@@ -32,66 +32,77 @@ async def simulate_payment(
     current_user: User = Depends(get_current_broker_or_admin_user)
 ):
     """
-    Simulates a payment from a broker's test account to InsureFlow's settlement account.
-    This mimics the first leg of the payment flow.
+    Simulates a full end-to-end payment and settlement flow for a given premium.
+    1. Ensures a virtual account exists for the user.
+    2. Simulates a payment TO the user's virtual account.
+    3. Simulates the webhook processing by updating balances and policy status.
+    4. Triggers the settlement FROM the user's virtual account to the insurance firm.
     """
-    logger.info(f"--- 🧪 Test: Simulating payment for Premium ID: {request.premium_id} ---")
+    logger.info(f"--- 🧪 Test: Simulating full payment flow for Premium ID: {request.premium_id} ---")
 
     premium = crud_premium.get_premium(db, premium_id=request.premium_id)
     if not premium:
         raise HTTPException(status_code=404, detail="Premium not found")
 
-    amount = premium.amount
-
-    logger.info(f"--- 🧪 Transferring ₦{amount} from {settings.BROKER_TEST_ACCOUNT_NUMBER} to {settings.INSUREFLOW_SETTLEMENT_ACCOUNT_NUMBER} ---")
-
-    # In a real scenario with Squad Co's transfer API, you'd call it here.
-    # Since we are simulating, and the core logic is covered by funding the settlement account,
-    # we can re-use the simulate_payment function from squad_co_service for simplicity.
-    # This effectively credits the settlement account, which is what the transfer would do.
-    
-    result = await squad_co_service.simulate_payment(
-        virtual_account_number=settings.INSUREFLOW_SETTLEMENT_ACCOUNT_NUMBER,
-        amount=premium.amount  # Use the actual premium amount here
-    )
-
-    if not result.get("success"):
-        raise HTTPException(status_code=400, detail=result.get("message", "Failed to simulate payment to settlement account"))
-    
-    # --- Trigger settlement logic after successful payment ---
-    logger.info(f"--- 🧪 Payment to settlement account successful. Triggering settlement to insurance firm... ---")
     try:
-        if premium.policy and premium.policy.user:
-            user = premium.policy.user
-            # Get or create a virtual account for the user
-            user_va = crud_virtual_account.get_virtual_account_by_user(db, user_id=user.id)
-            if not user_va:
-                logger.warning(f"No VA found for user {user.id}. Creating one...")
-                va_creation_result = await virtual_account_service.create_individual_virtual_account(
-                    db=db, user=user, policy_id=premium.policy.id
-                )
-                if va_creation_result.get("success"):
-                    # Refetch the newly created VA
-                    user_va = crud_virtual_account.get_virtual_account_by_user(db, user_id=user.id)
-                else:
-                    logger.error(f"Failed to create VA for user {user.id}: {va_creation_result.get('error')}")
+        if not (premium.policy and premium.policy.user):
+            raise HTTPException(status_code=404, detail="Policy is not linked to a user.")
 
-            if user_va:
-                settlement_result = await settlement_service.process_settlement(db, virtual_account_id=user_va.id)
-                if settlement_result.get("error"):
-                     logger.error(f"Settlement processing failed: {settlement_result.get('error')}")
+        user = premium.policy.user
+        
+        # Step 1: Get or create a virtual account for the user.
+        user_va = crud_virtual_account.get_virtual_account_by_user(db, user_id=user.id)
+        if not user_va:
+            logger.warning(f"No VA found for user {user.id}. Creating one...")
+            va_creation_result = await virtual_account_service.create_individual_virtual_account(
+                db=db, user=user, policy_id=premium.policy.id
+            )
+            if va_creation_result.get("success"):
+                user_va = crud_virtual_account.get_virtual_account_by_user(db, user_id=user.id)
             else:
-                logger.error(f"Could not trigger settlement for premium {premium.id} because VA could not be found or created for the user.")
-        else:
-            logger.warning(f"Could not trigger settlement for premium {premium.id} because no user is linked to the policy.")
+                error_msg = f"Failed to create VA for user {user.id}: {va_creation_result.get('error')}"
+                logger.error(error_msg)
+                raise HTTPException(status_code=500, detail=error_msg)
+
+        if not user_va:
+            raise HTTPException(status_code=404, detail="Virtual account for user could not be found or created.")
+
+        # Step 2: Simulate the payment to the user's virtual account.
+        logger.info(f"--- 🧪 Stage 1: Simulating payment of ₦{premium.amount} to user's VA {user_va.virtual_account_number} ---")
+        payment_result = await squad_co_service.simulate_payment(
+            virtual_account_number=user_va.virtual_account_number,
+            amount=premium.amount
+        )
+
+        if not payment_result.get("success"):
+            raise HTTPException(status_code=400, detail=payment_result.get("message", "Failed to simulate payment to user's virtual account"))
+        
+        # Step 3: Manually update the VA balance and policy status (simulating the webhook).
+        logger.info(f"--- 🧪 Simulating webhook processing: Updating balances and policy status... ---")
+        crud_virtual_account.update_virtual_account_balance(db, virtual_account_id=user_va.id, amount_change=premium.amount)
+        crud_policy.update_policy_payment_status(db, policy_id=premium.policy.id, status="paid")
+
+        # Step 4: Trigger the settlement.
+        logger.info(f"--- 🧪 Stage 2: Triggering settlement from user's VA to insurance firm... ---")
+        settlement_result = await settlement_service.process_settlement(db, virtual_account_id=user_va.id)
+        if settlement_result.get("error"):
+            logger.error(f"Settlement processing failed: {settlement_result.get('error')}")
+            return {
+                "message": "Payment simulation successful, but automated settlement failed.",
+                "details": {"payment": payment_result, "settlement": settlement_result}
+            }
+            
+        return {
+            "message": "Full payment and settlement flow simulated successfully.",
+            "details": {"payment": payment_result, "settlement": settlement_result}
+        }
 
     except Exception as e:
-        logger.error(f"An unexpected error occurred during settlement trigger: {e}")
+        logger.error(f"An unexpected error occurred during the simulation: {e}")
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=500, detail=str(e))
 
-    return {
-        "message": "Payment simulation successful. InsureFlow settlement account has been credited.",
-        "details": result
-    }
 
 @router.post("/test-create-va", response_model=dict, tags=["Testing"])
 async def test_create_va(
