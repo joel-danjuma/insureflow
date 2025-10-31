@@ -20,6 +20,7 @@ from app.schemas.testing import (
 )
 from app.services.virtual_account_service import virtual_account_service
 from app.services.squad_co import squad_co_service
+from app.services.settlement_service import settlement_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -57,6 +58,23 @@ async def simulate_payment(
     if not result.get("success"):
         raise HTTPException(status_code=400, detail=result.get("message", "Failed to simulate payment to settlement account"))
     
+    # --- NEW: Trigger settlement logic after successful payment ---
+    logger.info(f"--- 🧪 Payment to settlement account successful. Triggering settlement to insurance firm... ---")
+    try:
+        # This will use the logic we updated to settle to the test insurance firm account
+        # Note: We need the virtual_account_id associated with the policy/premium
+        if premium.policy and premium.policy.virtual_account_id:
+            settlement_result = await settlement_service.process_settlement(db, virtual_account_id=premium.policy.virtual_account_id)
+            if settlement_result.get("error"):
+                 logger.error(f"Settlement processing failed: {settlement_result.get('error')}")
+                 # We don't raise an exception here because the main payment succeeded.
+                 # In a real app, this would be handled by a retry mechanism.
+        else:
+            logger.warning(f"Could not trigger settlement for premium {premium.id} because no virtual account is linked to the policy.")
+
+    except Exception as e:
+        logger.error(f"An unexpected error occurred during settlement trigger: {e}")
+
     return {
         "message": "Payment simulation successful. InsureFlow settlement account has been credited.",
         "details": result
