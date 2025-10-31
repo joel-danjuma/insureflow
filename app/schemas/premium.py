@@ -5,6 +5,8 @@ from datetime import date
 from pydantic import BaseModel
 from typing import Optional
 
+from app.schemas.policy import Policy as PolicySchema
+
 class PremiumBase(BaseModel):
     amount: float
     due_date: date
@@ -21,6 +23,7 @@ class PremiumUpdate(BaseModel):
 
 class Premium(PremiumBase):
     id: int
+    policy: Optional[PolicySchema] = None
 
     class Config:
         from_attributes = True 

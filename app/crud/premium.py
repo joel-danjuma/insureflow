@@ -2,7 +2,7 @@
 CRUD operations for the Premium model.
 """
 from typing import List, Optional
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from app.models.premium import Premium, PaymentStatus
 from app.schemas.premium import PremiumCreate, PremiumUpdate
 
@@ -11,19 +11,19 @@ def get_premium(db: Session, premium_id: int) -> Optional[Premium]:
     """
     Retrieves a premium from the database by its ID.
     """
-    return db.query(Premium).filter(Premium.id == premium_id).first()
+    return db.query(Premium).options(joinedload(Premium.policy)).filter(Premium.id == premium_id).first()
 
 def get_premiums(db: Session, skip: int = 0, limit: int = 100) -> List[Premium]:
     """
     Retrieves a list of all premiums from the database.
     """
-    return db.query(Premium).offset(skip).limit(limit).all()
+    return db.query(Premium).options(joinedload(Premium.policy)).offset(skip).limit(limit).all()
 
 def get_premiums_by_policy(db: Session, policy_id: int, skip: int = 0, limit: int = 100) -> List[Premium]:
     """
     Retrieves a list of premiums for a specific policy from the database.
     """
-    return db.query(Premium).filter(Premium.policy_id == policy_id).offset(skip).limit(limit).all()
+    return db.query(Premium).options(joinedload(Premium.policy)).filter(Premium.policy_id == policy_id).offset(skip).limit(limit).all()
 
 def get_unpaid_premiums_by_policy(db: Session, policy_id: int) -> List[Premium]:
     """

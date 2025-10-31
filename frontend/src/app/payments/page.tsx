@@ -3,8 +3,9 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import useAuthStore from '@/store/authStore';
-import { usePolicies, usePremiums } from '@/hooks/useQuery';
+import { usePremiums } from '@/hooks/useQuery';
 import { formatNaira } from '@/utils/currency';
+import Layout from '@/components/Layout';
 
 export default function PaymentsPage() {
   const router = useRouter();
@@ -12,7 +13,6 @@ export default function PaymentsPage() {
   const [selectedPremium, setSelectedPremium] = useState<any>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const { data: policies, isLoading: policiesLoading } = usePolicies();
   const { data: premiums, isLoading: premiumsLoading } = usePremiums();
 
   // Filter unpaid premiums with validation
@@ -59,22 +59,13 @@ export default function PaymentsPage() {
     }
   };
 
-  const getPolicyForPremium = (premiumPolicyId: number) => {
-    return policies?.find(policy => policy.id === premiumPolicyId);
-  };
-
   const getStatusColor = (status: string | undefined | null) => {
-    // Handle undefined/null status
-    if (!status || typeof status !== 'string') {
-      return 'text-gray-400 bg-gray-400/10';
-    }
-    
-    switch (status.toLowerCase()) {
-      case 'pending':
+    switch (status) {
+      case 'PENDING':
         return 'text-yellow-400 bg-yellow-400/10';
-      case 'overdue':
+      case 'OVERDUE':
         return 'text-red-400 bg-red-400/10';
-      case 'paid':
+      case 'PAID':
         return 'text-green-400 bg-green-400/10';
       default:
         return 'text-gray-400 bg-gray-400/10';
@@ -82,200 +73,200 @@ export default function PaymentsPage() {
   };
 
   // Helper function to safely format dates
-  const formatDate = (dateString: string | undefined | null): string => {
-    if (!dateString) return 'N/A';
+  const formatDate = (dateString: string | undefined | null) => {
+    if (!dateString) {
+      return 'N/A';
+    }
     try {
       const date = new Date(dateString);
-      // Check if date is valid
-      if (isNaN(date.getTime())) return 'N/A';
-      return date.toLocaleDateString();
-    } catch (error) {
-      console.error('Error formatting date:', dateString, error);
-      return 'N/A';
+      return date.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' });
+    } catch (e) {
+      return 'Invalid Date';
     }
   };
 
-  if (policiesLoading || premiumsLoading) {
+  if (premiumsLoading) {
     return (
-      <div className="space-y-6">
-        <h1 className="text-white text-[28px] font-bold leading-tight tracking-[-0.015em]">Payments</h1>
-        <div className="animate-pulse">
-          <div className="bg-gray-800 rounded-xl p-6">
-            <div className="h-4 bg-gray-700 rounded w-1/4 mb-4"></div>
-            <div className="space-y-3">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="h-16 bg-gray-700 rounded"></div>
-              ))}
+      <Layout title="Payments">
+        <div className="space-y-6">
+          <h1 className="text-white text-[28px] font-bold leading-tight tracking-[-0.015em]">Payments</h1>
+          <div className="animate-pulse">
+            <div className="bg-gray-800 rounded-xl p-6">
+              <div className="h-4 bg-gray-700 rounded w-1/4 mb-4"></div>
+              <div className="space-y-3">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="h-16 bg-gray-700 rounded"></div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </Layout>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-white text-[28px] font-bold leading-tight tracking-[-0.015em]">Payments</h1>
-          <p className="text-gray-400 text-sm font-normal leading-normal">
-            Manage your premium payments and view payment history.
-          </p>
-        </div>
-        <button
-          onClick={() => router.back()}
-          className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors"
-        >
-          ← Back
-        </button>
-      </div>
-
-      {/* Unpaid Premiums */}
-      {unpaidPremiums.length > 0 && (
-        <div className="bg-gray-800 rounded-xl border border-gray-700">
-          <div className="p-6 border-b border-gray-700">
-            <h2 className="text-white text-xl font-semibold">Outstanding Payments</h2>
-            <p className="text-gray-400 text-sm mt-1">
-              You have {unpaidPremiums.length} pending payment(s)
+    <Layout title="Payments">
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-white text-[28px] font-bold leading-tight tracking-[-0.015em]">Payments</h1>
+            <p className="text-gray-400 text-sm font-normal leading-normal">
+              Manage your premium payments and view payment history.
             </p>
           </div>
-          
-          <div className="divide-y divide-gray-700">
-            {unpaidPremiums.map((premium) => {
-              // Skip invalid premium records
-              if (!premium || !premium.id) return null;
-              
-              const policy = getPolicyForPremium(premium.policy_id);
-              const isSelected = selectedPremium?.id === premium.id;
-              
-              return (
-                <div key={premium.id} className="p-6 hover:bg-gray-750 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-white font-semibold">
-                          {policy?.policy_name || 'Unknown Policy'}
-                        </h3>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(premium?.payment_status)}`}>
-                          {premium?.payment_status || 'Unknown'}
-                        </span>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                        <div>
-                          <span className="text-gray-400">Policy Number:</span>
-                          <div className="text-white font-mono">
-                            {policy?.policy_number || 'N/A'}
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <span className="text-gray-400">Due Date:</span>
-                          <div className="text-white">
-                            {formatDate(premium?.due_date)}
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <span className="text-gray-400">Amount:</span>
-                          <div className="text-white font-semibold">
-                            {formatNaira(premium?.amount || 0)}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="ml-6">
-                      <button
-                        onClick={() => handlePayPremium(premium)}
-                        disabled={isProcessing}
-                        className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-                          isSelected
-                            ? 'bg-orange-600 text-white cursor-not-allowed'
-                            : 'bg-orange-500 hover:bg-orange-600 text-white'
-                        }`}
-                      >
-                        {isSelected ? (
-                          <div className="flex items-center gap-2">
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                            Processing...
-                          </div>
-                        ) : (
-                          'Pay Now'
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* No Unpaid Premiums */}
-      {unpaidPremiums.length === 0 && (
-        <div className="bg-gray-800 rounded-xl border border-gray-700 p-12 text-center">
-          <div className="text-green-400 text-6xl mb-4">✅</div>
-          <h2 className="text-white text-2xl font-bold mb-2">All Caught Up!</h2>
-          <p className="text-gray-400 mb-6">
-            You have no outstanding payments at this time.
-          </p>
           <button
-            onClick={() => router.push('/dashboard')}
-            className="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors"
+            onClick={() => router.back()}
+            className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors"
           >
-            Return to Dashboard
+            ← Back
           </button>
         </div>
-      )}
 
-      {/* Payment History Section */}
-      <div className="bg-gray-800 rounded-xl border border-gray-700">
-        <div className="p-6 border-b border-gray-700">
-          <h2 className="text-white text-xl font-semibold">Recent Payment History</h2>
-        </div>
-        
-        <div className="p-6">
-          {premiums && premiums.length > 0 ? (
-            <div className="space-y-4">
-              {premiums.slice(0, 5).map((premium) => {
+        {/* Unpaid Premiums */}
+        {unpaidPremiums.length > 0 && (
+          <div className="bg-gray-800 rounded-xl border border-gray-700">
+            <div className="p-6 border-b border-gray-700">
+              <h2 className="text-white text-xl font-semibold">Outstanding Payments</h2>
+              <p className="text-gray-400 text-sm mt-1">
+                You have {unpaidPremiums.length} pending payment(s)
+              </p>
+            </div>
+            
+            <div className="divide-y divide-gray-700">
+              {unpaidPremiums.map((premium) => {
                 // Skip invalid premium records
                 if (!premium || !premium.id) return null;
                 
-                const policy = getPolicyForPremium(premium.policy_id);
+                const isSelected = selectedPremium?.id === premium.id;
                 
                 return (
-                  <div key={premium.id} className="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
-                    <div>
-                      <div className="text-white font-medium">
-                        {policy?.policy_name || 'Unknown Policy'}
+                  <div key={premium.id} className="p-6 hover:bg-gray-750 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="text-white font-semibold">
+                            {premium.policy?.policy_name || 'Unknown Policy'}
+                          </h3>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(premium?.payment_status)}`}>
+                            {premium?.payment_status || 'Unknown'}
+                          </span>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                          <div>
+                            <span className="text-gray-400">Policy Number:</span>
+                            <div className="text-white font-mono">
+                              {premium.policy?.policy_number || 'N/A'}
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <span className="text-gray-400">Due Date:</span>
+                            <div className="text-white">
+                              {formatDate(premium?.due_date)}
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <span className="text-gray-400">Amount:</span>
+                            <div className="text-white font-semibold">
+                              {formatNaira(premium?.amount || 0)}
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-gray-400 text-sm">
-                        {formatDate(premium?.due_date)}
+                      
+                      <div className="ml-6">
+                        <button
+                          onClick={() => handlePayPremium(premium)}
+                          disabled={isProcessing}
+                          className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                            isSelected
+                              ? 'bg-orange-600 text-white cursor-not-allowed'
+                              : 'bg-orange-500 hover:bg-orange-600 text-white'
+                          }`}
+                        >
+                          {isSelected ? (
+                            <div className="flex items-center gap-2">
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                              Processing...
+                            </div>
+                          ) : (
+                            'Pay Now'
+                          )}
+                        </button>
                       </div>
-                    </div>
-                    
-                    <div className="text-right">
-                      <div className="text-white font-semibold">
-                        {formatNaira(premium?.amount || 0)}
-                      </div>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(premium?.payment_status)}`}>
-                        {premium?.payment_status || 'Unknown'}
-                      </span>
                     </div>
                   </div>
                 );
               })}
             </div>
-          ) : (
-            <div className="text-center py-8">
-              <div className="text-gray-400 text-lg mb-2">No payment history</div>
-              <p className="text-gray-500 text-sm">Your payment history will appear here once you make payments.</p>
-            </div>
-          )}
+          </div>
+        )}
+
+        {/* No Unpaid Premiums */}
+        {unpaidPremiums.length === 0 && (
+          <div className="bg-gray-800 rounded-xl border border-gray-700 p-12 text-center">
+            <div className="text-green-400 text-6xl mb-4">✅</div>
+            <h2 className="text-white text-2xl font-bold mb-2">All Caught Up!</h2>
+            <p className="text-gray-400 mb-6">
+              You have no outstanding payments at this time.
+            </p>
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors"
+            >
+              Return to Dashboard
+            </button>
+          </div>
+        )}
+
+        {/* Payment History Section */}
+        <div className="bg-gray-800 rounded-xl border border-gray-700">
+          <div className="p-6 border-b border-gray-700">
+            <h2 className="text-white text-xl font-semibold">Recent Payment History</h2>
+          </div>
+          
+          <div className="p-6">
+            {premiums && premiums.length > 0 ? (
+              <div className="space-y-4">
+                {premiums.slice(0, 5).map((premium) => {
+                  // Skip invalid premium records
+                  if (!premium || !premium.id) return null;
+                  
+                  return (
+                    <div key={premium.id} className="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
+                      <div>
+                        <div className="text-white font-medium">
+                          {premium.policy?.policy_name || 'Unknown Policy'}
+                        </div>
+                        <div className="text-gray-400 text-sm">
+                          {formatDate(premium?.due_date)}
+                        </div>
+                      </div>
+                      
+                      <div className="text-right">
+                        <div className="text-white font-semibold">
+                          {formatNaira(premium?.amount || 0)}
+                        </div>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(premium?.payment_status)}`}>
+                          {premium?.payment_status || 'Unknown'}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <div className="text-gray-400 text-lg mb-2">No payment history</div>
+                <p className="text-gray-500 text-sm">Your payment history will appear here once you make payments.</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </Layout>
   );
 }

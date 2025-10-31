@@ -36,6 +36,10 @@ alembic upgrade head
 echo "👥 Populating database..."
 python3 scripts/populate_database.py
 
+# Create the InsureFlow admin user
+echo "👑 Creating InsureFlow admin user..."
+python3 scripts/fix_insureflow_admin.py
+
 echo "✅ Database setup complete!"
 echo "🚀 Starting FastAPI application..."
 
