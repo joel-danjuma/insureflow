@@ -17,6 +17,8 @@ from app.models.virtual_account import VirtualAccount, VirtualAccountType, Virtu
 from app.models.virtual_account_transaction import VirtualAccountTransaction, TransactionType, TransactionStatus, TransactionIndicator
 from app.models.user import User
 from app.crud import virtual_account as crud_virtual_account
+from app.crud import policy as crud_policy
+from app.models.policy import Policy
 from app.services.settlement_service import settlement_service
 from app.services.squad_co import squad_co_service
 from app.schemas.virtual_account import SquadVirtualAccountCreatePayload
@@ -271,6 +273,23 @@ class VirtualAccountService:
                 return {"error": "Virtual account not found"}
             
             logger.info(f"✅ VIRTUAL ACCOUNT FOUND: {virtual_account.account_name}")
+            
+            # Find the associated policy using the virtual account
+            policy = db.query(Policy).filter(Policy.id == virtual_account.policy_id).first()
+            if not policy:
+                logger.error(f"❌ POLICY NOT FOUND FOR VIRTUAL ACCOUNT: {virtual_account.id}")
+                # Even if no policy is found, we should still process the transaction
+                # but we cannot update a policy status.
+            else:
+                # Verify the amount against the policy's premium
+                if settled_amount < policy.premium_amount:
+                    logger.warning(f"⚠️ PAYMENT AMOUNT MISMATCH: Received {settled_amount}, expected {policy.premium_amount}. Treating as underpayment.")
+                    policy.payment_status = "partial_payment" 
+                else:
+                    if settled_amount > policy.premium_amount:
+                        logger.warning(f"⚠️ PAYMENT AMOUNT MISMATCH: Received {settled_amount}, expected {policy.premium_amount}. Treating as overpayment.")
+                    # Mark the policy as paid
+                    policy.payment_status = "paid"
             
             # Calculate platform commission split
             total_platform_commission = settled_amount * virtual_account.platform_commission_rate
