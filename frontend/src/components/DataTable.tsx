@@ -92,7 +92,7 @@ export function DataTable<TData, TValue>({
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
-                    className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider border-r border-gray-600 last:border-r-0"
+                    className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider border-r border-gray-600 last:border-r-0 ${header.column.columnDef.meta?.className || ''}`}
                   >
                     {header.isPlaceholder ? null : (
                       <div
@@ -151,7 +151,7 @@ export function DataTable<TData, TValue>({
                   {row.getVisibleCells().map((cell) => (
                     <td 
                       key={cell.id} 
-                      className="px-6 py-4 text-sm text-white border-r border-gray-700 last:border-r-0"
+                      className={`px-6 py-4 text-sm text-white border-r border-gray-700 last:border-r-0 ${cell.column.columnDef.meta?.className || ''}`}
                     >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </td>

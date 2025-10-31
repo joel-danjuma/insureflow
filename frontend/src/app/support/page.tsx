@@ -3,8 +3,8 @@
 import React, { useState } from 'react';
 import Layout from '@/components/Layout';
 import withAuth from '@/hocs/withAuth';
-import { useQuery } from '@tanstack/react-query';
-import api from '@/services/api';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { supportService } from '@/services/api';
 
 interface SupportTicket {
   id: number;
@@ -24,6 +24,7 @@ interface FAQ {
 }
 
 const SupportPage = () => {
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'tickets' | 'faq'>('tickets');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -35,40 +36,17 @@ const SupportPage = () => {
     category: 'general' as string,
   });
 
-  // Mock data - replace with actual API calls
-  const { data: tickets = [], isLoading: ticketsLoading } = useQuery({
+  // Fetch tickets from API
+  const { data: tickets = [], isLoading: ticketsLoading, refetch } = useQuery({
     queryKey: ['support-tickets'],
     queryFn: async () => {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return [
-        {
-          id: 1,
-          title: 'Payment Processing Issue',
-          description: 'Unable to process payment for policy POL-2024-001',
-          status: 'open' as const,
-          priority: 'high' as const,
-          created_at: '2024-01-15T10:30:00Z',
-          updated_at: '2024-01-15T10:30:00Z',
-        },
-        {
-          id: 2,
-          title: 'Policy Creation Problem',
-          description: 'Error when creating new policy',
-          status: 'in_progress' as const,
-          priority: 'medium' as const,
-          created_at: '2024-01-14T14:20:00Z',
-          updated_at: '2024-01-15T09:15:00Z',
-        },
-        {
-          id: 3,
-          title: 'Commission Calculation Query',
-          description: 'Need clarification on commission rates',
-          status: 'resolved' as const,
-          priority: 'low' as const,
-          created_at: '2024-01-13T16:45:00Z',
-          updated_at: '2024-01-14T11:30:00Z',
-        },
-      ];
+      try {
+        const data = await supportService.getTickets();
+        return data;
+      } catch (error) {
+        console.error('Error fetching tickets:', error);
+        return [];
+      }
     },
   });
 
@@ -123,8 +101,13 @@ const SupportPage = () => {
     setMessage(null);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await supportService.createTicket({
+        title: ticketForm.title,
+        description: ticketForm.description,
+        category: ticketForm.category,
+        priority: ticketForm.priority,
+      });
+      
       setMessage({ type: 'success', text: 'Support ticket submitted successfully! We will get back to you within 24 hours.' });
       setTicketForm({
         title: '',
@@ -132,8 +115,12 @@ const SupportPage = () => {
         priority: 'medium',
         category: 'general',
       });
-    } catch (error) {
-      setMessage({ type: 'error', text: 'Failed to submit ticket. Please try again.' });
+      
+      // Refetch tickets to show the new ticket
+      queryClient.invalidateQueries({ queryKey: ['support-tickets'] });
+      refetch();
+    } catch (error: any) {
+      setMessage({ type: 'error', text: error.message || 'Failed to submit ticket. Please try again.' });
     } finally {
       setIsSubmitting(false);
     }

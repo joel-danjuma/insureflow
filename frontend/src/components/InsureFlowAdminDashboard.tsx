@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/services/api';
+import { supportService } from '@/services/api';
 
 interface TransactionLog {
   id: number;
@@ -37,8 +38,30 @@ interface PlatformHealth {
   api_response_time: number;
 }
 
+interface SupportTicket {
+  id: number;
+  title: string;
+  description: string;
+  status: 'open' | 'in_progress' | 'resolved' | 'closed';
+  priority: 'low' | 'medium' | 'high';
+  category: string;
+  user_id: number;
+  admin_response?: string;
+  assigned_to?: number;
+  created_at: string;
+  updated_at: string;
+  resolved_at?: string;
+}
+
 const InsureFlowAdminDashboard = () => {
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('overview');
+  const [ticketFilters, setTicketFilters] = useState<{ status?: string; priority?: string; category?: string }>({});
+  const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
+  const [showTicketModal, setShowTicketModal] = useState(false);
+  const [adminResponse, setAdminResponse] = useState('');
+  const [updateStatus, setUpdateStatus] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
 
   // Fetch transaction logs
   const { data: transactionLogs, isLoading: logsLoading } = useQuery({
@@ -70,6 +93,20 @@ const InsureFlowAdminDashboard = () => {
     retry: 1,
   });
 
+  // Fetch support tickets
+  const { data: supportTickets = [], isLoading: ticketsLoading, refetch: refetchTickets } = useQuery({
+    queryKey: ['admin-support-tickets', ticketFilters],
+    queryFn: async () => {
+      const data = await supportService.getAllTickets(
+        ticketFilters.status,
+        ticketFilters.priority,
+        ticketFilters.category
+      );
+      return data;
+    },
+    retry: 1,
+  });
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NG', {
       style: 'currency',
@@ -79,6 +116,62 @@ const InsureFlowAdminDashboard = () => {
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-NG');
+  };
+
+  const getStatusColor = (status: string) => {
+    const colors = {
+      open: 'bg-blue-100 text-blue-800',
+      in_progress: 'bg-yellow-100 text-yellow-800',
+      resolved: 'bg-green-100 text-green-800',
+      closed: 'bg-gray-100 text-gray-800',
+    };
+    return colors[status as keyof typeof colors] || colors.open;
+  };
+
+  const getPriorityColor = (priority: string) => {
+    const colors = {
+      low: 'bg-green-100 text-green-800',
+      medium: 'bg-yellow-100 text-yellow-800',
+      high: 'bg-red-100 text-red-800',
+    };
+    return colors[priority as keyof typeof colors] || colors.medium;
+  };
+
+  const handleTicketClick = (ticket: SupportTicket) => {
+    setSelectedTicket(ticket);
+    setShowTicketModal(true);
+    setAdminResponse(ticket.admin_response || '');
+    setUpdateStatus(ticket.status);
+  };
+
+  const handleUpdateTicket = async () => {
+    if (!selectedTicket) return;
+    
+    setIsUpdating(true);
+    try {
+      const updateData: any = {};
+      if (adminResponse && adminResponse.trim() !== selectedTicket.admin_response) {
+        updateData.admin_response = adminResponse.trim();
+      }
+      if (updateStatus && updateStatus !== selectedTicket.status) {
+        updateData.status = updateStatus;
+      }
+      
+      if (Object.keys(updateData).length > 0) {
+        await supportService.updateTicket(selectedTicket.id, updateData);
+        queryClient.invalidateQueries({ queryKey: ['admin-support-tickets'] });
+        refetchTickets();
+        setShowTicketModal(false);
+        setSelectedTicket(null);
+        setAdminResponse('');
+        setUpdateStatus('');
+      }
+    } catch (error: any) {
+      console.error('Error updating ticket:', error);
+      alert('Failed to update ticket: ' + (error.message || 'Unknown error'));
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   return (
@@ -98,6 +191,7 @@ const InsureFlowAdminDashboard = () => {
               { id: 'transactions', label: 'Transaction Logs' },
               { id: 'commissions', label: 'Commission Analytics' },
               { id: 'platform', label: 'Platform Health' },
+              { id: 'support-tickets', label: 'Support Tickets' },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -292,8 +386,230 @@ const InsureFlowAdminDashboard = () => {
             </div>
           )}
 
+          {/* Support Tickets Tab */}
+          {activeTab === 'support-tickets' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-xl font-semibold">Support Tickets</h3>
+              </div>
+
+              {/* Filters */}
+              <div className="bg-gray-50 p-4 rounded-lg flex gap-4">
+                <select
+                  value={ticketFilters.status || ''}
+                  onChange={(e) => setTicketFilters(prev => ({ ...prev, status: e.target.value || undefined }))}
+                  className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+                >
+                  <option value="">All Statuses</option>
+                  <option value="open">Open</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="resolved">Resolved</option>
+                  <option value="closed">Closed</option>
+                </select>
+
+                <select
+                  value={ticketFilters.priority || ''}
+                  onChange={(e) => setTicketFilters(prev => ({ ...prev, priority: e.target.value || undefined }))}
+                  className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+                >
+                  <option value="">All Priorities</option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+
+                <select
+                  value={ticketFilters.category || ''}
+                  onChange={(e) => setTicketFilters(prev => ({ ...prev, category: e.target.value || undefined }))}
+                  className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+                >
+                  <option value="">All Categories</option>
+                  <option value="general">General</option>
+                  <option value="policies">Policies</option>
+                  <option value="payments">Payments</option>
+                  <option value="commissions">Commissions</option>
+                  <option value="technical">Technical</option>
+                </select>
+              </div>
+
+              {ticketsLoading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin h-8 w-8 border-4 border-purple-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                  <p>Loading support tickets...</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          ID
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Title
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Category
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Priority
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Created
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {supportTickets.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">
+                            No support tickets found
+                          </td>
+                        </tr>
+                      ) : (
+                        supportTickets.map((ticket: SupportTicket) => (
+                          <tr key={ticket.id} className="hover:bg-gray-50 cursor-pointer">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                              #{ticket.id}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-900">
+                              {ticket.title}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {ticket.category}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(ticket.status)}`}>
+                                {ticket.status.replace('_', ' ')}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(ticket.priority)}`}>
+                                {ticket.priority}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {formatDate(ticket.created_at)}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                              <button
+                                onClick={() => handleTicketClick(ticket)}
+                                className="text-purple-600 hover:text-purple-900"
+                              >
+                                View/Update
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
         </div>
       </div>
+
+      {/* Ticket Detail/Update Modal */}
+      {showTicketModal && selectedTicket && (
+        <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold">Ticket #{selectedTicket.id}</h3>
+              <button
+                onClick={() => {
+                  setShowTicketModal(false);
+                  setSelectedTicket(null);
+                  setAdminResponse('');
+                  setUpdateStatus('');
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                <p className="text-gray-900 font-medium">{selectedTicket.title}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <p className="text-gray-900">{selectedTicket.description}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                  <p className="text-gray-900">{selectedTicket.category}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(selectedTicket.priority)}`}>
+                    {selectedTicket.priority}
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <select
+                  value={updateStatus}
+                  onChange={(e) => setUpdateStatus(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                >
+                  <option value="open">Open</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="resolved">Resolved</option>
+                  <option value="closed">Closed</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Admin Response</label>
+                <textarea
+                  value={adminResponse}
+                  onChange={(e) => setAdminResponse(e.target.value)}
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  placeholder="Add your response to this ticket..."
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t">
+                <button
+                  onClick={() => {
+                    setShowTicketModal(false);
+                    setSelectedTicket(null);
+                    setAdminResponse('');
+                    setUpdateStatus('');
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleUpdateTicket}
+                  disabled={isUpdating}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50"
+                >
+                  {isUpdating ? 'Updating...' : 'Update Ticket'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

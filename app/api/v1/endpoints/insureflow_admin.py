@@ -11,6 +11,7 @@ from decimal import Decimal
 from app.dependencies import get_db, get_current_insureflow_admin
 from app.models.user import User
 from app.crud import insureflow_admin as crud_admin
+from app.crud import support_ticket as crud_support_ticket
 from app.crud.virtual_account import (
     update_virtual_account_commission_rates,
     get_total_commission_for_insureflow,
@@ -27,7 +28,8 @@ from app.schemas.dashboard import (
     TransactionFilter,
     CommissionConfigUpdate,
     SystemAlert,
-    AuditLogEntry
+    AuditLogEntry,
+    SupportTicketsSummary
 )
 
 router = APIRouter()
@@ -51,6 +53,16 @@ def get_insureflow_admin_dashboard(
         recent_transactions = crud_admin.get_transaction_logs(db, limit=20)
         system_alerts = crud_admin.get_recent_system_alerts(db, limit=10)
         
+        # Get support tickets summary
+        ticket_counts = crud_support_ticket.get_ticket_count_by_status(db)
+        support_tickets_summary = SupportTicketsSummary(
+            total=ticket_counts['total'],
+            open=ticket_counts['open'],
+            in_progress=ticket_counts['in_progress'],
+            resolved=ticket_counts['resolved'],
+            closed=ticket_counts['closed']
+        )
+        
         # Performance metrics
         performance_metrics = {
             "total_platform_revenue": float(commission_analytics.total_revenue_generated),
@@ -67,6 +79,7 @@ def get_insureflow_admin_dashboard(
             user_management=user_management,
             recent_transactions=recent_transactions,
             system_alerts=system_alerts,
+            support_tickets_summary=support_tickets_summary,
             performance_metrics=performance_metrics
         )
         

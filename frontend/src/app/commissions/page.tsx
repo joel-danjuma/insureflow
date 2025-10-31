@@ -7,6 +7,8 @@ import { DataTable } from '@/components/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/services/api';
+import CommissionDetailModal from '@/components/CommissionDetailModal';
+import PayoutRequestModal from '@/components/PayoutRequestModal';
 
 interface Commission {
   id: number;
@@ -24,6 +26,9 @@ interface Commission {
 const CommissionsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending' | 'processing'>('all');
+  const [selectedCommission, setSelectedCommission] = useState<Commission | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showPayoutModal, setShowPayoutModal] = useState(false);
 
   // Mock data - replace with actual API call
   const { data: commissions = [], isLoading } = useQuery({
@@ -96,6 +101,52 @@ const CommissionsPage = () => {
     },
   });
 
+  // Handler functions for buttons
+  const handleViewCommission = (commission: Commission) => {
+    setSelectedCommission(commission);
+    setShowDetailModal(true);
+  };
+
+  const handleDownloadCommission = async (commission: Commission) => {
+    try {
+      // Generate or fetch commission receipt/invoice
+      // For now, we'll create a simple text-based receipt
+      const receiptContent = `
+Commission Receipt
+==================
+
+Policy Number: ${commission.policy_number}
+Client Name: ${commission.client_name}
+Premium Amount: ₦${(commission.premium_amount / 1000).toFixed(0)}K
+Commission Rate: ${(commission.commission_rate * 100).toFixed(1)}%
+Commission Amount: ₦${(commission.commission_amount / 1000).toFixed(1)}K
+Payment Date: ${commission.payment_date ? new Date(commission.payment_date).toLocaleDateString() : 'N/A'}
+Transaction Ref: ${commission.transaction_ref || 'N/A'}
+Status: ${commission.status.charAt(0).toUpperCase() + commission.status.slice(1)}
+
+Generated on: ${new Date().toLocaleDateString()}
+      `.trim();
+
+      // Create a blob and download
+      const blob = new Blob([receiptContent], { type: 'text/plain' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `commission-receipt-${commission.policy_number}-${Date.now()}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Error downloading commission receipt:', error);
+      alert('Failed to download receipt. Please try again.');
+    }
+  };
+
+  const handleRequestPayout = () => {
+    setShowPayoutModal(true);
+  };
+
   const columns: ColumnDef<Commission>[] = [
     {
       accessorKey: 'policy_number',
@@ -121,6 +172,7 @@ const CommissionsPage = () => {
           </div>
         </div>
       ),
+      meta: { className: 'hidden lg:table-cell' },
     },
     {
       accessorKey: 'commission_rate',
@@ -132,6 +184,7 @@ const CommissionsPage = () => {
           </div>
         </div>
       ),
+      meta: { className: 'hidden md:table-cell' },
     },
     {
       accessorKey: 'commission_amount',
@@ -158,6 +211,7 @@ const CommissionsPage = () => {
           )}
         </div>
       ),
+      meta: { className: 'hidden lg:table-cell' },
     },
     {
       accessorKey: 'status',
@@ -184,6 +238,7 @@ const CommissionsPage = () => {
           <div className="text-white">{row.original.payment_method}</div>
         </div>
       ),
+      meta: { className: 'hidden xl:table-cell' },
     },
     {
       accessorKey: 'transaction_ref',
@@ -197,17 +252,24 @@ const CommissionsPage = () => {
           )}
         </div>
       ),
+      meta: { className: 'hidden xl:table-cell' },
     },
     {
       id: 'actions',
       header: 'Actions',
       cell: ({ row }) => (
-        <div className="flex space-x-2">
-          <button className="px-3 py-1 text-sm bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors">
+        <div className="flex flex-col sm:flex-row gap-2">
+          <button 
+            onClick={() => handleViewCommission(row.original)}
+            className="px-3 py-1 text-sm bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors"
+          >
             View
           </button>
           {row.original.status === 'paid' && (
-            <button className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600 transition-colors">
+            <button 
+              onClick={() => handleDownloadCommission(row.original)}
+              className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+            >
               Download
             </button>
           )}
@@ -217,9 +279,10 @@ const CommissionsPage = () => {
   ];
 
   const filteredCommissions = commissions.filter(commission => {
-    const matchesSearch = commission.policy_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         commission.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         commission.transaction_ref.toLowerCase().includes(searchTerm.toLowerCase());
+    const searchLower = searchTerm.toLowerCase();
+    const matchesSearch = commission.policy_number?.toLowerCase().includes(searchLower) ||
+                         commission.client_name?.toLowerCase().includes(searchLower) ||
+                         (commission.transaction_ref && commission.transaction_ref.toLowerCase().includes(searchLower));
     const matchesStatus = statusFilter === 'all' || commission.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -288,7 +351,10 @@ const CommissionsPage = () => {
               </select>
             </div>
             <div className="flex items-end">
-              <button className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-colors">
+              <button 
+                onClick={handleRequestPayout}
+                className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-colors"
+              >
                 Request Payout
               </button>
             </div>
@@ -355,9 +421,28 @@ const CommissionsPage = () => {
         </div>
 
         {/* Commissions Table */}
-        <div className="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
+        <div className="bg-gray-800 border border-gray-700 rounded-xl overflow-x-auto">
           <DataTable columns={columns} data={filteredCommissions} />
         </div>
+
+        {/* Commission Detail Modal */}
+        {showDetailModal && selectedCommission && (
+          <CommissionDetailModal
+            commission={selectedCommission}
+            onClose={() => {
+              setShowDetailModal(false);
+              setSelectedCommission(null);
+            }}
+          />
+        )}
+
+        {/* Payout Request Modal */}
+        {showPayoutModal && (
+          <PayoutRequestModal
+            totalPaidCommission={paidCommission}
+            onClose={() => setShowPayoutModal(false)}
+          />
+        )}
       </div>
     </Layout>
   );

@@ -9,6 +9,7 @@ from .premium import Premium, PaymentStatus, BillingCycle
 from .payment import Payment
 from .transaction import Transaction
 from .notification import Notification
+from .support_ticket import SupportTicket, TicketStatus, TicketPriority, TicketCategory
 from .virtual_account import VirtualAccount, VirtualAccountType, VirtualAccountStatus
 from .virtual_account_transaction import VirtualAccountTransaction, TransactionType, TransactionStatus, TransactionIndicator
 
@@ -28,6 +29,10 @@ __all__ = [
     "Payment",
     "Transaction",
     "Notification",
+    "SupportTicket",
+    "TicketStatus",
+    "TicketPriority",
+    "TicketCategory",
     "VirtualAccount",
     "VirtualAccountType",
     "VirtualAccountStatus",

@@ -227,6 +227,15 @@ class UserManagementSummary(BaseModel):
     top_active_users: List[Dict[str, Any]]
 
 
+class SupportTicketsSummary(BaseModel):
+    """Summary of support tickets for admin dashboard."""
+    total: int
+    open: int
+    in_progress: int
+    resolved: int
+    closed: int
+
+
 class InsureFlowAdminDashboard(BaseModel):
     """Comprehensive InsureFlow internal admin dashboard."""
     platform_health: PlatformHealthMetrics
@@ -235,6 +244,7 @@ class InsureFlowAdminDashboard(BaseModel):
     user_management: UserManagementSummary
     recent_transactions: List[TransactionLogEntry]
     system_alerts: List[Dict[str, Any]]
+    support_tickets_summary: Optional[SupportTicketsSummary] = None
     performance_metrics: Dict[str, Any]
 
 

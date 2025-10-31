@@ -261,6 +261,63 @@ export const clientService = {
   },
 };
 
+export const supportService = {
+  createTicket: async (ticketData: { title: string; description: string; category: string; priority: string }) => {
+    try {
+      const response = await api.post('/support/tickets', ticketData);
+      return response.data;
+    } catch (error) {
+      errorHandler(error, 'creating support ticket');
+      throw error;
+    }
+  },
+
+  getTickets: async (status?: string) => {
+    try {
+      const response = await api.get('/support/tickets', {
+        params: status ? { status } : {},
+      });
+      return response.data;
+    } catch (error) {
+      errorHandler(error, 'fetching support tickets');
+      throw error;
+    }
+  },
+
+  getTicketById: async (ticketId: number) => {
+    try {
+      const response = await api.get(`/support/tickets/${ticketId}`);
+      return response.data;
+    } catch (error) {
+      errorHandler(error, 'fetching support ticket');
+      throw error;
+    }
+  },
+
+  // Admin methods
+  getAllTickets: async (status?: string, priority?: string, category?: string) => {
+    try {
+      const response = await api.get('/support/admin/tickets', {
+        params: { status, priority, category },
+      });
+      return response.data;
+    } catch (error) {
+      errorHandler(error, 'fetching all support tickets');
+      throw error;
+    }
+  },
+
+  updateTicket: async (ticketId: number, updateData: { status?: string; admin_response?: string }) => {
+    try {
+      const response = await api.patch(`/support/admin/tickets/${ticketId}`, updateData);
+      return response.data;
+    } catch (error) {
+      errorHandler(error, 'updating support ticket');
+      throw error;
+    }
+  },
+};
+
 export const policyService = {
   getPolicies: async (skip: number = 0, limit: number = 100) => {
     try {
