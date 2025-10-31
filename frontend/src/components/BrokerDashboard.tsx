@@ -237,12 +237,32 @@ const BrokerDashboard = () => {
   };
 
   // Handle single premium payment
-  const handleSinglePayment = async (premiumId: number, policyId: string) => {
-    const policy = clientPortfolio.find(item => item.id === policyId);
-    if (!policy) return;
+  const handleSinglePayment = async (premiumId: number | null, policyId: string) => {
+    if (!premiumId) {
+      setPaymentError("This policy doesn't have an associated premium to pay.");
+      return;
+    }
 
-    setSelectedPolicies(new Set([policyId]));
-    setShowPaymentModal(true);
+    setPaymentLoading(prev => new Set(prev).add(policyId));
+    setPaymentError(null);
+    setPaymentSuccess(null);
+
+    try {
+      const result = await paymentService.simulateBankTransfer(premiumId);
+      setPaymentSuccess(result.message || "Payment simulation initiated successfully.");
+      // Optionally, you can refetch data here to update the UI
+      // queryClient.invalidateQueries(['policies']);
+      // queryClient.invalidateQueries(['premiums']);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+      setPaymentError(`Simulation failed: ${errorMessage}`);
+    } finally {
+      setPaymentLoading(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(policyId);
+        return newSet;
+      });
+    }
   };
 
   // Handle bulk payment

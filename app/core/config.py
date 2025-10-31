@@ -72,6 +72,11 @@ class Settings(BaseSettings):
 IrAK4ll0FPndJ3i57CioPalYKdNMF9+K4mFaGfT3dAMRSgWWWDeaerHx35VLgdX/wFTN5Zf1QYGe
 WiKyAmCAXoPwtlfvlLqsr9NMBJ3Ua+fFqSC4/6ThhudMlrxNL/ut/kd+pQIDAQAB"""  # Test public key
     
+    # Test Accounts for Simulated Payment Flow
+    BROKER_TEST_ACCOUNT_NUMBER: str = ""
+    INSUREFLOW_SETTLEMENT_ACCOUNT_NUMBER: str = ""
+    INSURANCE_FIRM_TEST_ACCOUNT_NUMBER: str = ""
+
     # Settlement Configuration
     INSUREFLOW_SETTLEMENT_ACCOUNT: str = ""  # InsureFlow's settlement account number
     INSUREFLOW_COMMISSION_RATE: float = 0.75  # 0.75% commission rate

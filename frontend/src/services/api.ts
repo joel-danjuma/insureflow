@@ -371,6 +371,16 @@ export const paymentService = {
       errorHandler(error, 'verifying payment');
     }
   },
+
+  simulateBankTransfer: async (premiumId: number) => {
+    try {
+      const response = await api.post('/testing/simulate-payment', { premium_id: premiumId });
+      return response.data;
+    } catch (error) {
+      errorHandler(error, 'simulating bank transfer');
+      throw error;
+    }
+  },
 };
 
 export const reminderService = {

@@ -7,20 +7,60 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 import logging
 
+from app.core.config import settings
 from app.core.database import get_db
 from app.dependencies import get_current_broker_or_admin_user
 from app.models.user import User
-from app.crud import user as crud_user
+from app.crud import user as crud_user, premium as crud_premium
 from app.schemas.testing import (
     TestVAAccountCreationRequest, 
     TestVAFundingRequest, 
-    TestVATransferRequest
+    TestVATransferRequest,
+    SimulatePaymentRequest
 )
 from app.services.virtual_account_service import virtual_account_service
 from app.services.squad_co import squad_co_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+@router.post("/simulate-payment", response_model=dict, tags=["Testing"])
+async def simulate_payment(
+    request: SimulatePaymentRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_broker_or_admin_user)
+):
+    """
+    Simulates a payment from a broker's test account to InsureFlow's settlement account.
+    This mimics the first leg of the payment flow.
+    """
+    logger.info(f"--- 🧪 Test: Simulating payment for Premium ID: {request.premium_id} ---")
+
+    premium = crud_premium.get_premium(db, premium_id=request.premium_id)
+    if not premium:
+        raise HTTPException(status_code=404, detail="Premium not found")
+
+    amount = premium.amount
+
+    logger.info(f"--- 🧪 Transferring ₦{amount} from {settings.BROKER_TEST_ACCOUNT_NUMBER} to {settings.INSUREFLOW_SETTLEMENT_ACCOUNT_NUMBER} ---")
+
+    # In a real scenario with Squad Co's transfer API, you'd call it here.
+    # Since we are simulating, and the core logic is covered by funding the settlement account,
+    # we can re-use the simulate_payment function from squad_co_service for simplicity.
+    # This effectively credits the settlement account, which is what the transfer would do.
+    
+    result = await squad_co_service.simulate_payment(
+        virtual_account_number=settings.INSUREFLOW_SETTLEMENT_ACCOUNT_NUMBER,
+        amount=float(amount)
+    )
+
+    if not result.get("success"):
+        raise HTTPException(status_code=400, detail=result.get("message", "Failed to simulate payment to settlement account"))
+    
+    return {
+        "message": "Payment simulation successful. InsureFlow settlement account has been credited.",
+        "details": result
+    }
 
 @router.post("/test-create-va", response_model=dict, tags=["Testing"])
 async def test_create_va(

@@ -7,6 +7,7 @@ from typing import Dict, Any, List
 from sqlalchemy.orm import Session
 from app.services.gaps_service import gaps_service
 from app.crud import virtual_account as crud_virtual_account
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -41,9 +42,9 @@ class SettlementService:
             "remarks": "Settlement",
             "vendor_code": "VC001",
             "vendor_name": "Insurance Company",
-            "vendor_acct_number": "0123456789",
+            "vendor_acct_number": settings.INSURANCE_FIRM_TEST_ACCOUNT_NUMBER,
             "vendor_bank_code": "058",  # GTBank
-            "customer_acct_number": "9876543210",  # InsureFlow's account
+            "customer_acct_number": settings.INSUREFLOW_SETTLEMENT_ACCOUNT_NUMBER,
         }
 
         result = await gaps_service.initiate_single_transfer(insurance_company_account)

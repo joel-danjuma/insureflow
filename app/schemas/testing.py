@@ -27,6 +27,11 @@ class TestVATransferRequest(BaseModel):
     amount: Decimal = Field(..., gt=0, description="The amount to transfer in Naira.")
 
 
+class SimulatePaymentRequest(BaseModel):
+    """Payload for the payment simulation endpoint."""
+    premium_id: int = Field(..., description="The ID of the premium to simulate payment for.")
+
+
 class TestingLogEntry(BaseModel):
     """Schema for individual log entries during testing."""
     timestamp: str
