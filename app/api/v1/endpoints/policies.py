@@ -16,7 +16,8 @@ from app.dependencies import (
 from app.models.user import User, UserRole
 from app.schemas.policy import Policy, PolicyCreate, PolicyUpdate, PolicySummary
 from app.schemas.virtual_account import PaymentSimulationResponse
-from app.services.virtual_account_service import simulate_policy_payment, virtual_account_service
+from app.services.virtual_account_service import virtual_account_service
+from app.services.squad_co import squad_co_service
 from app.models.policy import Policy as PolicyModel
 from app.models.virtual_account import VirtualAccount as VirtualAccountModel
 
@@ -404,13 +405,16 @@ async def simulate_policy_payment_endpoint(policy_id: int, db: Session = Depends
     if not policy:
         raise HTTPException(status_code=404, detail="Policy not found")
     
-    virtual_account = db.query(VirtualAccountModel).filter(VirtualAccountModel.policy_id == policy_id).first()
+    # Use the current user's ID to find the virtual account
+    virtual_account = db.query(VirtualAccountModel).filter(VirtualAccountModel.user_id == current_user.id).first()
     if not virtual_account:
-        raise HTTPException(status_code=404, detail="Virtual account not found for this policy")
+        raise HTTPException(status_code=404, detail="Virtual account not found for this user")
 
-    result = await virtual_account_service.simulate_payment(
+    # Call the centralized squad_co_service to handle the payment simulation
+    # This service correctly handles the conversion of Naira to kobo.
+    result = await squad_co_service.simulate_payment(
         virtual_account_number=virtual_account.virtual_account_number,
-        amount=policy.premium_amount
+        amount=policy.premium_amount  # Pass the amount in Naira
     )
     
     if result.get("error"):
