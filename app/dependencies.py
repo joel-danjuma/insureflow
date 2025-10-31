@@ -88,10 +88,10 @@ def get_current_insureflow_admin(
 ) -> User:
     """
     Get current user with InsureFlow platform admin privileges.
-    Only allows global ADMIN role access to internal platform data.
+    Only allows global INSUREFLOW_ADMIN role access to internal platform data.
     Restricts access from insurance company and broker admins.
     """
-    if current_user.role != UserRole.ADMIN:
+    if current_user.role != UserRole.INSUREFLOW_ADMIN:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="InsureFlow platform admin privileges required. Only global administrators can access internal platform data."
