@@ -79,11 +79,20 @@ class VirtualAccountService:
         
         logger.info(f"🆔 Customer Identifier: {customer_identifier}")
         
+        # Sanitize and validate phone number for Squad API
+        mobile_number = "08000000000"  # Default valid number
+        if user.phone_number:
+            sanitized_number = "".join(filter(str.isdigit, user.phone_number))
+            if len(sanitized_number) in [11, 13]:
+                mobile_number = sanitized_number
+            else:
+                logger.warning(f"Invalid phone number format for user {user.id}: '{user.phone_number}'. Using default.")
+        
         payload_data = {
             "customer_identifier": customer_identifier,
             "first_name": user.full_name.split()[0] if user.full_name else "User",
             "last_name": " ".join(user.full_name.split()[1:]) if len(user.full_name.split()) > 1 else "Customer",
-            "mobile_num": user.phone_number or "08000000000",
+            "mobile_num": mobile_number,
             "email": user.email,
             "beneficiary_account": "0123456789"  # Placeholder for testing
         }
