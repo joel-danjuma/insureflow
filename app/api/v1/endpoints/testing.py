@@ -52,7 +52,7 @@ async def simulate_payment(
     
     result = await squad_co_service.simulate_payment(
         virtual_account_number=settings.INSUREFLOW_SETTLEMENT_ACCOUNT_NUMBER,
-        amount=float(amount)
+        amount=premium.amount  # Use the actual premium amount here
     )
 
     if not result.get("success"):
@@ -61,16 +61,27 @@ async def simulate_payment(
     # --- Trigger settlement logic after successful payment ---
     logger.info(f"--- 🧪 Payment to settlement account successful. Triggering settlement to insurance firm... ---")
     try:
-        # Correctly find the virtual account via the policy's user
-        if premium.policy and premium.policy.user_id:
-            # Find the virtual account linked to the user
-            user_va = crud_virtual_account.get_virtual_account_by_user(db, user_id=premium.policy.user_id)
+        if premium.policy and premium.policy.user:
+            user = premium.policy.user
+            # Get or create a virtual account for the user
+            user_va = crud_virtual_account.get_virtual_account_by_user(db, user_id=user.id)
+            if not user_va:
+                logger.warning(f"No VA found for user {user.id}. Creating one...")
+                va_creation_result = await virtual_account_service.create_individual_virtual_account(
+                    db=db, user=user, policy_id=premium.policy.id
+                )
+                if va_creation_result.get("success"):
+                    # Refetch the newly created VA
+                    user_va = crud_virtual_account.get_virtual_account_by_user(db, user_id=user.id)
+                else:
+                    logger.error(f"Failed to create VA for user {user.id}: {va_creation_result.get('error')}")
+
             if user_va:
                 settlement_result = await settlement_service.process_settlement(db, virtual_account_id=user_va.id)
                 if settlement_result.get("error"):
                      logger.error(f"Settlement processing failed: {settlement_result.get('error')}")
             else:
-                logger.warning(f"Could not trigger settlement for premium {premium.id} because no virtual account is linked to the policy's user.")
+                logger.error(f"Could not trigger settlement for premium {premium.id} because VA could not be found or created for the user.")
         else:
             logger.warning(f"Could not trigger settlement for premium {premium.id} because no user is linked to the policy.")
 
