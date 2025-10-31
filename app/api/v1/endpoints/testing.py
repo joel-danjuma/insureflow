@@ -80,7 +80,15 @@ async def simulate_payment(
         # Step 3: Manually update the VA balance and policy status (simulating the webhook).
         logger.info(f"--- 🧪 Simulating webhook processing: Updating balances and policy status... ---")
         crud_virtual_account.update_virtual_account_balance(db, virtual_account_id=user_va.id, credit_amount=premium.amount)
-        crud_policy.update_policy_payment_status(db, policy_id=premium.policy.id, status="paid")
+        
+        # Correctly call the status update function with the required arguments
+        transaction_ref = payment_result.get("data", {}).get("transaction_reference", "simulated_ref")
+        crud_policy.update_policy_payment_status(
+            db, 
+            merchant_ref=premium.policy.merchant_reference, 
+            status="paid", 
+            tx_ref=transaction_ref
+        )
 
         # Step 4: Trigger the settlement.
         logger.info(f"--- 🧪 Stage 2: Triggering settlement from user's VA to insurance firm... ---")
