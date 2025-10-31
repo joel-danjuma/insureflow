@@ -97,10 +97,21 @@ const InsureFlowAdminDashboard = () => {
   const { data: supportTickets = [], isLoading: ticketsLoading, refetch: refetchTickets } = useQuery({
     queryKey: ['admin-support-tickets', ticketFilters],
     queryFn: async () => {
+      // Normalize filter values: convert empty strings to undefined, trim and lowercase if not empty
+      const normalizedStatus = ticketFilters.status && ticketFilters.status.trim() 
+        ? ticketFilters.status.trim().toLowerCase() 
+        : undefined;
+      const normalizedPriority = ticketFilters.priority && ticketFilters.priority.trim() 
+        ? ticketFilters.priority.trim().toLowerCase() 
+        : undefined;
+      const normalizedCategory = ticketFilters.category && ticketFilters.category.trim() 
+        ? ticketFilters.category.trim().toLowerCase() 
+        : undefined;
+      
       const data = await supportService.getAllTickets(
-        ticketFilters.status,
-        ticketFilters.priority,
-        ticketFilters.category
+        normalizedStatus,
+        normalizedPriority,
+        normalizedCategory
       );
       return data;
     },

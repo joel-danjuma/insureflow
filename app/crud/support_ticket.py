@@ -86,12 +86,13 @@ def get_all_tickets(
     """
     query = db.query(SupportTicket)
     
-    if status:
-        query = query.filter(SupportTicket.status == status)
-    if priority:
-        query = query.filter(SupportTicket.priority == priority)
-    if category:
-        query = query.filter(SupportTicket.category == category)
+    # Only filter if value is provided and not empty (after stripping whitespace)
+    if status and status.strip():
+        query = query.filter(SupportTicket.status == status.strip().lower())
+    if priority and priority.strip():
+        query = query.filter(SupportTicket.priority == priority.strip().lower())
+    if category and category.strip():
+        query = query.filter(SupportTicket.category == category.strip().lower())
     
     return query.order_by(SupportTicket.created_at.desc()).offset(skip).limit(limit).all()
 
