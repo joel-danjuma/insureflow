@@ -4,9 +4,13 @@ API endpoints for policy management.
 from typing import List, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from decimal import Decimal
+from datetime import date, timedelta, datetime
+import logging
 
 from app.core.database import get_db
 from app.crud import policy as policy_crud
+from app.crud import user as crud_user
 from app.dependencies import (
     get_current_broker_or_admin_user, 
     get_current_policy_creator,
@@ -14,14 +18,122 @@ from app.dependencies import (
     get_current_payment_processor
 )
 from app.models.user import User, UserRole
+from app.models.policy import Policy as PolicyModel, PolicyType, PolicyStatus, PaymentFrequency
+from app.models.company import InsuranceCompany
+from app.core.security import get_password_hash
 from app.schemas.policy import Policy, PolicyCreate, PolicyUpdate, PolicySummary
 from app.schemas.virtual_account import PaymentSimulationResponse
 from app.services.virtual_account_service import virtual_account_service
 from app.services.squad_co import squad_co_service
-from app.models.policy import Policy as PolicyModel
 from app.models.virtual_account import VirtualAccount as VirtualAccountModel
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter()
+
+def _seed_mock_data(db: Session):
+    """Seed database with mock policies and users that have all Squad API required fields."""
+    existing_count = db.query(PolicyModel).count()
+    if existing_count > 0:
+        return  # Already seeded
+    
+    logger.info("📋 Seeding database with mock policies and users...")
+    
+    # Get or create default insurance company
+    company = db.query(InsuranceCompany).filter(
+        InsuranceCompany.name == "Secure Life Insurance Nigeria"
+    ).first()
+    
+    if not company:
+        company = InsuranceCompany(
+            name="Secure Life Insurance Nigeria",
+            registration_number="RC123456",
+            address="14B Adeola Odeku Street, Victoria Island, Lagos",
+            contact_email="info@securelife.ng",
+            contact_phone="+234-1-234-5678",
+            website="https://securelife.ng",
+            description="Leading life insurance provider in Nigeria"
+        )
+        db.add(company)
+        db.commit()
+        db.refresh(company)
+    
+    # Create users with all Squad API required fields
+    user_data = [
+        {"full_name": "John Doe", "email": "john.doe@example.com", "phone": "08012345678", "gender": "male", "dob": date(1985, 3, 15)},
+        {"full_name": "Jane Smith", "email": "jane.smith@example.com", "phone": "08023456789", "gender": "female", "dob": date(1990, 7, 22)},
+        {"full_name": "Michael Johnson", "email": "michael.johnson@example.com", "phone": "08034567890", "gender": "male", "dob": date(1988, 11, 5)},
+        {"full_name": "Sarah Williams", "email": "sarah.williams@example.com", "phone": "08045678901", "gender": "female", "dob": date(1992, 2, 18)},
+        {"full_name": "David Brown", "email": "david.brown@example.com", "phone": "08056789012", "gender": "male", "dob": date(1987, 9, 30)},
+        {"full_name": "Emily Davis", "email": "emily.davis@example.com", "phone": "08067890123", "gender": "female", "dob": date(1991, 4, 12)},
+        {"full_name": "Robert Wilson", "email": "robert.wilson@example.com", "phone": "08078901234", "gender": "male", "dob": date(1986, 8, 25)},
+        {"full_name": "Lisa Anderson", "email": "lisa.anderson@example.com", "phone": "08089012345", "gender": "female", "dob": date(1989, 12, 8)},
+    ]
+    
+    users = []
+    for user_info in user_data:
+        user = crud_user.get_user_by_email(db, user_info["email"])
+        if not user:
+            user = User(
+                username=user_info["email"].split("@")[0],
+                email=user_info["email"],
+                full_name=user_info["full_name"],
+                phone_number=user_info["phone"],
+                bvn="22222222222",  # Valid test BVN for Squad sandbox
+                date_of_birth=datetime.combine(user_info["dob"], datetime.min.time()),
+                gender=user_info["gender"],
+                address="123 Fictional Street, Lagos, Nigeria",
+                role=UserRole.CUSTOMER,
+                hashed_password=get_password_hash("password123"),
+                is_active=True,
+                is_verified=True
+            )
+            db.add(user)
+            users.append(user)
+        else:
+            users.append(user)
+    
+    db.commit()
+    
+    # Create policies linked to users
+    policy_data = [
+        {"name": "Life Insurance Policy", "number": "POL-001-2024-0001", "type": PolicyType.LIFE, "premium": Decimal("250000.00"), "due_date": date(2024, 12, 31), "frequency": PaymentFrequency.MONTHLY},
+        {"name": "Auto Insurance Policy", "number": "POL-002-2024-0002", "type": PolicyType.AUTO, "premium": Decimal("180000.00"), "due_date": date(2024, 11, 15), "frequency": PaymentFrequency.QUARTERLY},
+        {"name": "Health Insurance Policy", "number": "POL-003-2024-0003", "type": PolicyType.HEALTH, "premium": Decimal("120000.00"), "due_date": date(2024, 12, 15), "frequency": PaymentFrequency.MONTHLY},
+        {"name": "Property Insurance Policy", "number": "POL-004-2024-0004", "type": PolicyType.HOME, "premium": Decimal("350000.00"), "due_date": date(2024, 12, 20), "frequency": PaymentFrequency.ANNUALLY},
+        {"name": "Business Insurance Policy", "number": "POL-005-2024-0005", "type": PolicyType.BUSINESS, "premium": Decimal("500000.00"), "due_date": date(2024, 12, 10), "frequency": PaymentFrequency.QUARTERLY},
+        {"name": "Travel Insurance Policy", "number": "POL-006-2024-0006", "type": PolicyType.TRAVEL, "premium": Decimal("75000.00"), "due_date": date(2024, 11, 30), "frequency": PaymentFrequency.ANNUALLY},
+        {"name": "Marine Insurance Policy", "number": "POL-007-2024-0007", "type": PolicyType.TRAVEL, "premium": Decimal("450000.00"), "due_date": date(2024, 12, 25), "frequency": PaymentFrequency.QUARTERLY},
+        {"name": "Professional Indemnity", "number": "POL-008-2024-0008", "type": PolicyType.BUSINESS, "premium": Decimal("200000.00"), "due_date": date(2024, 12, 5), "frequency": PaymentFrequency.ANNUALLY},
+    ]
+    
+    for i, policy_info in enumerate(policy_data):
+        existing = db.query(PolicyModel).filter(PolicyModel.policy_number == policy_info["number"]).first()
+        if not existing:
+            policy = PolicyModel(
+                policy_name=policy_info["name"],
+                policy_number=policy_info["number"],
+                policy_type=policy_info["type"],
+                company_id=company.id,
+                user_id=users[i].id,
+                premium_amount=policy_info["premium"],
+                coverage_amount=policy_info["premium"] * 10,
+                start_date=date.today(),
+                due_date=policy_info["due_date"],
+                end_date=policy_info["due_date"] + timedelta(days=365),
+                payment_frequency=policy_info["frequency"],
+                status=PolicyStatus.ACTIVE,
+                payment_status="pending",
+                company_name=f"{users[i].full_name.split()[0]} Corp",
+                contact_person=users[i].full_name,
+                contact_email=users[i].email,
+                contact_phone=users[i].phone_number,
+                merchant_reference=f"POL-{policy_info['number']}"
+            )
+            db.add(policy)
+    
+    db.commit()
+    logger.info("✅ Mock data seeded successfully")
 
 @router.post("/", response_model=Policy, status_code=status.HTTP_201_CREATED)
 async def create_policy(
@@ -83,6 +195,9 @@ def get_policies(
     """
     Get policies. Broker or Admin only.
     """
+    # Seed database if empty
+    _seed_mock_data(db)
+    
     # Check user role and filter policies accordingly
     if current_user.role == UserRole.BROKER:
         if current_user.broker_profile:
@@ -99,142 +214,7 @@ def get_policies(
         # Fallback for unexpected roles
         policies = []
 
-    if not policies:
-        # This is mock data for testing, should be handled carefully in production
-        from app.schemas.policy import PolicySummary
-        from decimal import Decimal
-        from datetime import date
-        from app.schemas.policy import CustomerInfo
-        return [
-            PolicySummary(
-                id=1,
-                policy_name="Life Insurance Policy",
-                policy_number="POL-001-2024-0001",
-                policy_type="life",
-                company_name="TechCorp Nigeria Ltd",
-                premium_amount=Decimal("250000.00"),
-                due_date=date(2024, 12, 31),
-                payment_frequency="monthly",
-                status="active",
-                customer=CustomerInfo(
-                    full_name="John Doe",
-                    email="john.doe@example.com",
-                    phone_number="08012345678"
-                )
-            ),
-            PolicySummary(
-                id=2,
-                policy_name="Auto Insurance Policy",
-                policy_number="POL-002-2024-0002",
-                policy_type="auto",
-                company_name="Lagos Motors Ltd",
-                premium_amount=Decimal("180000.00"),
-                due_date=date(2024, 11, 15),
-                payment_frequency="quarterly",
-                status="active",
-                customer=CustomerInfo(
-                    full_name="Jane Smith",
-                    email="jane.smith@example.com",
-                    phone_number="08023456789"
-                )
-            ),
-            PolicySummary(
-                id=3,
-                policy_name="Health Insurance Policy",
-                policy_number="POL-003-2024-0003",
-                policy_type="health",
-                company_name="MedCare Insurance Ltd",
-                premium_amount=Decimal("120000.00"),
-                due_date=date(2024, 12, 15),
-                payment_frequency="monthly",
-                status="active",
-                customer=CustomerInfo(
-                    full_name="Michael Johnson",
-                    email="michael.johnson@example.com",
-                    phone_number="08034567890"
-                )
-            ),
-            PolicySummary(
-                id=4,
-                policy_name="Property Insurance Policy",
-                policy_number="POL-004-2024-0004",
-                policy_type="property",
-                company_name="SafeGuard Properties Ltd",
-                premium_amount=Decimal("350000.00"),
-                due_date=date(2024, 12, 20),
-                payment_frequency="annual",
-                status="active",
-                customer=CustomerInfo(
-                    full_name="Sarah Williams",
-                    email="sarah.williams@example.com",
-                    phone_number="08045678901"
-                )
-            ),
-            PolicySummary(
-                id=5,
-                policy_name="Business Insurance Policy",
-                policy_number="POL-005-2024-0005",
-                policy_type="business",
-                company_name="Enterprise Shield Ltd",
-                premium_amount=Decimal("500000.00"),
-                due_date=date(2024, 12, 10),
-                payment_frequency="quarterly",
-                status="active",
-                customer=CustomerInfo(
-                    full_name="David Brown",
-                    email="david.brown@example.com",
-                    phone_number="08056789012"
-                )
-            ),
-            PolicySummary(
-                id=6,
-                policy_name="Travel Insurance Policy",
-                policy_number="POL-006-2024-0006",
-                policy_type="travel",
-                company_name="Global Travel Insurance",
-                premium_amount=Decimal("75000.00"),
-                due_date=date(2024, 11, 30),
-                payment_frequency="annual",
-                status="active",
-                customer=CustomerInfo(
-                    full_name="Emily Davis",
-                    email="emily.davis@example.com",
-                    phone_number="08067890123"
-                )
-            ),
-            PolicySummary(
-                id=7,
-                policy_name="Marine Insurance Policy",
-                policy_number="POL-007-2024-0007",
-                policy_type="marine",
-                company_name="Ocean Shield Insurance",
-                premium_amount=Decimal("450000.00"),
-                due_date=date(2024, 12, 25),
-                payment_frequency="quarterly",
-                status="active",
-                customer=CustomerInfo(
-                    full_name="Robert Wilson",
-                    email="robert.wilson@example.com",
-                    phone_number="08078901234"
-                )
-            ),
-            PolicySummary(
-                id=8,
-                policy_name="Professional Indemnity",
-                policy_number="POL-008-2024-0008",
-                policy_type="professional",
-                company_name="Professional Cover Ltd",
-                premium_amount=Decimal("200000.00"),
-                due_date=date(2024, 12, 5),
-                payment_frequency="annual",
-                status="active",
-                customer=CustomerInfo(
-                    full_name="Lisa Anderson",
-                    email="lisa.anderson@example.com",
-                    phone_number="08089012345"
-                )
-            )
-        ]
+    return policies if policies is not None else []
 
 @router.get("/my", response_model=List[PolicySummary])
 def list_my_policies(
