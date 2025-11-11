@@ -74,11 +74,6 @@ async def simulate_payment(
             amount=premium.amount
         )
 
-        # Check if payment_result is a dictionary (expected format) or a string (error message)
-        if not isinstance(payment_result, dict):
-            error_msg = str(payment_result) if payment_result else "Failed to simulate payment to user's virtual account"
-            raise HTTPException(status_code=400, detail=error_msg)
-
         if not payment_result.get("success"):
             raise HTTPException(status_code=400, detail=payment_result.get("message", "Failed to simulate payment to user's virtual account"))
         
@@ -87,7 +82,7 @@ async def simulate_payment(
         crud_virtual_account.update_virtual_account_balance(db, virtual_account_id=user_va.id, credit_amount=premium.amount)
         
         # Correctly call the status update function with the required arguments
-        transaction_ref = payment_result.get("data", {}).get("transaction_reference", "simulated_ref") if isinstance(payment_result.get("data"), dict) else "simulated_ref"
+        transaction_ref = payment_result.get("data", {}).get("transaction_reference", "simulated_ref")
         crud_policy.update_policy_payment_status(
             db, 
             merchant_ref=premium.policy.merchant_reference, 
@@ -129,9 +124,6 @@ async def test_create_va(
         raise HTTPException(status_code=404, detail="User not found")
     
     result = await virtual_account_service.create_individual_virtual_account(db=db, user=user)
-    if not isinstance(result, dict):
-        error_msg = str(result) if result else "Failed to create VA"
-        raise HTTPException(status_code=400, detail=error_msg)
     if not result.get("success"):
         raise HTTPException(status_code=400, detail=result.get("error", "Failed to create VA"))
     return result
@@ -144,9 +136,6 @@ async def test_fund_va(request: TestVAFundingRequest):
         virtual_account_number=request.virtual_account_number,
         amount=request.amount
     )
-    if not isinstance(result, dict):
-        error_msg = str(result) if result else "Failed to fund VA"
-        raise HTTPException(status_code=400, detail=error_msg)
     if not result.get("success"):
         raise HTTPException(status_code=400, detail=result.get("message", "Failed to fund VA"))
     return result
@@ -162,9 +151,6 @@ async def test_transfer_va(request: TestVATransferRequest):
         virtual_account_number=request.to_account,
         amount=request.amount
     )
-    if not isinstance(result, dict):
-        error_msg = str(result) if result else "Failed to transfer to VA"
-        raise HTTPException(status_code=400, detail=error_msg)
     if not result.get("success"):
         raise HTTPException(status_code=400, detail=result.get("message", "Failed to transfer to VA"))
     return result
