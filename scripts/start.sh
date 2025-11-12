@@ -30,7 +30,23 @@ END
 
 # Run database migrations
 echo "📋 Running database migrations..."
-alembic upgrade head
+# Try upgrade head first, fallback to heads if multiple heads exist
+set +e  # Temporarily disable exit on error
+alembic upgrade head 2>&1 | tee /tmp/alembic_output.log
+MIGRATION_EXIT_CODE=${PIPESTATUS[0]}
+set -e  # Re-enable exit on error
+
+if [ $MIGRATION_EXIT_CODE -ne 0 ]; then
+    if grep -q "Multiple head revisions" /tmp/alembic_output.log; then
+        echo "⚠️ Multiple heads detected, applying all heads..."
+        alembic upgrade heads
+    else
+        echo "❌ Migration failed. Check logs above."
+        exit 1
+    fi
+else
+    echo "✅ Migrations applied successfully"
+fi
 
 # Populate database with comprehensive demo data
 echo "👥 Populating database..."
