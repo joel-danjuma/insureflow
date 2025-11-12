@@ -53,15 +53,15 @@ class VirtualAccountTransaction(Base):
     
     # Transaction Information
     transaction_type = Column(
-        Enum(TransactionType, values_callable=lambda obj: [e.value for e in obj]),
+        Enum(TransactionType, name='vat_transactiontype', values_callable=lambda obj: [e.value for e in obj]),
         nullable=False
     )
     transaction_indicator = Column(
-        Enum(TransactionIndicator, values_callable=lambda obj: [e.value for e in obj]),
+        Enum(TransactionIndicator, name='vat_transactionindicator', values_callable=lambda obj: [e.value for e in obj]),
         nullable=False
     )
     status = Column(
-        Enum(TransactionStatus, values_callable=lambda obj: [e.value for e in obj]),
+        Enum(TransactionStatus, name='vat_transactionstatus', values_callable=lambda obj: [e.value for e in obj]),
         nullable=False,
         default=TransactionStatus.PENDING.value
     )
