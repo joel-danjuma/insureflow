@@ -20,6 +20,48 @@ def upgrade() -> None:
     """Update virtual_account_transactions table to match model schema"""
     conn = op.get_bind()
     
+    # Fix transactiontype enum - add missing values
+    # The enum might have been created with different values in initial migration
+    # We need: 'credit', 'debit', 'commission', 'settlement', 'refund'
+    result = conn.execute(text("""
+        SELECT enumlabel 
+        FROM pg_enum 
+        WHERE enumtypid = (SELECT oid FROM pg_type WHERE typname = 'transactiontype')
+        ORDER BY enumsortorder
+    """))
+    existing_values = [row[0] for row in result]
+    
+    enum_values_to_add = ['credit', 'debit', 'commission', 'settlement', 'refund']
+    for value in enum_values_to_add:
+        if value not in existing_values:
+            try:
+                op.execute(f"ALTER TYPE transactiontype ADD VALUE IF NOT EXISTS '{value}'")
+            except Exception:
+                try:
+                    op.execute(f"ALTER TYPE transactiontype ADD VALUE '{value}'")
+                except Exception as e:
+                    if 'already exists' not in str(e).lower():
+                        raise
+    
+    # Fix transactionstatus enum - add 'reversed' if missing
+    result = conn.execute(text("""
+        SELECT enumlabel 
+        FROM pg_enum 
+        WHERE enumtypid = (SELECT oid FROM pg_type WHERE typname = 'transactionstatus')
+        ORDER BY enumsortorder
+    """))
+    existing_status_values = [row[0] for row in result]
+    
+    if 'reversed' not in existing_status_values:
+        try:
+            op.execute("ALTER TYPE transactionstatus ADD VALUE IF NOT EXISTS 'reversed'")
+        except Exception:
+            try:
+                op.execute("ALTER TYPE transactionstatus ADD VALUE 'reversed'")
+            except Exception as e:
+                if 'already exists' not in str(e).lower():
+                    raise
+    
     # Check if columns exist before renaming
     result = conn.execute(text("""
         SELECT column_name 
