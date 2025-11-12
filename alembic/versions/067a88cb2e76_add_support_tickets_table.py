@@ -1,7 +1,7 @@
 """Add support_tickets table
 
 Revision ID: 067a88cb2e76
-Revises: 1c23048b18b2
+Revises: b2c3d4e5f6g7
 Create Date: 2025-01-27 12:00:00.000000
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '067a88cb2e76'
-down_revision = '1c23048b18b2'
+down_revision = 'b2c3d4e5f6g7'
 branch_labels = None
 depends_on = None
 

@@ -1,7 +1,7 @@
 """Stamp head to align with current models
 
 Revision ID: 1c23048b18b2
-Revises: a957f3ef88db
+Revises: a1b2c3d4e5f6
 Create Date: 2025-10-27 12:00:00.000000
 
 """
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = '1c23048b18b2'
-down_revision: Union[str, None] = 'a957f3ef88db'
+down_revision: Union[str, None] = 'a1b2c3d4e5f6'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
