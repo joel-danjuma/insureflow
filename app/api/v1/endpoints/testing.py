@@ -6,6 +6,7 @@ from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 import logging
+import time
 
 from app.core.config import settings
 from app.core.database import get_db
@@ -24,6 +25,11 @@ from app.services.settlement_service import settlement_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+def generate_unique_transaction_ref(policy_id: int, premium_id: int) -> str:
+    """Generate a unique transaction reference using timestamp + policy ID + premium ID."""
+    timestamp = int(time.time())
+    return f"simulated_ref_{policy_id}_{premium_id}_{timestamp}"
 
 @router.post("/simulate-payment", response_model=dict, tags=["Testing"])
 async def simulate_payment(
@@ -96,27 +102,29 @@ async def simulate_payment(
         crud_virtual_account.update_virtual_account_balance(db, virtual_account_id=user_va.id, credit_amount=premium.amount)
         
         # Extract transaction reference from payment result with defensive handling
-        transaction_ref = "simulated_ref"
+        # Generate unique fallback reference using policy and premium IDs
+        unique_fallback_ref = generate_unique_transaction_ref(premium.policy.id, premium.id)
+        transaction_ref = unique_fallback_ref
         if isinstance(payment_result, dict):
             # Try to extract transaction reference from various possible locations
             data = payment_result.get("data")
             
             if isinstance(data, dict):
                 # Data is a dictionary, try to get transaction_reference from it
-                transaction_ref = data.get("transaction_reference") or data.get("transaction_ref") or data.get("reference") or "simulated_ref"
+                transaction_ref = data.get("transaction_reference") or data.get("transaction_ref") or data.get("reference") or unique_fallback_ref
                 logger.debug(f"Extracted transaction reference from data dict: {transaction_ref}")
             elif isinstance(data, str):
                 # Data is a string (like "Payment successful"), log it and try top-level fields
                 logger.info(f"Payment simulation data is a string: {data}")
-                transaction_ref = payment_result.get("transaction_reference") or payment_result.get("transaction_ref") or payment_result.get("reference") or "simulated_ref"
+                transaction_ref = payment_result.get("transaction_reference") or payment_result.get("transaction_ref") or payment_result.get("reference") or unique_fallback_ref
                 logger.info(f"Using transaction reference from top-level fields: {transaction_ref}")
             else:
                 # Data is None or other type, try top-level fields
-                transaction_ref = payment_result.get("transaction_reference") or payment_result.get("transaction_ref") or payment_result.get("reference") or "simulated_ref"
+                transaction_ref = payment_result.get("transaction_reference") or payment_result.get("transaction_ref") or payment_result.get("reference") or unique_fallback_ref
                 logger.debug(f"Data is {type(data)}, using transaction reference from top-level fields: {transaction_ref}")
             
-            if transaction_ref == "simulated_ref":
-                logger.info("No transaction reference found in payment result, using fallback: simulated_ref")
+            if transaction_ref == unique_fallback_ref:
+                logger.info(f"No transaction reference found in payment result, generated unique fallback: {transaction_ref}")
             else:
                 logger.info(f"Using transaction reference: {transaction_ref}")
         crud_policy.update_policy_payment_status(
