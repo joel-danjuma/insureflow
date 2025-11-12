@@ -89,7 +89,7 @@ async def handle_squad_co_webhook(
                                 amount_paid=premium.amount,
                                 payment_method=PaymentMethod.BANK_TRANSFER,
                                 transaction_reference=transaction_ref,
-                                status=PaymentTransactionStatus.COMPLETED,
+                                status=PaymentTransactionStatus.SUCCESS,
                                 payer_email=premium.policy.user.email if premium.policy.user else None
                             )
                         )

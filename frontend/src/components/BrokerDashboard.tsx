@@ -153,18 +153,22 @@ const BrokerDashboard = () => {
       // Handle potential undefined dates
       const endDate = policy?.end_date ? new Date(policy.end_date) : new Date();
       const nextPaymentDate = isNaN(endDate.getTime()) ? new Date() : endDate;
-      const today = new Date();
-      const daysDiff = Math.ceil((nextPaymentDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
-      
-      let paymentStatus: 'Paid' | 'Pending' | 'Overdue' = 'Pending';
-      if (daysDiff < 0) {
-        paymentStatus = 'Overdue';
-      } else if (policy?.status === 'active' && daysDiff > 30) {
-        paymentStatus = 'Paid';
-      }
 
       // Find the corresponding premium for this policy
       const premium = premiums?.find(p => p?.policy_id === policy?.id);
+      
+      // Use actual premium payment status from database instead of date calculations
+      let paymentStatus: 'Paid' | 'Pending' | 'Overdue' = 'Pending';
+      if (premium && premium.payment_status) {
+        const premiumStatus = premium.payment_status.toUpperCase();
+        if (premiumStatus === 'PAID') {
+          paymentStatus = 'Paid';
+        } else if (premiumStatus === 'OVERDUE') {
+          paymentStatus = 'Overdue';
+        } else {
+          paymentStatus = 'Pending';
+        }
+      }
       
       // Ensure premium amount is a valid number
       const premiumAmount = typeof policy?.premium_amount === 'number' ? policy.premium_amount : 0;
@@ -213,10 +217,11 @@ const BrokerDashboard = () => {
     return [...backendPolicies, ...localPoliciesData];
   }, [policies, localPolicies]);
 
-  const clientPortfolio = useMemo(() => 
-    transformToClientPortfolio(allPolicies), 
-    [allPolicies, transformToClientPortfolio]
-  );
+  const clientPortfolio = useMemo(() => {
+    const allItems = transformToClientPortfolio(allPolicies);
+    // Filter out paid premiums to prevent duplicate payments
+    return allItems.filter(item => item.paymentStatus !== 'Paid');
+  }, [allPolicies, transformToClientPortfolio]);
 
   // Handle individual row selection
   const handleRowSelection = (policyId: string, isSelected: boolean) => {

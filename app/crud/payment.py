@@ -63,6 +63,9 @@ def get_payments_for_insurance_firm(db: Session, skip: int = 0, limit: int = 50)
     Get payments grouped by broker and payment date for insurance firm dashboard.
     Returns formatted data matching LatestPayment type from frontend.
     """
+    import logging
+    logger = logging.getLogger(__name__)
+    
     # Query successful payments with all necessary relationships
     payments = db.query(Payment).options(
         joinedload(Payment.premium).joinedload(Premium.policy).joinedload(Policy.broker),
@@ -72,6 +75,8 @@ def get_payments_for_insurance_firm(db: Session, skip: int = 0, limit: int = 50)
     ).order_by(
         Payment.payment_date.desc()
     ).offset(skip).limit(limit * 10).all()  # Get more to group, then limit after grouping
+    
+    logger.debug(f"Found {len(payments)} successful payments for insurance firm dashboard")
     
     # Group payments by broker and payment date
     grouped_payments: Dict[str, Dict[str, Any]] = {}
@@ -123,6 +128,8 @@ def get_payments_for_insurance_firm(db: Session, skip: int = 0, limit: int = 50)
     # Convert to list and sort by completedAt descending
     result = list(grouped_payments.values())
     result.sort(key=lambda x: x["completedAt"], reverse=True)
+    
+    logger.debug(f"Grouped into {len(result)} payment groups for insurance firm dashboard")
     
     # Limit results
     return result[:limit] 

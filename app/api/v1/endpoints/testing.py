@@ -21,7 +21,6 @@ from app.schemas.testing import (
 )
 from app.services.virtual_account_service import virtual_account_service
 from app.services.squad_co import squad_co_service
-from app.services.settlement_service import settlement_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -97,11 +96,7 @@ async def simulate_payment(
         if not payment_result.get("success"):
             raise HTTPException(status_code=400, detail=payment_result.get("message", "Failed to simulate payment to user's virtual account"))
         
-        # Step 3: Manually update the VA balance and policy status (simulating the webhook).
-        logger.info(f"--- 🧪 Simulating webhook processing: Updating balances and policy status... ---")
-        crud_virtual_account.update_virtual_account_balance(db, virtual_account_id=user_va.id, credit_amount=premium.amount)
-        
-        # Extract transaction reference from payment result with defensive handling
+        # Step 3: Extract transaction reference from payment result with defensive handling
         # Generate unique fallback reference using policy and premium IDs
         unique_fallback_ref = generate_unique_transaction_ref(premium.policy.id, premium.id)
         transaction_ref = unique_fallback_ref
@@ -127,33 +122,43 @@ async def simulate_payment(
                 logger.info(f"No transaction reference found in payment result, generated unique fallback: {transaction_ref}")
             else:
                 logger.info(f"Using transaction reference: {transaction_ref}")
-        crud_policy.update_policy_payment_status(
-            db, 
-            merchant_ref=premium.policy.merchant_reference, 
-            status="paid", 
-            tx_ref=transaction_ref
-        )
 
-        # Step 4: Trigger the settlement.
-        logger.info(f"--- 🧪 Stage 2: Triggering settlement from user's VA to insurance firm... ---")
-        settlement_result = await settlement_service.process_settlement(db, virtual_account_id=user_va.id)
+        # Step 4: Process webhook transaction (this handles all payment logic automatically)
+        logger.info(f"--- 🧪 Processing webhook transaction: Updating premium status, creating payment records, transferring commissions... ---")
+        from datetime import datetime
         
-        # Enhanced logging and type safety check
-        logger.debug(f"Settlement result type: {type(settlement_result)}, value: {settlement_result}")
-        if not isinstance(settlement_result, dict):
-            logger.error(f"Unexpected response type from settlement: {type(settlement_result)}. Response: {settlement_result}")
-            settlement_result = {"error": f"Unexpected settlement response type: {type(settlement_result)}"}
+        # Construct webhook payload matching Squad Co webhook format
+        webhook_data = {
+            "transaction_reference": transaction_ref,
+            "virtual_account_number": user_va.virtual_account_number,
+            "principal_amount": str(premium.amount),
+            "settled_amount": str(premium.amount),  # For simulation, assume no fees
+            "fee_charged": "0",
+            "currency": "NGN",
+            "sender_name": premium.policy.user.full_name if premium.policy.user else None,
+            "transaction_date": datetime.utcnow().isoformat(),
+            "remarks": f"Simulated payment for premium {premium.id}"
+        }
         
-        if settlement_result.get("error"):
-            logger.error(f"Settlement processing failed: {settlement_result.get('error')}")
-            return {
-                "message": "Payment simulation successful, but automated settlement failed.",
-                "details": {"payment": payment_result, "settlement": settlement_result}
-            }
+        # Call webhook processing function - this handles everything:
+        # - Updates premium status to PAID
+        # - Creates Payment records
+        # - Transfers commissions to InsureFlow-VA
+        # - Updates all balances correctly
+        webhook_result = await virtual_account_service.process_webhook_transaction(db, webhook_data)
+        
+        if webhook_result.get("error"):
+            logger.error(f"Webhook processing failed: {webhook_result.get('error')}")
+            raise HTTPException(status_code=500, detail=f"Webhook processing failed: {webhook_result.get('error')}")
+        
+        logger.info(f"✅ Webhook processing completed successfully")
             
         return {
-            "message": "Full payment and settlement flow simulated successfully.",
-            "details": {"payment": payment_result, "settlement": settlement_result}
+            "message": "Payment simulation successful. Premium status updated, payment records created, and commissions transferred.",
+            "details": {
+                "payment": payment_result,
+                "webhook_processing": webhook_result
+            }
         }
 
     except Exception as e:

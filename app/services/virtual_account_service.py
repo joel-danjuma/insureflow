@@ -372,6 +372,23 @@ class VirtualAccountService:
                     
                     # Commit all payment records
                     db.commit()
+                    
+                    # Dismiss payment reminder notifications for this policy
+                    from app.models.notification import Notification, NotificationType
+                    
+                    reminders = db.query(Notification).filter(
+                        Notification.policy_id == policy.id,
+                        Notification.type == NotificationType.PAYMENT_REMINDER.value,
+                        Notification.is_dismissed == False
+                    ).all()
+                    
+                    if reminders:
+                        logger.info(f"🔔 Found {len(reminders)} payment reminder notification(s) to dismiss for policy {policy.id}")
+                        for reminder in reminders:
+                            reminder.dismiss()
+                            db.add(reminder)
+                            logger.info(f"✅ Dismissed payment reminder notification {reminder.id} for policy {policy.id}")
+                        db.commit()
                 else:
                     logger.info(f"ℹ️ No unpaid premiums found for policy {policy.id}")
             
