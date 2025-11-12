@@ -95,10 +95,30 @@ async def simulate_payment(
         logger.info(f"--- 🧪 Simulating webhook processing: Updating balances and policy status... ---")
         crud_virtual_account.update_virtual_account_balance(db, virtual_account_id=user_va.id, credit_amount=premium.amount)
         
-        # Correctly call the status update function with the required arguments
+        # Extract transaction reference from payment result with defensive handling
         transaction_ref = "simulated_ref"
-        if isinstance(payment_result, dict) and "data" in payment_result:
-            transaction_ref = payment_result.get("data", {}).get("transaction_reference", "simulated_ref")
+        if isinstance(payment_result, dict):
+            # Try to extract transaction reference from various possible locations
+            data = payment_result.get("data")
+            
+            if isinstance(data, dict):
+                # Data is a dictionary, try to get transaction_reference from it
+                transaction_ref = data.get("transaction_reference") or data.get("transaction_ref") or data.get("reference") or "simulated_ref"
+                logger.debug(f"Extracted transaction reference from data dict: {transaction_ref}")
+            elif isinstance(data, str):
+                # Data is a string (like "Payment successful"), log it and try top-level fields
+                logger.info(f"Payment simulation data is a string: {data}")
+                transaction_ref = payment_result.get("transaction_reference") or payment_result.get("transaction_ref") or payment_result.get("reference") or "simulated_ref"
+                logger.info(f"Using transaction reference from top-level fields: {transaction_ref}")
+            else:
+                # Data is None or other type, try top-level fields
+                transaction_ref = payment_result.get("transaction_reference") or payment_result.get("transaction_ref") or payment_result.get("reference") or "simulated_ref"
+                logger.debug(f"Data is {type(data)}, using transaction reference from top-level fields: {transaction_ref}")
+            
+            if transaction_ref == "simulated_ref":
+                logger.info("No transaction reference found in payment result, using fallback: simulated_ref")
+            else:
+                logger.info(f"Using transaction reference: {transaction_ref}")
         crud_policy.update_policy_payment_status(
             db, 
             merchant_ref=premium.policy.merchant_reference, 
