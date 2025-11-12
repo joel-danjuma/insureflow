@@ -123,6 +123,7 @@ class InsuranceFirmDashboard(BaseModel):
     policy_trends: LineChartData
     broker_performance: List[BrokerPerformance]
     policy_distribution: PieChartData
+    latest_payments: List[Dict[str, Any]] = []
 
 
 class BrokerDashboard(BaseModel):

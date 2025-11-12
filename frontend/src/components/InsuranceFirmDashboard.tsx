@@ -12,7 +12,6 @@ import { reminderService } from '@/services/api';
 import useReminderStore from '@/store/reminderStore';
 import usePolicyStore from '@/store/policyStore';
 import useAuthStore from '@/store/authStore';
-import usePaymentStore from '@/store/paymentStore';
 
 // For displaying broker performance (calculated from policies data)
 type BrokerPerformance = {
@@ -132,7 +131,8 @@ const InsuranceFirmDashboard = () => {
 
   const addReminders = useReminderStore((state) => state.addReminders);
   const clearReminders = useReminderStore((state) => state.clearReminders);
-  const payments = usePaymentStore((state) => state.payments);
+  // Get payments from dashboard data instead of client-side store
+  const payments = dashboardData?.latest_payments || [];
 
   // Clear messages after 5 seconds
   React.useEffect(() => {

@@ -108,6 +108,10 @@ def get_insurance_firm_dashboard(
         # Top brokers
         top_brokers = broker_performance[:5]
         
+        # Latest payments from brokers
+        from app.crud import payment as crud_payment
+        latest_payments = crud_payment.get_payments_for_insurance_firm(db, skip=0, limit=20)
+        
         return schemas_dashboard.InsuranceFirmDashboard(
             kpis=kpis,
             recent_policies=recent_policies,
@@ -115,6 +119,7 @@ def get_insurance_firm_dashboard(
             premium_collection_trends=premium_collection_trends,
             broker_performance=broker_performance,
             policy_type_distribution=policy_type_distribution,
+            latest_payments=latest_payments,
             monthly_revenue=monthly_revenue,
             overdue_payments=overdue_policies,
             top_brokers=top_brokers

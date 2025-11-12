@@ -18,7 +18,12 @@ from app.models.virtual_account_transaction import VirtualAccountTransaction, Tr
 from app.models.user import User
 from app.crud import virtual_account as crud_virtual_account
 from app.crud import policy as crud_policy
+from app.crud import premium as crud_premium
+from app.crud import payment as crud_payment
 from app.models.policy import Policy
+from app.models.premium import PaymentStatus as PremiumPaymentStatus
+from app.schemas.payment import PaymentCreate
+from app.models.payment import PaymentMethod, PaymentTransactionStatus
 from app.services.settlement_service import settlement_service
 from app.services.squad_co import squad_co_service
 from app.schemas.virtual_account import SquadVirtualAccountCreatePayload
@@ -283,8 +288,12 @@ class VirtualAccountService:
             
             logger.info(f"✅ VIRTUAL ACCOUNT FOUND: {virtual_account.account_name}")
             
-            # Find the associated policy using the virtual account
-            policy = db.query(Policy).filter(Policy.id == virtual_account.policy_id).first()
+            # Find the associated policy using the virtual account (with relationships loaded)
+            from sqlalchemy.orm import joinedload
+            policy = db.query(Policy).options(
+                joinedload(Policy.user),
+                joinedload(Policy.broker)
+            ).filter(Policy.id == virtual_account.policy_id).first()
             if not policy:
                 logger.error(f"❌ POLICY NOT FOUND FOR VIRTUAL ACCOUNT: {virtual_account.id}")
                 # Even if no policy is found, we should still process the transaction
@@ -299,6 +308,72 @@ class VirtualAccountService:
                         logger.warning(f"⚠️ PAYMENT AMOUNT MISMATCH: Received {settled_amount}, expected {policy.premium_amount}. Treating as overpayment.")
                     # Mark the policy as paid
                     policy.payment_status = "paid"
+                
+                # Update premium status and create Payment records
+                logger.info(f"📋 UPDATING PREMIUM STATUS AND CREATING PAYMENT RECORDS")
+                unpaid_premiums = crud_premium.get_unpaid_premiums_by_policy(db, policy_id=policy.id)
+                
+                if unpaid_premiums:
+                    logger.info(f"✅ Found {len(unpaid_premiums)} unpaid premium(s) for policy {policy.id}")
+                    
+                    # Get user information for payer details
+                    user_email = None
+                    user_name = None
+                    if policy.user:
+                        user_email = policy.user.email
+                        user_name = policy.user.full_name
+                    
+                    # Calculate amount per premium (distribute settled_amount across premiums)
+                    remaining_amount = settled_amount
+                    payment_records_to_create = []
+                    
+                    for idx, premium in enumerate(unpaid_premiums):
+                        # For the last premium, use remaining amount to avoid rounding issues
+                        if idx == len(unpaid_premiums) - 1:
+                            premium_amount = remaining_amount
+                        else:
+                            premium_amount = min(premium.amount, remaining_amount)
+                            remaining_amount -= premium_amount
+                        
+                        # Update premium status to paid
+                        logger.info(f"💰 Updating premium {premium.id} status to PAID (amount: ₦{premium_amount:,.2f})")
+                        premium.payment_status = PremiumPaymentStatus.PAID
+                        premium.paid_amount = premium_amount
+                        premium.payment_date = datetime.utcnow().date()
+                        db.add(premium)
+                        
+                        # Create unique transaction reference for each premium
+                        # Use transaction_ref with premium ID suffix to ensure uniqueness
+                        unique_transaction_ref = f"{transaction_ref}_premium_{premium.id}"
+                        
+                        # Prepare Payment record
+                        payment_create = PaymentCreate(
+                            premium_id=premium.id,
+                            amount_paid=premium_amount,
+                            payment_method=PaymentMethod.BANK_TRANSFER,
+                            status=PaymentTransactionStatus.SUCCESS,
+                            transaction_reference=unique_transaction_ref,
+                            payer_email=user_email,
+                        )
+                        payment_records_to_create.append((payment_create, user_name))
+                    
+                    # Commit premium updates
+                    db.commit()
+                    
+                    # Create all payment records
+                    for payment_create, payer_name in payment_records_to_create:
+                        payment_record = crud_payment.create_payment(db=db, payment=payment_create)
+                        logger.info(f"✅ Created Payment record {payment_record.id} for premium {payment_create.premium_id}")
+                        
+                        # Update payer_name if available
+                        if payer_name:
+                            payment_record.payer_name = payer_name
+                            db.add(payment_record)
+                    
+                    # Commit all payment records
+                    db.commit()
+                else:
+                    logger.info(f"ℹ️ No unpaid premiums found for policy {policy.id}")
             
             # Calculate platform commission split
             total_platform_commission = settled_amount * virtual_account.platform_commission_rate
@@ -342,6 +417,78 @@ class VirtualAccountService:
             virtual_account.total_credits += settled_amount
             virtual_account.current_balance += settled_amount
             virtual_account.last_activity_at = datetime.utcnow()
+            
+            # Transfer commissions to InsureFlow-VA
+            logger.info(f"💼 TRANSFERRING COMMISSIONS TO INSUREFLOW-VA")
+            if settings.INSUREFLOW_SETTLEMENT_ACCOUNT_NUMBER:
+                insureflow_va = crud_virtual_account.get_virtual_account_by_number(
+                    db, virtual_account_number=settings.INSUREFLOW_SETTLEMENT_ACCOUNT_NUMBER
+                )
+                
+                if insureflow_va:
+                    logger.info(f"✅ INSUREFLOW-VA FOUND: {insureflow_va.virtual_account_number}")
+                    
+                    # Create debit transaction on customer's VA for commission
+                    commission_debit = VirtualAccountTransaction(
+                        virtual_account_id=virtual_account.id,
+                        policy_id=policy.id if policy else None,
+                        transaction_reference=f"{transaction_ref}_commission_debit",
+                        squad_transaction_reference=transaction_ref,
+                        transaction_type=TransactionType.COMMISSION,
+                        transaction_indicator=TransactionIndicator.D,
+                        status=TransactionStatus.COMPLETED,
+                        principal_amount=total_platform_commission,
+                        settled_amount=total_platform_commission,
+                        fee_charged=Decimal('0'),
+                        total_platform_commission=total_platform_commission,
+                        insureflow_commission=insureflow_commission,
+                        habari_commission=habari_commission,
+                        currency=webhook_data.get("currency", "NGN"),
+                        transaction_date=datetime.utcnow(),
+                        webhook_received_at=datetime.utcnow(),
+                        remarks=f"Platform commission deduction (InsureFlow 0.75% + Habari 0.25%)"
+                    )
+                    db.add(commission_debit)
+                    
+                    # Create credit transaction on InsureFlow-VA for commission
+                    commission_credit = VirtualAccountTransaction(
+                        virtual_account_id=insureflow_va.id,
+                        policy_id=policy.id if policy else None,
+                        transaction_reference=f"{transaction_ref}_commission_credit",
+                        squad_transaction_reference=transaction_ref,
+                        transaction_type=TransactionType.COMMISSION,
+                        transaction_indicator=TransactionIndicator.C,
+                        status=TransactionStatus.COMPLETED,
+                        principal_amount=total_platform_commission,
+                        settled_amount=total_platform_commission,
+                        fee_charged=Decimal('0'),
+                        total_platform_commission=total_platform_commission,
+                        insureflow_commission=insureflow_commission,
+                        habari_commission=habari_commission,
+                        currency=webhook_data.get("currency", "NGN"),
+                        transaction_date=datetime.utcnow(),
+                        webhook_received_at=datetime.utcnow(),
+                        remarks=f"Platform commission from payment {transaction_ref}"
+                    )
+                    db.add(commission_credit)
+                    
+                    # Update customer VA balance: subtract commission
+                    virtual_account.current_balance -= total_platform_commission
+                    virtual_account.total_debits += total_platform_commission
+                    logger.info(f"💰 Customer VA balance updated: -₦{total_platform_commission:,}")
+                    
+                    # Update InsureFlow-VA balance: add commission
+                    insureflow_va.current_balance += total_platform_commission
+                    insureflow_va.total_credits += total_platform_commission
+                    insureflow_va.last_activity_at = datetime.utcnow()
+                    logger.info(f"💰 InsureFlow-VA balance updated: +₦{total_platform_commission:,}")
+                    logger.info(f"   - InsureFlow commission: ₦{insureflow_commission:,}")
+                    logger.info(f"   - Habari commission: ₦{habari_commission:,}")
+                else:
+                    logger.error(f"❌ INSUREFLOW-VA NOT FOUND: Account number {settings.INSUREFLOW_SETTLEMENT_ACCOUNT_NUMBER} does not exist")
+                    logger.warning(f"⚠️ Commission transfer skipped - payment will still complete")
+            else:
+                logger.warning(f"⚠️ INSUREFLOW_SETTLEMENT_ACCOUNT_NUMBER not configured - commission transfer skipped")
             
             db.commit()
             

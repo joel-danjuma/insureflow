@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import MetricCard from '@/components/MetricCard';
 import { DataTable } from '@/components/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
@@ -30,6 +31,7 @@ type ClientPortfolioItem = {
 };
 
 const BrokerDashboard = () => {
+  const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(0);
   const pageSize = 10;
   const { data: brokerProfile, isLoading: brokerLoading, error: brokerError } = useBrokerProfile();
@@ -250,9 +252,10 @@ const BrokerDashboard = () => {
     try {
       const result = await paymentService.simulateBankTransfer(premiumId);
       setPaymentSuccess(result.message || "Payment simulation initiated successfully.");
-      // Optionally, you can refetch data here to update the UI
-      // queryClient.invalidateQueries(['policies']);
-      // queryClient.invalidateQueries(['premiums']);
+      // Refetch data to update the UI after payment
+      queryClient.invalidateQueries({ queryKey: ['policies'] });
+      queryClient.invalidateQueries({ queryKey: ['premiums'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
       setPaymentError(`Simulation failed: ${errorMessage}`);
@@ -301,6 +304,11 @@ const BrokerDashboard = () => {
 
       setPaymentSuccess(`Successfully simulated payment for ${selectedItems.length} policies.`);
       setPaymentSuccessState(true);
+      
+      // Refetch data to update the UI after bulk payment
+      queryClient.invalidateQueries({ queryKey: ['policies'] });
+      queryClient.invalidateQueries({ queryKey: ['premiums'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
 
     } catch (error) {
       console.error('❌ PAYMENT SIMULATION ERROR:', error);
