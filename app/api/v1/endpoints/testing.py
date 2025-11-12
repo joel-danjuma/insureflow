@@ -74,6 +74,12 @@ async def simulate_payment(
             amount=premium.amount
         )
 
+        # Ensure payment_result is a dictionary
+        if not isinstance(payment_result, dict):
+            error_msg = f"Unexpected response type from payment simulation: {type(payment_result)}. Response: {payment_result}"
+            logger.error(error_msg)
+            raise HTTPException(status_code=500, detail=error_msg)
+
         if not payment_result.get("success"):
             raise HTTPException(status_code=400, detail=payment_result.get("message", "Failed to simulate payment to user's virtual account"))
         
@@ -82,7 +88,9 @@ async def simulate_payment(
         crud_virtual_account.update_virtual_account_balance(db, virtual_account_id=user_va.id, credit_amount=premium.amount)
         
         # Correctly call the status update function with the required arguments
-        transaction_ref = payment_result.get("data", {}).get("transaction_reference", "simulated_ref")
+        transaction_ref = "simulated_ref"
+        if isinstance(payment_result, dict) and "data" in payment_result:
+            transaction_ref = payment_result.get("data", {}).get("transaction_reference", "simulated_ref")
         crud_policy.update_policy_payment_status(
             db, 
             merchant_ref=premium.policy.merchant_reference, 
