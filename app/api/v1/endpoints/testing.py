@@ -57,10 +57,18 @@ async def simulate_payment(
             va_creation_result = await virtual_account_service.create_individual_virtual_account(
                 db=db, user=user, policy_id=premium.policy.id
             )
+            
+            # Enhanced logging and type safety check
+            logger.debug(f"VA creation result type: {type(va_creation_result)}, value: {va_creation_result}")
+            if not isinstance(va_creation_result, dict):
+                error_msg = f"Unexpected response type from VA creation: {type(va_creation_result)}. Response: {va_creation_result}"
+                logger.error(error_msg)
+                raise HTTPException(status_code=500, detail=error_msg)
+            
             if va_creation_result.get("success"):
                 user_va = crud_virtual_account.get_virtual_account_by_user(db, user_id=user.id)
             else:
-                error_msg = f"Failed to create VA for user {user.id}: {va_creation_result.get('error')}"
+                error_msg = f"Failed to create VA for user {user.id}: {va_creation_result.get('error', 'Unknown error')}"
                 logger.error(error_msg)
                 raise HTTPException(status_code=500, detail=error_msg)
 
@@ -101,6 +109,13 @@ async def simulate_payment(
         # Step 4: Trigger the settlement.
         logger.info(f"--- 🧪 Stage 2: Triggering settlement from user's VA to insurance firm... ---")
         settlement_result = await settlement_service.process_settlement(db, virtual_account_id=user_va.id)
+        
+        # Enhanced logging and type safety check
+        logger.debug(f"Settlement result type: {type(settlement_result)}, value: {settlement_result}")
+        if not isinstance(settlement_result, dict):
+            logger.error(f"Unexpected response type from settlement: {type(settlement_result)}. Response: {settlement_result}")
+            settlement_result = {"error": f"Unexpected settlement response type: {type(settlement_result)}"}
+        
         if settlement_result.get("error"):
             logger.error(f"Settlement processing failed: {settlement_result.get('error')}")
             return {
@@ -127,38 +142,80 @@ async def test_create_va(
 ):
     """Creates a virtual account for a specific user."""
     logger.info(f"--- 🧪 Test: Create VA for User ID: {request.user_id} ---")
-    user = crud_user.get_user_by_id(db, user_id=request.user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    result = await virtual_account_service.create_individual_virtual_account(db=db, user=user)
-    if not result.get("success"):
-        raise HTTPException(status_code=400, detail=result.get("error", "Failed to create VA"))
-    return result
+    try:
+        user = crud_user.get_user_by_id(db, user_id=request.user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        result = await virtual_account_service.create_individual_virtual_account(db=db, user=user)
+        
+        # Enhanced logging and type safety check
+        logger.debug(f"VA creation result type: {type(result)}, value: {result}")
+        if not isinstance(result, dict):
+            error_msg = f"Unexpected response type from VA creation: {type(result)}. Response: {result}"
+            logger.error(error_msg)
+            raise HTTPException(status_code=500, detail=error_msg)
+        
+        if not result.get("success"):
+            raise HTTPException(status_code=400, detail=result.get("error", "Failed to create VA"))
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error in test_create_va: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/test-fund-va", response_model=dict, tags=["Testing"])
 async def test_fund_va(request: TestVAFundingRequest):
     """Simulates a payment to a specific virtual account."""
     logger.info(f"--- 🧪 Test: Fund VA {request.virtual_account_number} with ₦{request.amount} ---")
-    result = await squad_co_service.simulate_payment(
-        virtual_account_number=request.virtual_account_number,
-        amount=request.amount
-    )
-    if not result.get("success"):
-        raise HTTPException(status_code=400, detail=result.get("message", "Failed to fund VA"))
-    return result
+    try:
+        result = await squad_co_service.simulate_payment(
+            virtual_account_number=request.virtual_account_number,
+            amount=request.amount
+        )
+        
+        # Enhanced logging and type safety check
+        logger.debug(f"Payment simulation result type: {type(result)}, value: {result}")
+        if not isinstance(result, dict):
+            error_msg = f"Unexpected response type from payment simulation: {type(result)}. Response: {result}"
+            logger.error(error_msg)
+            raise HTTPException(status_code=500, detail=error_msg)
+        
+        if not result.get("success"):
+            raise HTTPException(status_code=400, detail=result.get("message", "Failed to fund VA"))
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error in test_fund_va: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/test-transfer-va", response_model=dict, tags=["Testing"])
 async def test_transfer_va(request: TestVATransferRequest):
     """Initiates a transfer between two virtual accounts."""
     logger.info(f"--- 🧪 Test: Transfer ₦{request.amount} from {request.from_account} to {request.to_account} ---")
     
-    # For sandbox testing, a "transfer" between VAs is simulated by crediting the destination account.
-    # This uses the same logic as the "Fund VA" step, which is the correct approach according to Squad's docs.
-    result = await squad_co_service.simulate_payment(
-        virtual_account_number=request.to_account,
-        amount=request.amount
-    )
-    if not result.get("success"):
-        raise HTTPException(status_code=400, detail=result.get("message", "Failed to transfer to VA"))
-    return result
+    try:
+        # For sandbox testing, a "transfer" between VAs is simulated by crediting the destination account.
+        # This uses the same logic as the "Fund VA" step, which is the correct approach according to Squad's docs.
+        result = await squad_co_service.simulate_payment(
+            virtual_account_number=request.to_account,
+            amount=request.amount
+        )
+        
+        # Enhanced logging and type safety check
+        logger.debug(f"Payment simulation result type: {type(result)}, value: {result}")
+        if not isinstance(result, dict):
+            error_msg = f"Unexpected response type from payment simulation: {type(result)}. Response: {result}"
+            logger.error(error_msg)
+            raise HTTPException(status_code=500, detail=error_msg)
+        
+        if not result.get("success"):
+            raise HTTPException(status_code=400, detail=result.get("message", "Failed to transfer to VA"))
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error in test_transfer_va: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

@@ -49,12 +49,17 @@ class SettlementService:
 
         result = await gaps_service.initiate_single_transfer(insurance_company_account)
 
+        # Ensure result is a dictionary
+        if not isinstance(result, dict):
+            logger.error(f"Unexpected response type from GAPS service: {type(result)}. Response: {result}")
+            return {"error": f"Unexpected response type from GAPS service: {type(result)}"}
+
         if result.get("code") == "1000":
             # Update the virtual account's balance
             crud_virtual_account.update_virtual_account_balance(db, virtual_account_id, -virtual_account.current_balance)
             return {"success": True, "message": "Settlement successful"}
         else:
-            return {"error": f"Settlement failed: {result.get('description')}"}
+            return {"error": f"Settlement failed: {result.get('description', 'Unknown error')}"}
 
 
 settlement_service = SettlementService()
