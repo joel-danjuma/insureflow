@@ -523,7 +523,7 @@ class VirtualAccountService:
                 logger.info(f"⏳ SETTLEMENT NOT TRIGGERED: Threshold not met or auto-settlement disabled")
             
             logger.info(f"✅ WEBHOOK PROCESSING COMPLETE: {transaction_ref}")
-            return {"success": True, "transaction": transaction}
+            return {"success": True, "transaction_id": transaction.id, "transaction_reference": transaction.transaction_reference}
             
         except Exception as e:
             db.rollback()
