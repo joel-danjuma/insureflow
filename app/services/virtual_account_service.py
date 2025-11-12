@@ -20,7 +20,7 @@ from app.crud import virtual_account as crud_virtual_account
 from app.crud import policy as crud_policy
 from app.crud import premium as crud_premium
 from app.crud import payment as crud_payment
-from app.models.policy import Policy
+from app.models.policy import Policy, PolicyStatus
 from app.models.premium import PaymentStatus as PremiumPaymentStatus
 from app.schemas.payment import PaymentCreate
 from app.models.payment import PaymentMethod, PaymentTransactionStatus
@@ -309,6 +309,10 @@ class VirtualAccountService:
                         logger.warning(f"⚠️ PAYMENT AMOUNT MISMATCH: Received {settled_amount}, expected {policy.premium_amount}. Treating as overpayment.")
                     # Mark the policy as paid
                     policy.payment_status = "paid"
+                    # Update policy status to ACTIVE when payment is received
+                    if policy.status == PolicyStatus.PENDING:
+                        policy.status = PolicyStatus.ACTIVE
+                        logger.info(f"✅ Policy {policy.id} status updated to ACTIVE")
                 
                 # Update premium status and create Payment records
                 logger.info(f"📋 UPDATING PREMIUM STATUS AND CREATING PAYMENT RECORDS")
