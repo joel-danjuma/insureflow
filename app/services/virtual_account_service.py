@@ -67,13 +67,13 @@ class VirtualAccountService:
         # Check if user already has a virtual account
         existing_va = crud_virtual_account.get_virtual_account_by_user(db, user_id=user.id)
         if existing_va:
-            logger.info(f"✅ User already has virtual account: {existing_va.account_number}")
+            logger.info(f"✅ User already has virtual account: {existing_va.virtual_account_number}")
             return {
                 "success": True,
                 "virtual_account": {
-                    "account_number": existing_va.account_number,
-                    "account_name": existing_va.account_name,
-                    "bank_name": existing_va.bank_name,
+                    "account_number": existing_va.virtual_account_number,
+                    "account_name": existing_va.display_name or existing_va.virtual_account_number,
+                    "bank_name": "GTBank",  # Default bank name
                     "status": existing_va.status.value
                 }
             }
@@ -167,7 +167,7 @@ class VirtualAccountService:
                 "success": True, 
                 "virtual_account": {
                     "account_number": virtual_account.virtual_account_number,
-                    "account_name": f"{virtual_account.first_name} {virtual_account.last_name}",
+                    "account_name": virtual_account.display_name or virtual_account.virtual_account_number,
                     "bank_name": "GTBank",  # Default bank name
                     "status": "active"
                 }, 
@@ -286,7 +286,8 @@ class VirtualAccountService:
                 logger.error(f"❌ VIRTUAL ACCOUNT NOT FOUND: {virtual_account_number}")
                 return {"error": "Virtual account not found"}
             
-            logger.info(f"✅ VIRTUAL ACCOUNT FOUND: {virtual_account.account_name}")
+            account_display = virtual_account.display_name or virtual_account.virtual_account_number
+            logger.info(f"✅ VIRTUAL ACCOUNT FOUND: {account_display}")
             
             # Find the associated policy using the virtual account (with relationships loaded)
             from sqlalchemy.orm import joinedload
