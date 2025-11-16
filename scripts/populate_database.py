@@ -27,6 +27,30 @@ from app.models.payment import Payment, PaymentMethod, PaymentTransactionStatus
 
 fake = Faker()
 
+
+def generate_nigerian_phone_number():
+    """
+    Generate a realistic Nigerian phone number.
+    Format: +234-XXX-XXX-XXXX (17 characters total)
+    """
+    # Nigerian mobile network prefixes
+    mobile_prefixes = [
+        # MTN Nigeria
+        '803', '806', '813', '816', '810', '814', '903', '906', '913', '916',
+        # Airtel Nigeria  
+        '802', '808', '812', '701', '708', '902', '907', '901', '904', '912',
+        # Glo Mobile
+        '805', '807', '815', '811', '905', '915',
+        # 9mobile (formerly Etisalat)
+        '809', '817', '818', '908', '909'
+    ]
+    
+    prefix = random.choice(mobile_prefixes)
+    remaining_digits = ''.join([str(random.randint(0, 9)) for _ in range(7)])
+    
+    # Return in international format: +234-XXX-XXX-XXXX (17 chars)
+    return f"+234-{prefix}-{remaining_digits[:3]}-{remaining_digits[3:]}"
+
 def create_insurance_companies(db: Session):
     """Create sample insurance companies. This function is idempotent."""
     companies_data = [
@@ -211,7 +235,7 @@ def create_customer_users(db: Session, count=50):
             is_active=True, 
             is_verified=random.choice([True, False]),
             # Add missing fields required by Squad
-            phone_number=fake.phone_number(),
+            phone_number=generate_nigerian_phone_number(),
             address=fake.address().replace('\n', ', '),
             date_of_birth=fake.date_of_birth(minimum_age=18, maximum_age=80),
             gender=random.choice(["male", "female"])
