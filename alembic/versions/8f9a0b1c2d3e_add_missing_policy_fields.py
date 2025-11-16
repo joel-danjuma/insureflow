@@ -125,16 +125,16 @@ def upgrade() -> None:
     
     # Add merchant_reference if it doesn't exist
     if 'merchant_reference' not in columns:
-        op.add_column('policies', sa.Column('merchant_reference', sa.String(), nullable=True))
+        op.add_column('policies', sa.Column('merchant_reference', sa.String(100), nullable=True))
         op.create_index('ix_policies_merchant_reference', 'policies', ['merchant_reference'], unique=True)
     
     # Add payment_status if it doesn't exist
     if 'payment_status' not in columns:
-        op.add_column('policies', sa.Column('payment_status', sa.String(), nullable=True, server_default='pending'))
+        op.add_column('policies', sa.Column('payment_status', sa.String(50), nullable=True, server_default='pending'))
     
     # Add transaction_reference if it doesn't exist
     if 'transaction_reference' not in columns:
-        op.add_column('policies', sa.Column('transaction_reference', sa.String(), nullable=True))
+        op.add_column('policies', sa.Column('transaction_reference', sa.String(100), nullable=True))
         op.create_index('ix_policies_transaction_reference', 'policies', ['transaction_reference'], unique=True)
 
 
