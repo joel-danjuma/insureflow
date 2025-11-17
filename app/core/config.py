@@ -33,7 +33,8 @@ class Settings(BaseSettings):
             return v
         # Get values from the validator info
         data = info.data if hasattr(info, 'data') else {}
-        return f"postgresql://{data.get('POSTGRES_USER', 'insureflow')}:{data.get('POSTGRES_PASSWORD', 'password')}@{data.get('POSTGRES_SERVER', 'localhost')}:{data.get('POSTGRES_PORT', '5432')}/{data.get('POSTGRES_DB', 'insureflow')}"
+        # return f"postgresql://{data.get('POSTGRES_USER', 'insureflow')}:{data.get('POSTGRES_PASSWORD', 'password')}@{data.get('POSTGRES_SERVER', 'localhost')}:{data.get('POSTGRES_PORT', '5432')}/{data.get('POSTGRES_DB', 'insureflow')}"
+        return f"postgresql+psycopg://{data.get('POSTGRES_USER', 'insureflow')}:{data.get('POSTGRES_PASSWORD', 'password')}@{data.get('POSTGRES_SERVER', 'localhost')}:{data.get('POSTGRES_PORT', '5432')}/{data.get('POSTGRES_DB', 'insureflow')}"
     
     @property
     def jwt_secret(self) -> str:

@@ -6,7 +6,7 @@ python-multipart>=0.0.6
 # Database dependencies - Fixed versions for compatibility
 sqlalchemy==2.0.23
 alembic==1.12.1
-psycopg2-binary==2.9.7
+psycopg[binary]==3.1.13
 
 # Authentication and security
 python-jose[cryptography]==3.3.0
