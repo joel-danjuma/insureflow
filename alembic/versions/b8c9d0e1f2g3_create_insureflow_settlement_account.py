@@ -81,7 +81,10 @@ def upgrade() -> None:
                 INSERT INTO virtual_accounts (
                     user_id, customer_identifier, virtual_account_number, bank_code,
                     account_type, status, business_name, email, mobile_number, address,
-                    total_credits, total_debits, current_balance, created_at, updated_at
+                    total_credits, total_debits, current_balance,
+                    platform_commission_rate, insureflow_commission_rate, habari_commission_rate,
+                    auto_settlement, settlement_threshold,
+                    created_at, updated_at
                 ) VALUES (
                     :user_id,
                     'INSUREFLOW_SETTLEMENT',
@@ -96,6 +99,11 @@ def upgrade() -> None:
                     0.00,
                     0.00,
                     0.00,
+                    0.01,
+                    0.0075,
+                    0.0025,
+                    true,
+                    1000.00,
                     NOW(),
                     NOW()
                 )
