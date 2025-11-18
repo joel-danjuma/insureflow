@@ -45,8 +45,8 @@ class Policy(Base):
     id = Column(Integer, primary_key=True, index=True)
     
     # Policy identification
-    policy_name = Column(String(255), nullable=False)  # Human readable policy name
-    policy_number = Column(String(100), unique=True, index=True, nullable=False)
+    policy_name = Column(Text, nullable=False)  # Human readable policy name
+    policy_number = Column(Text, unique=True, index=True, nullable=False)
     policy_type = Column(
         Enum(PolicyType, values_callable=lambda obj: [e.value for e in obj]),
         nullable=False
@@ -82,11 +82,11 @@ class Policy(Base):
     custom_payment_schedule = Column(Text, nullable=True)  # JSON for custom payment schedules
     
     # Policyholder Information
-    company_name = Column(String(255), nullable=False)  # Insured company name
-    contact_person = Column(String(255), nullable=False)  # Primary contact person
-    contact_email = Column(String(255), nullable=False)
-    contact_phone = Column(String(50), nullable=True)
-    rc_number = Column(String(100), nullable=True)  # Registration/Tax ID
+    company_name = Column(Text, nullable=False)  # Insured company name
+    contact_person = Column(Text, nullable=False)  # Primary contact person
+    contact_email = Column(Text, nullable=False)
+    contact_phone = Column(Text, nullable=True)
+    rc_number = Column(Text, nullable=True)  # Registration/Tax ID
     
     # Coverage Details
     coverage_amount = Column(Numeric(15, 2), nullable=False)  # Total coverage amount
