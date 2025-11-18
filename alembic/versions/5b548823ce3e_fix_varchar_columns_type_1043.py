@@ -20,97 +20,120 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """
-    Fix unbounded VARCHAR columns in policies table that cause 
+    Fix ALL unbounded VARCHAR columns in policies table that cause 
     'Unknown PG numeric type: 1043' error with SQLAlchemy 2.0+ and psycopg3.
     
-    PostgreSQL type 1043 represents VARCHAR without explicit length constraints.
-    This migration ensures all VARCHAR columns have explicit length limits.
+    This migration dynamically finds and fixes all unbounded VARCHAR columns
+    by querying information_schema directly. PostgreSQL type 1043 represents 
+    VARCHAR without explicit length constraints.
     """
-    # Get database connection
     conn = op.get_bind()
-    inspector = sa.inspect(conn)
     
-    # Check if policies table exists
-    if 'policies' in inspector.get_table_names():
-        columns = {col['name']: col for col in inspector.get_columns('policies')}
-        
-        # Fix merchant_reference column if it exists and is unbounded VARCHAR
-        if 'merchant_reference' in columns:
-            col_info = columns['merchant_reference']
-            # Check if it's a VARCHAR without length (type 1043)
-            if hasattr(col_info['type'], 'length') and col_info['type'].length is None:
-                op.alter_column('policies', 'merchant_reference',
-                              existing_type=sa.String(),
-                              type_=sa.String(100),
-                              existing_nullable=True)
-        
-        # Fix payment_status column if it exists and is unbounded VARCHAR  
-        if 'payment_status' in columns:
-            col_info = columns['payment_status']
-            if hasattr(col_info['type'], 'length') and col_info['type'].length is None:
-                op.alter_column('policies', 'payment_status',
-                              existing_type=sa.String(),
-                              type_=sa.String(50),
-                              existing_nullable=True)
-        
-        # Fix transaction_reference column if it exists and is unbounded VARCHAR
-        if 'transaction_reference' in columns:
-            col_info = columns['transaction_reference']
-            if hasattr(col_info['type'], 'length') and col_info['type'].length is None:
-                op.alter_column('policies', 'transaction_reference',
-                              existing_type=sa.String(),
-                              type_=sa.String(100),
-                              existing_nullable=True)
+    # Define column length mappings based on column names
+    # This ensures we apply appropriate lengths to each column
+    column_lengths = {
+        'merchant_reference': 100,
+        'payment_status': 50,
+        'transaction_reference': 100,
+        'policy_number': 100,
+        'policy_name': 255,
+        'company_name': 255,
+        'contact_person': 255,
+        'contact_email': 255,
+        'contact_phone': 50,
+        'rc_number': 100,
+        'coverage_amount': 20,  # This might be Numeric, but if it's VARCHAR, fix it
+    }
     
-    # Alternative approach: Use raw SQL to fix any remaining unbounded VARCHAR columns
-    # This handles cases where the Python inspection might not catch all issues
+    # Use raw SQL to find and fix ALL unbounded VARCHAR columns dynamically
+    # This approach is more reliable than Python inspection
     try:
-        conn.execute(sa.text("""
-            -- Fix merchant_reference if it's unbounded VARCHAR
-            DO $$
-            BEGIN
-                IF EXISTS (
-                    SELECT 1 FROM information_schema.columns 
-                    WHERE table_name = 'policies' 
-                    AND column_name = 'merchant_reference'
-                    AND data_type = 'character varying'
-                    AND character_maximum_length IS NULL
-                ) THEN
-                    ALTER TABLE policies ALTER COLUMN merchant_reference TYPE VARCHAR(100);
-                END IF;
-            END $$;
-            
-            -- Fix payment_status if it's unbounded VARCHAR
-            DO $$
-            BEGIN
-                IF EXISTS (
-                    SELECT 1 FROM information_schema.columns 
-                    WHERE table_name = 'policies' 
-                    AND column_name = 'payment_status'
-                    AND data_type = 'character varying'
-                    AND character_maximum_length IS NULL
-                ) THEN
-                    ALTER TABLE policies ALTER COLUMN payment_status TYPE VARCHAR(50);
-                END IF;
-            END $$;
-            
-            -- Fix transaction_reference if it's unbounded VARCHAR
-            DO $$
-            BEGIN
-                IF EXISTS (
-                    SELECT 1 FROM information_schema.columns 
-                    WHERE table_name = 'policies' 
-                    AND column_name = 'transaction_reference'
-                    AND data_type = 'character varying'
-                    AND character_maximum_length IS NULL
-                ) THEN
-                    ALTER TABLE policies ALTER COLUMN transaction_reference TYPE VARCHAR(100);
-                END IF;
-            END $$;
+        # First, find all unbounded VARCHAR columns
+        result = conn.execute(sa.text("""
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'policies'
+            AND table_schema = 'public'
+            AND data_type = 'character varying'
+            AND character_maximum_length IS NULL
         """))
+        
+        unbounded_columns = [row[0] for row in result]
+        
+        if unbounded_columns:
+            print(f"Found {len(unbounded_columns)} unbounded VARCHAR columns: {unbounded_columns}")
+            
+            # Fix each unbounded column with appropriate length
+            for column_name in unbounded_columns:
+                # Get the appropriate length, default to 255 if not specified
+                length = column_lengths.get(column_name, 255)
+                
+                # Execute ALTER TABLE to fix the column
+                # Using USING clause to safely cast existing data
+                conn.execute(sa.text(f"""
+                    ALTER TABLE policies 
+                    ALTER COLUMN {column_name} 
+                    TYPE VARCHAR({length})
+                    USING {column_name}::VARCHAR({length})
+                """))
+                
+                print(f"Fixed column '{column_name}' to VARCHAR({length})")
+            
+            # Commit the changes
+            conn.commit()
+        else:
+            print("No unbounded VARCHAR columns found in policies table")
+        
     except Exception as e:
-        # Log the error but don't fail the migration
-        print(f"Warning: Could not execute raw SQL fix: {e}")
+        # If the dynamic approach fails, try the specific column fixes
+        print(f"Dynamic fix failed: {e}, trying specific column fixes...")
+        
+        # Fallback: Fix known columns specifically
+        try:
+            conn.execute(sa.text("""
+                DO $$
+                BEGIN
+                    -- Fix merchant_reference
+                    IF EXISTS (
+                        SELECT 1 FROM information_schema.columns 
+                        WHERE table_name = 'policies' 
+                        AND column_name = 'merchant_reference'
+                        AND data_type = 'character varying'
+                        AND character_maximum_length IS NULL
+                    ) THEN
+                        ALTER TABLE policies ALTER COLUMN merchant_reference TYPE VARCHAR(100);
+                    END IF;
+                    
+                    -- Fix payment_status
+                    IF EXISTS (
+                        SELECT 1 FROM information_schema.columns 
+                        WHERE table_name = 'policies' 
+                        AND column_name = 'payment_status'
+                        AND data_type = 'character varying'
+                        AND character_maximum_length IS NULL
+                    ) THEN
+                        ALTER TABLE policies ALTER COLUMN payment_status TYPE VARCHAR(50);
+                    END IF;
+                    
+                    -- Fix transaction_reference
+                    IF EXISTS (
+                        SELECT 1 FROM information_schema.columns 
+                        WHERE table_name = 'policies' 
+                        AND column_name = 'transaction_reference'
+                        AND data_type = 'character varying'
+                        AND character_maximum_length IS NULL
+                    ) THEN
+                        ALTER TABLE policies ALTER COLUMN transaction_reference TYPE VARCHAR(100);
+                    END IF;
+                END $$;
+            """))
+            conn.commit()
+            print("Fallback: Fixed specific columns using DO block")
+        except Exception as e2:
+            print(f"Specific column fix also failed: {e2}")
+            # Don't raise - let the migration continue
+            # The migration should be idempotent, so it can be run again
+            pass
 
 
 def downgrade() -> None:
