@@ -411,7 +411,7 @@ async def simulate_policy_payment_endpoint(policy_id: int, db: Session = Depends
         raise HTTPException(status_code=404, detail="Virtual account not found for this user")
 
     # Call the centralized squad_co_service to handle the payment simulation
-    # This service correctly handles the conversion of Naira to kobo.
+    # This service sends the amount as-is in Naira (no kobo conversion).
     result = await squad_co_service.simulate_payment(
         virtual_account_number=virtual_account.virtual_account_number,
         amount=policy.premium_amount  # Pass the amount in Naira

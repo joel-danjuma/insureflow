@@ -80,12 +80,12 @@ class SquadCoService:
         
         url = f"{self.base_url}/virtual-account/simulate/payment"
         
-        # Convert amount to kobo
-        amount_in_kobo = int(amount * 100)
+        # Send amount as-is (no kobo conversion)
+        amount_to_send = int(amount)
         
         payload = {
             "virtual_account_number": virtual_account_number,
-            "amount": str(amount_in_kobo)
+            "amount": str(amount_to_send)
         }
         
         logger.info(f"Simulating payment: {amount} NGN to {virtual_account_number}")
@@ -163,7 +163,7 @@ class SquadCoService:
     async def initiate_payment(self, amount: int, email: str, currency: str, metadata: dict = None):
         """
         Initiates a payment transaction with Squad Co.
-        Amount should be in base currency (Naira), not kobo - will be converted here.
+        Amount is sent as-is in Naira (no kobo conversion).
         """
         if not self.secret_key or self.secret_key == "":
             logger.error("Squad secret key not configured - cannot initiate payment")
@@ -171,20 +171,20 @@ class SquadCoService:
         
         url = f"{self.base_url}/transaction/initiate"
         
-        # Convert amount to kobo (Squad requires lowest currency unit)
-        amount_in_kobo = int(amount * 100)
+        # Send amount as-is (no kobo conversion)
+        amount_to_send = int(amount)
         
         payload = {
-            "amount": amount_in_kobo,
+            "amount": amount_to_send,
             "email": email,
             "currency": currency,
             "initiate_type": "inline",  # Required field according to Squad docs
-            "transaction_ref": f"INSURE_{int(datetime.now().timestamp())}_{amount_in_kobo}",  # Generate unique ref
+            "transaction_ref": f"INSURE_{int(datetime.now().timestamp())}_{amount_to_send}",  # Generate unique ref
             "callback_url": f"{settings.SQUAD_WEBHOOK_URL or 'http://localhost:8000/api/v1/payments/webhook'}",
             "metadata": metadata or {},
         }
         
-        logger.info(f"Initiating Squad payment: amount={amount_in_kobo} kobo, email={email}, ref={payload['transaction_ref']}")
+        logger.info(f"Initiating Squad payment: amount={amount_to_send} NGN, email={email}, ref={payload['transaction_ref']}")
         
         async with httpx.AsyncClient(timeout=30.0) as client:  # Increased timeout
             try:

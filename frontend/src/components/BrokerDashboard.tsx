@@ -296,6 +296,14 @@ const BrokerDashboard = () => {
       }
 
       console.log(`🚀 INITIATING SIMULATED PAYMENT for ${selectedItems.length} policies.`);
+      console.log('🔍 FRONTEND AMOUNT DEBUGGING: Selected items with amounts:', selectedItems.map(item => ({
+        id: item.id,
+        premiumId: item.premiumId,
+        clientName: item.clientName,
+        premiumAmountRaw: item.premiumAmountRaw,
+        premiumAmountFormatted: item.premiumAmount,
+        policyId: item.policyId
+      })));
 
       // We will simulate payment for each selected premium one by one.
       for (const item of selectedItems) {
@@ -303,8 +311,12 @@ const BrokerDashboard = () => {
           console.warn(`Skipping policy ID ${item.policyId} as it has no premiumId.`);
           continue;
         }
+        
+        console.log(`🔍 PROCESSING PAYMENT: Premium ID ${item.premiumId}, Client: ${item.clientName}, Amount: ${item.premiumAmount} (Raw: ${item.premiumAmountRaw})`);
+        
         // Call the simulation service for each selected premium
-        await paymentService.simulateBankTransfer(item.premiumId);
+        const paymentResult = await paymentService.simulateBankTransfer(item.premiumId);
+        console.log(`🔍 PAYMENT RESULT for ${item.clientName}:`, paymentResult);
       }
 
       setPaymentSuccess(`Successfully simulated payment for ${selectedItems.length} policies.`);

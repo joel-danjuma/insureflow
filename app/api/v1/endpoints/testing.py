@@ -82,10 +82,17 @@ async def simulate_payment(
 
         # Step 2: Simulate the payment to the user's virtual account.
         logger.info(f"--- 🧪 Stage 1: Simulating payment of ₦{premium.amount} to user's VA {user_va.virtual_account_number} ---")
+        logger.info(f"🔍 AMOUNT DEBUGGING: Premium ID {premium.id}, Amount from DB: {premium.amount}, Type: {type(premium.amount)}")
+        logger.info(f"🔍 AMOUNT DEBUGGING: Policy ID {premium.policy.id}, Customer: {premium.policy.user.full_name}")
+        logger.info(f"🔍 AMOUNT DEBUGGING: Converting Decimal {premium.amount} to amount for Squad API")
+        
         payment_result = await squad_co_service.simulate_payment(
             virtual_account_number=user_va.virtual_account_number,
             amount=premium.amount
         )
+
+        logger.info(f"🔍 SQUAD API RESPONSE: {payment_result}")
+        logger.info(f"🔍 AMOUNT VERIFICATION: Expected ₦{premium.amount}, Squad received amount in payload")
 
         # Ensure payment_result is a dictionary
         if not isinstance(payment_result, dict):

@@ -42,7 +42,7 @@ async def initiate_premium_payment(premium_id: int, db: Session):
 
     # 3. Initiate payment with Squad Co
     payment_data = await squad_co_service.initiate_payment(
-        amount=float(premium.amount),  # Pass amount in Naira, squad service will convert to kobo
+        amount=float(premium.amount),  # Pass amount in Naira as-is (no kobo conversion)
         email=customer.email,
         currency="NGN",
         metadata={"premium_id": premium_id, "policy_id": policy.id}
