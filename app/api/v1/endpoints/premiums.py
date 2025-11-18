@@ -25,30 +25,11 @@ def list_premiums(
     """
     Retrieve a list of all premiums. Broker or Admin only.
     """
-    try:
-        premiums = premium_crud.get_premiums(db, skip=skip, limit=limit)
-        return premiums
-    except Exception as e:
-        # Return mock data if database query fails
-        print(f"⚠️  Premiums API failed, using mock data: {e}")
-        from app.schemas.premium import Premium
-        from datetime import date
-        return [
-            Premium(
-                id=1,
-                policy_id=1,
-                amount=250000.00,
-                due_date=date(2024, 12, 15),
-                status="paid"
-            ),
-            Premium(
-                id=2,
-                policy_id=2,
-                amount=180000.00,
-                due_date=date(2024, 11, 30),
-                status="pending"
-            )
-        ]
+    premiums = premium_crud.get_premiums(db, skip=skip, limit=limit)
+    if not premiums:
+        # Return empty list instead of mock data to prevent validation errors
+        return []
+    return premiums
 
 @router.post("/", response_model=Premium, status_code=status.HTTP_201_CREATED)
 def create_premium(

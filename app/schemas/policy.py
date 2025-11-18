@@ -1,7 +1,7 @@
 """
 Pydantic schemas for policy-related operations.
 """
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List, Dict, Any
@@ -115,8 +115,8 @@ class Policy(PolicyBase):
     """Schema for policy responses."""
     id: int
     policy_number: str
-    created_at: Optional[date] = None
-    updated_at: Optional[date] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
