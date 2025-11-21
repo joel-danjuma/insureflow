@@ -2,27 +2,27 @@
 CRUD operations for the Policy model.
 """
 from typing import List, Optional
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from app.models.policy import Policy
 from app.schemas.policy import PolicyCreate, PolicyUpdate
 
 def get_policy(db: Session, policy_id: int) -> Optional[Policy]:
     """
-    Retrieves a policy from the database by its ID.
+    Retrieves a policy from the database by its ID with user data.
     """
-    return db.query(Policy).filter(Policy.id == policy_id).first()
+    return db.query(Policy).options(joinedload(Policy.user)).filter(Policy.id == policy_id).first()
 
 def get_policies(db: Session, skip: int = 0, limit: int = 100) -> List[Policy]:
     """
-    Retrieves a list of policies from the database.
+    Retrieves a list of policies from the database with user data.
     """
-    return db.query(Policy).offset(skip).limit(limit).all()
+    return db.query(Policy).options(joinedload(Policy.user)).offset(skip).limit(limit).all()
 
 def get_policies_by_broker(db: Session, broker_id: int, skip: int = 0, limit: int = 100) -> List[Policy]:
     """
-    Retrieves a list of policies for a specific broker from the database.
+    Retrieves a list of policies for a specific broker from the database with user data.
     """
-    return db.query(Policy).filter(Policy.broker_id == broker_id).offset(skip).limit(limit).all()
+    return db.query(Policy).options(joinedload(Policy.user)).filter(Policy.broker_id == broker_id).offset(skip).limit(limit).all()
 
 def create_policy(db: Session, policy: PolicyCreate) -> Policy:
     """
