@@ -85,8 +85,8 @@ class RecentPolicy(BaseModel):
     id: int
     policy_number: str
     policy_name: str
-    policy_type: str
-    company_name: str
+    policy_type: Optional[str] = None
+    company_name: Optional[str] = None
     premium_amount: Decimal
     due_date: date
     status: str
