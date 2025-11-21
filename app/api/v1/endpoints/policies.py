@@ -102,6 +102,8 @@ def get_policies(
     if not policies:
         # Return empty list instead of mock data to prevent validation errors
         return []
+    
+    return policies
 
 @router.get("/my", response_model=List[PolicySummary])
 def list_my_policies(

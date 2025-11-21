@@ -237,14 +237,10 @@ def get_broker_dashboard(
         mock_performance = BrokerPerformance(
             broker_id=current_user.id,
             broker_name=current_user.full_name,
-            organization_name=current_user.organization_name or "Independent Broker",
-            total_policies=5,
-            total_premiums=430000.0,
-            commission_earned=21500.0,
+            policies_count=5,
+            total_premium=430000.0,
             conversion_rate=50.0,
-            client_retention_rate=85.0,
-            average_deal_size=86000.0,
-            rank=1
+            ranking=1
         )
         
         # Mock trends data
