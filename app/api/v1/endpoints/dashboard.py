@@ -259,7 +259,7 @@ def get_broker_dashboard(
         return BrokerDashboard(
             kpis=mock_kpis,
             virtual_account_summary=[],
-            commission_trends=LineChartData(
+            commission_trends=schemas_dashboard.LineChartData(
                 datasets=[{
                     "label": "Commission Earned",
                     "data": [50000.0, 75000.0, 100000.0, 125000.0],
