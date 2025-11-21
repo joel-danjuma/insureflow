@@ -219,15 +219,10 @@ export const useBrokerProfile = () => {
   return useReactQuery<Broker>({
     queryKey: ['broker', 'profile'],
     queryFn: async () => {
-      try {
-        return await brokerService.getBrokerProfile();
-      } catch (error) {
-        console.warn('Broker profile API failed, using mock data:', error);
-        return mockBroker;
-      }
+      return await brokerService.getBrokerProfile();
     },
     staleTime: 30 * 1000, // 30 seconds (reduced)
-    retry: false, // Don't retry, use mock data on failure
+    retry: 2, // Enable retries
     refetchOnWindowFocus: false,
   });
 };
@@ -237,15 +232,10 @@ export const usePolicies = (skip: number = 0, limit: number = 10) => {
   return useReactQuery<Policy[]>({
     queryKey: ['policies', skip, limit],
     queryFn: async () => {
-      try {
-        return await policyService.getPolicies(skip, limit);
-      } catch (error) {
-        console.warn('Policies API failed, using mock data:', error);
-        return mockPolicies;
-      }
+      return await policyService.getPolicies(skip, limit);
     },
     staleTime: 30 * 1000, // 30 seconds (reduced)
-    retry: false, // Don't retry, use mock data on failure
+    retry: 2, // Enable retries
     refetchOnWindowFocus: false,
   });
 };
@@ -255,15 +245,10 @@ export const usePremiums = () => {
   return useReactQuery<Premium[]>({
     queryKey: ['premiums'],
     queryFn: async () => {
-      try {
-        return await premiumService.getPremiums();
-      } catch (error) {
-        console.warn('Premiums API failed, using mock data:', error);
-        return mockPremiums;
-      }
+      return await premiumService.getPremiums();
     },
     staleTime: 30 * 1000, // 30 seconds (reduced)
-    retry: false, // Don't retry, use mock data on failure
+    retry: 2, // Enable retries
     refetchOnWindowFocus: false,
   });
 }; 

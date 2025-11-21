@@ -54,4 +54,67 @@ Once the services are running, you can interact with them as follows:
 - **FastAPI Backend**: The main application is available at [`http://localhost:8000`](http://localhost:8000).
 - **Streamlit Dashboard**: The payment monitoring dashboard is available at [`http://localhost:8501`](http://localhost:8501).
 
-You can use an API client like Postman or Insomnia to interact with the API endpoints, or use the interactive documentation linked above. 
+You can use an API client like Postman or Insomnia to interact with the API endpoints, or use the interactive documentation linked above.
+
+## Default Test Credentials
+
+For testing and development purposes, you can create a test user with known credentials:
+
+**Test User Credentials:**
+- **Email**: `test@insureflow.com`
+- **Password**: `TestPassword123!`
+- **Role**: BROKER
+
+### Creating the Test User
+
+To create the test user, run the following command after the containers are running:
+
+```bash
+docker exec -it insureflow_app python scripts/create_test_user.py
+```
+
+This will create a broker user that you can use to login and test the application with real database data.
+
+### Using the Test User
+
+1. Navigate to your application's login page
+2. Enter the email: `test@insureflow.com`
+3. Enter the password: `TestPassword123!`
+4. You should now be logged in and able to see real policies and premiums from the database
+
+## Testing the Fixes
+
+After deploying the authentication fixes, follow these steps to verify everything works:
+
+1. **Restart the Docker containers** to apply backend changes:
+   ```bash
+   docker-compose down
+   docker-compose up --build -d
+   ```
+
+2. **Create the test user**:
+   ```bash
+   docker exec -it insureflow_app python scripts/create_test_user.py
+   ```
+
+3. **Clear browser Session Storage**:
+   - Open Developer Tools (F12)
+   - Go to Application → Session Storage
+   - Delete the `auth-storage` entry
+   - Refresh the page
+
+4. **Login with test credentials** via the UI
+
+5. **Verify real data is displayed**:
+   - Check that you see actual policies from the database (not mock data)
+   - Verify payment status updates work correctly
+   - Confirm all API calls are authenticated properly
+
+### Expected Results
+
+After the authentication fixes:
+- ✅ Registration endpoint works properly
+- ✅ Frontend displays real database data (87 policies, 671 premiums in your current database)
+- ✅ Authentication uses real JWT tokens instead of "mock-token"
+- ✅ Payment status updates reflect immediately on insurance firm dashboard
+- ✅ No more mock data fallbacks 

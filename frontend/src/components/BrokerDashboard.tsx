@@ -188,34 +188,10 @@ const BrokerDashboard = () => {
     });
   }, [premiums]);
 
-  const localPolicies = usePolicyStore((state) => state.getPolicies());
-
-  // Merge backend and local policies
+  // Use only backend policies - no local mock data
   const allPolicies = useMemo(() => {
-    const backendPolicies = Array.isArray(policies) ? policies : [];
-    const validLocalPolicies = Array.isArray(localPolicies) ? localPolicies : [];
-    
-    const localPoliciesData = validLocalPolicies.map(localPolicy => ({
-      id: parseInt(localPolicy?.id?.split('-')[0]) || Math.floor(Math.random() * 10000),
-      policy_number: localPolicy?.policy_number || `LOCAL-${localPolicy?.id || 'unknown'}`,
-      policy_type: localPolicy?.policy_type || 'unknown',
-      customer_id: Math.floor(Math.random() * 1000),
-      broker_id: Math.floor(Math.random() * 100),
-      coverage_amount: typeof localPolicy?.coverage_amount === 'number' ? localPolicy.coverage_amount : 0,
-      premium_amount: typeof localPolicy?.premium_amount === 'number' ? localPolicy.premium_amount : 0,
-      start_date: localPolicy?.start_date || new Date().toISOString(),
-      end_date: localPolicy?.due_date || new Date().toISOString(),
-      status: 'active',
-      customer: {
-        full_name: localPolicy?.contact_person || 'Unknown Client',
-        email: localPolicy?.contact_email || 'unknown@example.com',
-      },
-      broker: {
-        name: 'Local Broker',
-      },
-    }));
-    return [...backendPolicies, ...localPoliciesData];
-  }, [policies, localPolicies]);
+    return Array.isArray(policies) ? policies : [];
+  }, [policies]);
 
   const clientPortfolio = useMemo(() => {
     const allItems = transformToClientPortfolio(allPolicies);

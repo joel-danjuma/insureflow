@@ -46,7 +46,7 @@ def register_user(
         )
     
     # Create new user
-    new_user = crud_user.create_user(db, user=user_in)
+    new_user = crud_user.create_user(db, obj_in=user_in)
     
     # Automatically log in the user after registration
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -198,7 +198,7 @@ def onboard_broker(
         can_make_payments=broker_request.can_make_payments if broker_request.role == "BROKER_ACCOUNTANT" else False
     )
     
-    new_broker = crud_user.create_user(db, user=user_data)
+    new_broker = crud_user.create_user(db, obj_in=user_data)
 
     # Create the broker profile
     broker_profile_data = {
