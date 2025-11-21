@@ -258,13 +258,16 @@ def get_broker_dashboard(
         
         return BrokerDashboard(
             kpis=mock_kpis,
-            recent_policies=mock_recent_policies,
-            virtual_accounts=[],
-            commission_trends=mock_trends,
-            payment_trends=mock_trends,
-            client_portfolio=mock_recent_policies,
-            performance_metrics=mock_performance,
-            upcoming_renewals=mock_recent_policies[:1]
+            virtual_account_summary=[],
+            commission_trends=LineChartData(
+                datasets=[{
+                    "label": "Commission Earned",
+                    "data": [50000.0, 75000.0, 100000.0, 125000.0],
+                    "borderColor": "rgb(75, 192, 192)"
+                }],
+                labels=["Week 1", "Week 2", "Week 3", "Week 4"]
+            ),
+            individual_performance=mock_performance
         )
 
 @router.get("/admin", response_model=schemas_dashboard.AdminDashboard)
