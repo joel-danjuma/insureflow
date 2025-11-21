@@ -245,12 +245,15 @@ def get_broker_dashboard(
         
         # Mock trends data
         mock_trends = TimeSeriesData(
+            period="weekly",
             data_points=[
                 ChartDataPoint(label="Week 1", value=50000.0),
                 ChartDataPoint(label="Week 2", value=75000.0),
                 ChartDataPoint(label="Week 3", value=100000.0),
                 ChartDataPoint(label="Week 4", value=125000.0)
-            ]
+            ],
+            total=350000.0,
+            growth_rate=150.0
         )
         
         return BrokerDashboard(
