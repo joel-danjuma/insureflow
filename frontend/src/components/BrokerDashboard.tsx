@@ -119,7 +119,11 @@ const BrokerDashboard = () => {
     
     // Calculate total premiums with null checks
     const totalPremiums = validPolicies.reduce((sum, policy) => {
-      const premiumAmount = typeof policy?.premium_amount === 'number' ? policy.premium_amount : 0;
+      const premiumAmount = policy?.premium_amount 
+        ? (typeof policy.premium_amount === 'number' 
+            ? policy.premium_amount 
+            : parseFloat(policy.premium_amount))
+        : 0;
       return sum + premiumAmount;
     }, 0);
     
@@ -171,7 +175,11 @@ const BrokerDashboard = () => {
       }
       
       // Ensure premium amount is a valid number
-      const premiumAmount = typeof policy?.premium_amount === 'number' ? policy.premium_amount : 0;
+      const premiumAmount = policy?.premium_amount 
+        ? (typeof policy.premium_amount === 'number' 
+            ? policy.premium_amount 
+            : parseFloat(policy.premium_amount))
+        : 0;
 
       return {
         id: policy?.id?.toString() || 'unknown',
