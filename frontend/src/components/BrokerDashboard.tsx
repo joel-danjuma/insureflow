@@ -185,7 +185,7 @@ const BrokerDashboard = () => {
         id: policy?.id?.toString() || 'unknown',
         policyId: policy?.id || 0,
         premiumId: premium?.id || null,
-        clientName: policy?.customer?.full_name || 'Unknown Client',
+        clientName: policy?.customer?.full_name || policy?.company_name || policy?.contact_person || 'Unknown Client',
         policyType: policy?.policy_type || 'Unknown',
         policyStatus: policy?.status === 'active' ? 'Active' : 'Pending',
         paymentStatus,
