@@ -23,12 +23,31 @@ def list_premiums(
     current_user: User = Depends(get_current_broker_or_admin_user)
 ):
     """
-    Retrieve a list of all premiums. Broker or Admin only.
+    Retrieve a list of premiums. Broker or Admin only.
+    Brokers see only premiums for their policies. Admins see all premiums.
     """
-    premiums = premium_crud.get_premiums(db, skip=skip, limit=limit)
+    from app.models.user import UserRole
+    
+    # Check user role and filter premiums accordingly
+    if current_user.role == UserRole.BROKER:
+        if current_user.broker_profile:
+            premiums = premium_crud.get_premiums_by_broker(
+                db, broker_id=current_user.broker_profile.id, skip=skip, limit=limit
+            )
+        else:
+            # If for some reason a broker user has no profile, return empty list
+            premiums = []
+    elif current_user.can_perform_admin_actions:
+        # Admin can see all premiums
+        premiums = premium_crud.get_premiums(db, skip=skip, limit=limit)
+    else:
+        # Fallback for unexpected roles
+        premiums = []
+    
     if not premiums:
         # Return empty list instead of mock data to prevent validation errors
         return []
+    
     return premiums
 
 @router.post("/", response_model=Premium, status_code=status.HTTP_201_CREATED)

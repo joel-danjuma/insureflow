@@ -32,6 +32,16 @@ def get_premiums_by_policy(db: Session, policy_id: int, skip: int = 0, limit: in
         joinedload(Premium.policy).joinedload(Policy.user)
     ).filter(Premium.policy_id == policy_id).offset(skip).limit(limit).all()
 
+def get_premiums_by_broker(db: Session, broker_id: int, skip: int = 0, limit: int = 100) -> List[Premium]:
+    """
+    Retrieves a list of premiums for policies belonging to a specific broker with policy and user data.
+    """
+    return db.query(Premium).options(
+        joinedload(Premium.policy).joinedload(Policy.user)
+    ).join(Policy).filter(
+        Policy.broker_id == broker_id
+    ).offset(skip).limit(limit).all()
+
 def get_unpaid_premiums_by_policy(db: Session, policy_id: int) -> List[Premium]:
     """
     Retrieves all unpaid premiums for a single policy with policy and user data.
