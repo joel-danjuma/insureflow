@@ -175,10 +175,13 @@ const BrokerDashboard = () => {
       }
       
       // Ensure premium amount is a valid number
-      const premiumAmount = policy?.premium_amount 
-        ? (typeof policy.premium_amount === 'number' 
-            ? policy.premium_amount 
-            : parseFloat(policy.premium_amount))
+      // Use premium.amount (installment) if available, otherwise fallback to policy.premium_amount (total)
+      const premiumValue = premium?.amount || policy?.premium_amount;
+      
+      const premiumAmount = premiumValue 
+        ? (typeof premiumValue === 'number' 
+            ? premiumValue 
+            : parseFloat(premiumValue))
         : 0;
 
       return {

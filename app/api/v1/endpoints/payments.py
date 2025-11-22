@@ -28,6 +28,9 @@ from app.models.user import User
 
 router = APIRouter()
 
+from datetime import datetime
+from decimal import Decimal
+
 @router.post("/webhook", status_code=status.HTTP_200_OK)
 async def handle_squad_co_webhook(
     request: Request,
@@ -54,6 +57,13 @@ async def handle_squad_co_webhook(
     if event == "charge.success":
         webhook_data = payload.get("Body", {})
         transaction_ref = webhook_data.get("transaction_ref")
+        
+        # Extract amount (convert from kobo if needed)
+        amount = webhook_data.get("amount")
+        
+        # Squad usually sends amount in kobo (integer), convert to naira
+        amount_paid = Decimal(str(amount)) / 100 if amount else Decimal("0.00")
+        transaction_date = datetime.now()
 
         if not transaction_ref:
             raise HTTPException(status_code=400, detail="No transaction reference in webhook")
@@ -71,9 +81,17 @@ async def handle_squad_co_webhook(
             metadata = webhook_data.get("meta_data", {})
             if metadata.get("type") == "bulk_payment" and "premium_ids" in metadata:
                 premium_ids = metadata["premium_ids"]
+                # Calculate amount per premium (simple split for now, ideally track per premium)
+                amount_per_premium = amount_paid / len(premium_ids) if premium_ids else Decimal("0.00")
+                
                 for premium_id in premium_ids:
-                    # Update premium status to paid
-                    crud_premium.update_premium_status_to_paid(db, premium_id=premium_id)
+                    # Update premium status to paid with amount
+                    crud_premium.update_premium_status_to_paid(
+                        db, 
+                        premium_id=premium_id, 
+                        amount_paid=amount_per_premium,
+                        payment_date=transaction_date
+                    )
                     
                     # Create individual payment record for insurance firm dashboard
                     premium = crud_premium.get_premium(db, premium_id=premium_id)
@@ -86,7 +104,7 @@ async def handle_squad_co_webhook(
                             db=db,
                             payment=PaymentCreate(
                                 premium_id=premium_id,
-                                amount_paid=premium.amount,
+                                amount_paid=amount_per_premium, # Use actual paid amount
                                 payment_method=PaymentMethod.BANK_TRANSFER,
                                 transaction_reference=transaction_ref,
                                 status=PaymentTransactionStatus.SUCCESS,
@@ -97,7 +115,19 @@ async def handle_squad_co_webhook(
                 # Handle single payment - find the premium by transaction ref
                 payment = crud_payment.get_payment_by_transaction_ref(db, transaction_ref=transaction_ref)
                 if payment and payment.premium_id:
-                    crud_premium.update_premium_status_to_paid(db, premium_id=payment.premium_id)
+                    # Update premium with actual amount paid
+                    crud_premium.update_premium_status_to_paid(
+                        db, 
+                        premium_id=payment.premium_id,
+                        amount_paid=amount_paid,
+                        payment_date=transaction_date
+                    )
+                    
+                    # Update payment record with actual amount if it differs
+                    if payment.amount_paid != amount_paid:
+                        payment.amount_paid = amount_paid
+                        db.add(payment)
+                        db.commit()
 
     # Acknowledge receipt of the webhook
     return {"status": "success"}

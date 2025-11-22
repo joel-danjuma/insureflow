@@ -103,13 +103,20 @@ def delete_premium(db: Session, premium_id: int) -> bool:
         return True
     return False
 
-def update_premium_status_to_paid(db: Session, premium_id: int) -> Premium | None:
+from datetime import datetime
+from decimal import Decimal
+
+def update_premium_status_to_paid(db: Session, premium_id: int, amount_paid: Decimal = None, payment_date: datetime = None) -> Premium | None:
     """
-    Updates the status of a premium to 'paid'.
+    Updates the status of a premium to 'paid' and records payment details.
     """
     premium = db.query(Premium).filter(Premium.id == premium_id).first()
     if premium:
         premium.payment_status = PaymentStatus.PAID
+        if amount_paid is not None:
+            premium.paid_amount = amount_paid
+        if payment_date:
+            premium.payment_date = payment_date
         db.add(premium)
         db.commit()
         db.refresh(premium)
