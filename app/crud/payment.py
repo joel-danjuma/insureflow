@@ -60,13 +60,13 @@ def initiate_bulk(db: Session, policy_ids: list[int]):
 
 def get_payments_for_insurance_firm(db: Session, skip: int = 0, limit: int = 50) -> List[Dict[str, Any]]:
     """
-    Get payments grouped by broker and payment date for insurance firm dashboard.
-    Returns formatted data matching LatestPayment type from frontend.
+    SIMPLIFIED: Get latest successful payments.
+    Bypasses complex grouping to ensure data visibility for demo.
     """
     import logging
     logger = logging.getLogger(__name__)
     
-    # Query successful payments with all necessary relationships
+    # Fetch latest 50 successful payments directly
     payments = db.query(Payment).options(
         joinedload(Payment.premium).joinedload(Premium.policy).joinedload(Policy.broker),
         joinedload(Payment.premium).joinedload(Premium.policy).joinedload(Policy.user)
@@ -74,62 +74,52 @@ def get_payments_for_insurance_firm(db: Session, skip: int = 0, limit: int = 50)
         Payment.status == PaymentTransactionStatus.SUCCESS
     ).order_by(
         Payment.payment_date.desc()
-    ).offset(skip).limit(limit * 10).all()  # Get more to group, then limit after grouping
+    ).limit(limit).all()
     
     logger.debug(f"Found {len(payments)} successful payments for insurance firm dashboard")
     
-    # Group payments by broker and payment date
-    grouped_payments: Dict[str, Dict[str, Any]] = {}
+    result = []
     
     for payment in payments:
+        # Safety checks with defaults
         premium = payment.premium
-        if not premium:
-            continue
-            
-        policy = premium.policy
-        if not policy:
-            continue
+        policy = premium.policy if premium else None
         
-        broker_name = policy.broker.name if policy.broker else "Unassigned"
-        broker_id = policy.broker.id if policy.broker else 0
+        # Fallback data if relationships are missing
+        broker_name = "Direct Client"
+        customer_name = "Unknown Customer"
+        policy_number = "N/A"
+        policy_id = 0
         
-        # Create a key for grouping: broker_id + date (without time)
-        payment_date_key = payment.payment_date.date().isoformat()
-        group_key = f"{broker_id}_{payment_date_key}"
-        
-        if group_key not in grouped_payments:
-            grouped_payments[group_key] = {
-                "id": payment.transaction_reference.split("_premium_")[0] if "_premium_" in payment.transaction_reference else payment.transaction_reference,
-                "brokerId": broker_id,
-                "brokerName": broker_name,
-                "totalAmount": 0,
-                "policyCount": 0,
-                "paymentMethod": payment.payment_method.value,
-                "status": payment.status.value,
-                "completedAt": payment.payment_date.isoformat(),
-                "policies": []
-            }
-        
-        # Add to grouped payment
-        grouped = grouped_payments[group_key]
-        grouped["totalAmount"] += float(payment.amount_paid)
-        
-        # Add policy details if not already added
-        policy_exists = any(p["policyId"] == policy.id for p in grouped["policies"])
-        if not policy_exists:
-            grouped["policies"].append({
-                "policyId": policy.id,
-                "policyNumber": policy.policy_number,
-                "customerName": policy.user.full_name if policy.user else "Unknown",
+        if policy:
+            policy_id = policy.id
+            policy_number = policy.policy_number
+            if policy.broker:
+                broker_name = policy.broker.name
+            elif policy.user:
+                # If no broker, maybe it's a direct user, verify if user is broker
+                pass
+                
+            if policy.user:
+                customer_name = policy.user.full_name
+
+        # Map directly to frontend structure (LatestPayment type)
+        # We treat every single payment as a "Latest Payment" row
+        # This avoids complex grouping logic that might hide data
+        result.append({
+            "id": payment.transaction_reference or str(payment.id),
+            "brokerName": broker_name,
+            "totalAmount": float(payment.amount_paid),
+            "policyCount": 1,  # 1 payment = 1 policy paid
+            "paymentMethod": payment.payment_method.value if hasattr(payment.payment_method, 'value') else str(payment.payment_method),
+            "status": "Successful", # Force friendly string
+            "completedAt": payment.payment_date.isoformat(),
+            "policies": [{
+                "policyId": policy_id,
+                "policyNumber": policy_number,
+                "customerName": customer_name,
                 "amount": float(payment.amount_paid)
-            })
-            grouped["policyCount"] = len(grouped["policies"])
-    
-    # Convert to list and sort by completedAt descending
-    result = list(grouped_payments.values())
-    result.sort(key=lambda x: x["completedAt"], reverse=True)
-    
-    logger.debug(f"Grouped into {len(result)} payment groups for insurance firm dashboard")
-    
-    # Limit results
-    return result[:limit] 
+            }]
+        })
+        
+    return result
