@@ -141,6 +141,7 @@ class AdminDashboard(BaseModel):
     broker_performance: List[BrokerPerformance]
     virtual_account_summary: List[VirtualAccountSummary]
     commission_distribution: PieChartData
+    latest_payments: List[Dict[str, Any]] = []
 
 
 class CommissionSummary(BaseModel):
