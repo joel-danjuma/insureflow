@@ -92,22 +92,6 @@ def get_insurance_firm_dashboard(
         # Policy type distribution
         policy_type_distribution = crud_dashboard.get_policy_type_distribution(db, current_user)
         
-        # Monthly revenue (simplified bar chart)
-        monthly_revenue = schemas_dashboard.BarChartData(
-            categories=[
-                schemas_dashboard.ChartDataPoint(label="Jan", value=float(kpis.total_premium_collected * 0.8)),
-                schemas_dashboard.ChartDataPoint(label="Feb", value=float(kpis.total_premium_collected * 0.9)),
-                schemas_dashboard.ChartDataPoint(label="Mar", value=float(kpis.total_premium_collected)),
-            ],
-            max_value=float(kpis.total_premium_collected)
-        )
-        
-        # Overdue payments
-        overdue_policies = [p for p in recent_policies if p.days_until_due and p.days_until_due < 0]
-        
-        # Top brokers
-        top_brokers = broker_performance[:5]
-        
         # Latest payments from brokers
         from app.crud import payment as crud_payment
         latest_payments = crud_payment.get_payments_for_insurance_firm(db, skip=0, limit=20)
@@ -116,13 +100,9 @@ def get_insurance_firm_dashboard(
             kpis=kpis,
             recent_policies=recent_policies,
             policy_trends=policy_trends,
-            premium_collection_trends=premium_collection_trends,
             broker_performance=broker_performance,
-            policy_type_distribution=policy_type_distribution,
-            latest_payments=latest_payments,
-            monthly_revenue=monthly_revenue,
-            overdue_payments=overdue_policies,
-            top_brokers=top_brokers
+            policy_distribution=policy_type_distribution,
+            latest_payments=latest_payments
         )
     except Exception as e:
         raise HTTPException(
