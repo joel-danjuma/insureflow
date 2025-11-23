@@ -6,7 +6,8 @@ import { DataTable } from '@/components/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
 import { formatNaira } from '@/utils/currency';
 import { useDashboardData, usePolicies, usePremiums } from '@/hooks/useQuery';
-import { RecentPolicy, Policy, Premium } from '@/types/user';
+// ✅ Import LatestPayment from types
+import { DashboardData, DashboardKPIs, RecentPolicy, LatestPayment, Policy, Premium } from '@/types/user';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { reminderService } from '@/services/api';
 import useReminderStore from '@/store/reminderStore';
