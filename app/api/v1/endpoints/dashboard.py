@@ -4,7 +4,7 @@ Enhanced with role-based dashboards and comprehensive metrics.
 """
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from typing import Optional
+from typing import Optional, List, Dict, Any
 
 from app import dependencies
 from app.crud import dashboard as crud_dashboard
