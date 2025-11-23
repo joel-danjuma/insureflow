@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useQuery as useReactQuery } from '@tanstack/react-query';
 import { dashboardService, brokerService, policyService, premiumService } from '@/services/api';
-import { DashboardData, Broker, Policy, Premium } from '@/types/user';
+import { DashboardData, Broker, Policy, Premium, LatestPayment } from '@/types/user';
 
 interface QueryResult<T> {
   data: T | null;
@@ -250,5 +250,14 @@ export const usePremiums = () => {
     staleTime: 30 * 1000, // 30 seconds (reduced)
     retry: 2, // Enable retries
     refetchOnWindowFocus: false,
+  });
+};
+
+// ✅ New hook for direct payment fetching
+export const useLatestPayments = () => {
+  return useReactQuery<LatestPayment[]>({
+    queryKey: ['latest-payments'],
+    queryFn: async () => dashboardService.getLatestPayments(),
+    staleTime: 10 * 1000, // 10 seconds
   });
 }; 

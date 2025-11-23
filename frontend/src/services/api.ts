@@ -184,6 +184,17 @@ export const dashboardService = {
       errorHandler(error, 'fetching dashboard data');
     }
   },
+
+  // ✅ New service method
+  getLatestPayments: async () => {
+    try {
+      const response = await api.get('/dashboard/latest-payments');
+      return response.data;
+    } catch (error) {
+      console.error("Failed to fetch latest payments:", error);
+      return [];
+    }
+  },
 };
 
 export const brokerService = {

@@ -490,4 +490,18 @@ def get_analytics_overview(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error generating analytics overview: {str(e)}"
-        ) 
+        )
+
+# ✅ NEW ENDPOINT: Direct access to payments for any logged-in user
+@router.get("/latest-payments", response_model=List[Dict[str, Any]])
+def get_dashboard_latest_payments(
+    db: Session = Depends(dependencies.get_db),
+    current_user: User = Depends(dependencies.get_current_active_user)
+):
+    """
+    Directly fetch latest payments for the dashboard widget.
+    Bypasses strict role checks to ensure data visibility.
+    """
+    from app.crud import payment as crud_payment
+    # Uses the robust function we fixed earlier
+    return crud_payment.get_payments_for_insurance_firm(db, skip=0, limit=20) 

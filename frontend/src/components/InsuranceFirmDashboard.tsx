@@ -5,7 +5,7 @@ import MetricCard from '@/components/MetricCard';
 import { DataTable } from '@/components/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
 import { formatNaira } from '@/utils/currency';
-import { useDashboardData, usePolicies, usePremiums } from '@/hooks/useQuery';
+import { useDashboardData, usePolicies, usePremiums, useLatestPayments } from '@/hooks/useQuery';
 // ✅ Import LatestPayment from types
 import { DashboardData, DashboardKPIs, RecentPolicy, LatestPayment, Policy, Premium } from '@/types/user';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -132,8 +132,14 @@ const InsuranceFirmDashboard = () => {
 
   const addReminders = useReminderStore((state) => state.addReminders);
   const clearReminders = useReminderStore((state) => state.clearReminders);
-  // Get payments from dashboard data instead of client-side store
-  const payments = dashboardData?.latest_payments || [];
+  // Replace the old payments logic
+  // const payments = dashboardData?.latest_payments || [];
+  
+  // ✅ Use new hook
+  const { data: directPayments, isLoading: paymentsLoading } = useLatestPayments();
+  
+  // Use direct data, falling back to dashboard data (if any), falling back to empty array
+  const payments = directPayments || dashboardData?.latest_payments || [];
 
   // Clear messages after 5 seconds
   React.useEffect(() => {
