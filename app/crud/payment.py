@@ -64,82 +64,95 @@ def get_payments_for_insurance_firm(db: Session, skip: int = 0, limit: int = 50)
     Directly fetches PAID PREMIUMS to guarantee data visibility on dashboard.
     """
     import logging
+    import sys
+    
+    # Force configuration of logging to stdout
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[logging.StreamHandler(sys.stdout)]
+    )
     logger = logging.getLogger(__name__)
-    
-    # ✅ Add detailed logging to see what's happening
-    total_paid_count = db.query(Premium).filter(
-        Premium.payment_status == PaymentStatus.PAID
-    ).count()
-    
-    logger.info(f"🔍 Total PAID premiums in database: {total_paid_count}")
-    
-    # Fetch PAID premiums directly to ensure we show what is in the DB
-    # This bypasses potential issues with the 'payments' table sync
-    premiums = db.query(Premium).options(
-        joinedload(Premium.policy).joinedload(Policy.broker),
-        joinedload(Premium.policy).joinedload(Policy.user)
-    ).filter(
-        Premium.payment_status == PaymentStatus.PAID
-    ).order_by(
-        Premium.payment_date.desc(),  # Prioritize payment_date
-        Premium.updated_at.desc()     # Fallback to update time
-    ).limit(limit).all()
-    
-    logger.info(f"✅ Found {len(premiums)} paid premiums for insurance firm dashboard (limit: {limit})")
+    logger.setLevel(logging.INFO)
     
     result = []
     
-    for premium in premiums:
-        try:
-            # Safety checks with defaults
-            policy = premium.policy
-            
-            # Fallback data if relationships are missing
-            broker_name = "Direct Client"
-            customer_name = "Unknown Customer"
-            policy_number = "N/A"
-            policy_id = 0
-            
-            if policy:
-                policy_id = policy.id
-                policy_number = policy.policy_number
-                if policy.broker:
-                    broker_name = policy.broker.name
-                elif policy.user:
-                    # If no broker, maybe it's a direct user
-                    pass
-                    
-                if policy.user:
-                    customer_name = policy.user.full_name
-            else:
-                logger.warning(f"⚠️ Premium {premium.id} has no associated policy")
+    try:
+        # Debug: Check count first
+        total_paid = db.query(Premium).filter(Premium.payment_status == PaymentStatus.PAID).count()
+        # Use print as fallback in case logging is still suppressed
+        print(f"🔍 PRINT DEBUG: Total PAID premiums in DB: {total_paid}")
+        logger.info(f"🔍 DASHBOARD: Found {total_paid} PAID premiums in DB")
 
-            # Determine payment date
-            payment_date = premium.payment_date or premium.updated_at or datetime.utcnow()
-            if hasattr(payment_date, 'isoformat'):
-                payment_date_str = payment_date.isoformat()
-            else:
-                payment_date_str = str(payment_date)
-
-            # Map directly to frontend structure (LatestPayment type)
-            result.append({
-                "id": premium.payment_reference or f"PAY-{premium.id}",
-                "brokerName": broker_name,
-                "totalAmount": float(premium.amount), # Use full premium amount
-                "policyCount": 1,
-                "paymentMethod": "Bank Transfer", # Default
-                "status": "Success",
-                "completedAt": payment_date_str,
-                "policies": [{
-                    "policyId": policy_id,
-                    "policyNumber": policy_number,
-                    "customerName": customer_name,
-                    "amount": float(premium.amount)
-                }]
-            })
-        except Exception as e:
-            logger.error(f"❌ Error processing premium {premium.id}: {str(e)}", exc_info=True)
-            continue
+        # Fetch PAID premiums directly
+        premiums = db.query(Premium).options(
+            joinedload(Premium.policy).joinedload(Policy.broker),
+            joinedload(Premium.policy).joinedload(Policy.user)
+        ).filter(
+            Premium.payment_status == PaymentStatus.PAID
+        ).order_by(
+            Premium.payment_date.desc(),
+            Premium.updated_at.desc()
+        ).limit(limit).all()
         
-    logger.info(f"📊 Returning {len(result)} payment records")
+        print(f"✅ PRINT DEBUG: Fetched {len(premiums)} premium objects")
+        logger.info(f"✅ DASHBOARD: Fetched {len(premiums)} premiums for display")
+        
+        for premium in premiums:
+            try:
+                # Safety checks with defaults
+                policy = premium.policy
+                
+                # Fallback data if relationships are missing
+                broker_name = "Direct Client"
+                customer_name = "Unknown Customer"
+                policy_number = "N/A"
+                policy_id = 0
+                
+                if policy:
+                    policy_id = policy.id
+                    policy_number = policy.policy_number
+                    if policy.broker:
+                        broker_name = policy.broker.name
+                    elif policy.user:
+                        pass
+                        
+                    if policy.user:
+                        customer_name = policy.user.full_name
+
+                # Determine payment date
+                payment_date = premium.payment_date or premium.updated_at or datetime.utcnow()
+                if hasattr(payment_date, 'isoformat'):
+                    payment_date_str = payment_date.isoformat()
+                else:
+                    payment_date_str = str(payment_date)
+
+                # Map directly to frontend structure
+                result.append({
+                    "id": premium.payment_reference or f"PAY-{premium.id}",
+                    "brokerName": broker_name,
+                    "totalAmount": float(premium.amount), 
+                    "policyCount": 1,
+                    "paymentMethod": "Bank Transfer", 
+                    "status": "Success",
+                    "completedAt": payment_date_str,
+                    "policies": [{
+                        "policyId": policy_id,
+                        "policyNumber": policy_number,
+                        "customerName": customer_name,
+                        "amount": float(premium.amount)
+                    }]
+                })
+            except Exception as inner_e:
+                print(f"❌ PRINT DEBUG: Error processing premium {premium.id}: {inner_e}")
+                logger.error(f"❌ DASHBOARD: Error processing premium {premium.id}: {inner_e}")
+                continue
+                
+    except Exception as e:
+        print(f"❌ PRINT DEBUG: Critical error in get_payments: {e}")
+        logger.error(f"❌ DASHBOARD: Query failed: {e}")
+        return []
+    
+    print(f"📊 PRINT DEBUG: Returning {len(result)} records")
+    logger.info(f"📊 DASHBOARD: Returning {len(result)} payment records to frontend")
     return result

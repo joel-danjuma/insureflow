@@ -36,9 +36,27 @@ export interface RecentPolicy {
   premium_amount?: number;
 }
 
+// ✅ Re-adding LatestPayment interface
+export interface LatestPayment {
+  id: string;
+  brokerName: string;
+  totalAmount: number;
+  policyCount: number;
+  paymentMethod: string;
+  status: string;
+  completedAt: string;
+  policies: Array<{
+    policyId: number;
+    policyNumber: string;
+    customerName: string;
+    amount: number;
+  }>;
+}
+
 export interface DashboardData {
   kpis: DashboardKPIs;
   recent_policies: RecentPolicy[];
+  latest_payments?: LatestPayment[]; // ✅ Re-adding this field
 }
 
 // Broker Types  
