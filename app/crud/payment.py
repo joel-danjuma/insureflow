@@ -66,93 +66,87 @@ def get_payments_for_insurance_firm(db: Session, skip: int = 0, limit: int = 50)
     import logging
     import sys
     
-    # Force configuration of logging to stdout
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        handlers=[logging.StreamHandler(sys.stdout)]
-    )
+    # Force logging to be visible
+    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
     logger = logging.getLogger(__name__)
-    logger.setLevel(logging.INFO)
     
     result = []
     
     try:
-        # Debug: Check count first
-        total_paid = db.query(Premium).filter(Premium.payment_status == PaymentStatus.PAID).count()
-        # Use print as fallback in case logging is still suppressed
-        print(f"🔍 PRINT DEBUG: Total PAID premiums in DB: {total_paid}")
-        logger.info(f"🔍 DASHBOARD: Found {total_paid} PAID premiums in DB")
-
-        # Fetch PAID premiums directly
+        # 1. Fetch Premiums
         premiums = db.query(Premium).options(
             joinedload(Premium.policy).joinedload(Policy.broker),
             joinedload(Premium.policy).joinedload(Policy.user)
         ).filter(
             Premium.payment_status == PaymentStatus.PAID
         ).order_by(
-            Premium.payment_date.desc(),
-            Premium.updated_at.desc()
+            Premium.payment_date.desc()
         ).limit(limit).all()
         
-        print(f"✅ PRINT DEBUG: Fetched {len(premiums)} premium objects")
-        logger.info(f"✅ DASHBOARD: Fetched {len(premiums)} premiums for display")
+        logger.info(f"✅ DASHBOARD: Found {len(premiums)} paid premiums")
         
         for premium in premiums:
             try:
-                # Safety checks with defaults
-                policy = premium.policy
-                
-                # Fallback data if relationships are missing
-                broker_name = "Direct Client"
+                # Initialize safe defaults
+                broker_name = "Direct/Unknown"
                 customer_name = "Unknown Customer"
                 policy_number = "N/A"
                 policy_id = 0
                 
-                if policy:
-                    policy_id = policy.id
-                    policy_number = policy.policy_number
-                    if policy.broker:
-                        broker_name = policy.broker.name
-                    elif policy.user:
-                        pass
-                        
-                    if policy.user:
-                        customer_name = policy.user.full_name
+                # Safely extract related data
+                if premium.policy:
+                    policy_id = premium.policy.id or 0
+                    policy_number = premium.policy.policy_number or "N/A"
+                    
+                    if premium.policy.broker and premium.policy.broker.name:
+                        broker_name = premium.policy.broker.name
+                    
+                    if premium.policy.user and premium.policy.user.full_name:
+                        customer_name = premium.policy.user.full_name
 
-                # Determine payment date
-                payment_date = premium.payment_date or premium.updated_at or datetime.utcnow()
-                if hasattr(payment_date, 'isoformat'):
-                    payment_date_str = payment_date.isoformat()
-                else:
-                    payment_date_str = str(payment_date)
+                # Safely format date
+                payment_date_str = datetime.utcnow().isoformat()
+                if premium.payment_date:
+                    if hasattr(premium.payment_date, 'isoformat'):
+                        payment_date_str = premium.payment_date.isoformat()
+                    else:
+                        payment_date_str = str(premium.payment_date)
 
-                # Map directly to frontend structure
+                # Safely get amount
+                amount = float(premium.amount) if premium.amount else 0.0
+
+                # Construct the result object
                 result.append({
-                    "id": premium.payment_reference or f"PAY-{premium.id}",
+                    "id": str(premium.payment_reference or f"PAY-{premium.id}"),
                     "brokerName": broker_name,
-                    "totalAmount": float(premium.amount), 
+                    "totalAmount": amount,
                     "policyCount": 1,
-                    "paymentMethod": "Bank Transfer", 
+                    "paymentMethod": "Bank Transfer",
                     "status": "Success",
                     "completedAt": payment_date_str,
                     "policies": [{
                         "policyId": policy_id,
                         "policyNumber": policy_number,
                         "customerName": customer_name,
-                        "amount": float(premium.amount)
+                        "amount": amount
                     }]
                 })
             except Exception as inner_e:
-                print(f"❌ PRINT DEBUG: Error processing premium {premium.id}: {inner_e}")
-                logger.error(f"❌ DASHBOARD: Error processing premium {premium.id}: {inner_e}")
-                continue
-                
+                # If processing fails, return a minimal record instead of skipping!
+                logger.error(f"⚠️ Recovering premium {premium.id}: {inner_e}")
+                result.append({
+                    "id": f"PAY-{premium.id}",
+                    "brokerName": "Data Error",
+                    "totalAmount": float(premium.amount or 0),
+                    "policyCount": 1,
+                    "paymentMethod": "Unknown",
+                    "status": "Recovered",
+                    "completedAt": datetime.utcnow().isoformat(),
+                    "policies": []
+                })
+
     except Exception as e:
-        print(f"❌ PRINT DEBUG: Critical error in get_payments: {e}")
-        logger.error(f"❌ DASHBOARD: Query failed: {e}")
+        logger.error(f"❌ Critical DB Error: {e}")
         return []
-    
-    print(f"📊 PRINT DEBUG: Returning {len(result)} records")
-    logger.info(f"📊 DASHBOARD: Returning {len(result)} payment records to frontend")
+
     return result
