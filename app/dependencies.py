@@ -143,6 +143,10 @@ def get_current_policy_creator(
     """
     Get current user who can create policies (Insurance Admin or Accountant with permission).
     """
+    # ✅ Allow Global Admin for testing/management
+    if current_user.role == UserRole.ADMIN:
+        return current_user
+
     if not (current_user.is_insurance_user and 
             (current_user.can_perform_admin_actions or current_user.can_create_policies)):
         raise HTTPException(

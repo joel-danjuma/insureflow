@@ -69,8 +69,8 @@ class PolicyBase(BaseModel):
     
     # Status and relationships
     status: str = "pending"
-    company_id: int
-    user_id: int
+    # company_id: int
+    # user_id: int
 
 class PolicyCreate(PolicyBase):
     """Schema for creating a new policy."""
@@ -115,6 +115,8 @@ class Policy(PolicyBase):
     """Schema for policy responses."""
     id: int
     policy_number: str
+    company_id: int
+    user_id: int
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 

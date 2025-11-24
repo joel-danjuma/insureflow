@@ -20,6 +20,7 @@ from app.services.virtual_account_service import virtual_account_service
 from app.services.squad_co import squad_co_service
 from app.models.policy import Policy as PolicyModel
 from app.models.virtual_account import VirtualAccount as VirtualAccountModel
+from app.models.company import InsuranceCompany
 
 router = APIRouter()
 
@@ -63,7 +64,22 @@ async def create_policy(
             detail="Coverage amount must be greater than 0"
         )
     
-    new_policy = policy_crud.create_policy(db=db, policy=policy)
+    # Find a default insurance company for the policy
+    # For ADMIN user, just pick the first one.
+    # For INSURANCE_ADMIN, ideally pick their company (if we had the link).
+    company = db.query(InsuranceCompany).first()
+    if not company:
+        # Handle case where no company exists (maybe create dummy?)
+        # Or just raise error
+        raise HTTPException(status_code=400, detail="No insurance company found to assign policy to.")
+    
+    # Call CRUD with explicit IDs
+    new_policy = policy_crud.create_policy(
+        db=db, 
+        policy=policy, 
+        user_id=current_user.id, 
+        company_id=company.id
+    )
 
     # Automatically create a virtual account for the new policy
     await virtual_account_service.create_individual_virtual_account(

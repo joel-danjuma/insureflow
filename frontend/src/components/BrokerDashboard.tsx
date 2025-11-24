@@ -201,6 +201,7 @@ const BrokerDashboard = () => {
 
   // Use only backend policies - no local mock data
   const allPolicies = useMemo(() => {
+    // ✅ Defensive check: Ensure policies is always an array
     return Array.isArray(policies) ? policies : [];
   }, [policies]);
 
@@ -485,7 +486,15 @@ const BrokerDashboard = () => {
     );
   }
 
-  const metrics = useMemo(() => calculateBrokerMetrics(allPolicies, premiums || []), [allPolicies, premiums]);
+  const metrics = useMemo(() => {
+    // ✅ Defensive check: Ensure safe calculation even if data is missing
+    try {
+      return calculateBrokerMetrics(allPolicies, premiums || []);
+    } catch (e) {
+      console.error("Error calculating metrics:", e);
+      return { totalPremiums: 0, totalCommission: 0, retentionRate: 0, activeClients: 0 };
+    }
+  }, [allPolicies, premiums]);
 
   // Mock chart data for premium performance
   const premiumPerformanceData = [

@@ -24,11 +24,15 @@ def get_policies_by_broker(db: Session, broker_id: int, skip: int = 0, limit: in
     """
     return db.query(Policy).options(joinedload(Policy.user)).filter(Policy.broker_id == broker_id).offset(skip).limit(limit).all()
 
-def create_policy(db: Session, policy: PolicyCreate) -> Policy:
+def create_policy(db: Session, policy: PolicyCreate, user_id: int, company_id: int) -> Policy:
     """
     Creates a new policy in the database.
     """
-    db_policy = Policy(**policy.model_dump())
+    db_policy = Policy(
+        **policy.model_dump(),
+        user_id=user_id,
+        company_id=company_id
+    )
     db.add(db_policy)
     db.commit()
     db.refresh(db_policy)
