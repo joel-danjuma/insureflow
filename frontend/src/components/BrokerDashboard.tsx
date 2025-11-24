@@ -659,7 +659,7 @@ const BrokerDashboard = () => {
       </div>
 
       {/* Payment Flow Testing Section - For Stakeholder Demos */}
-      <div className="flex justify-between items-center pt-8 pb-3">
+      {/* <div className="flex justify-between items-center pt-8 pb-3">
         <h2 className="text-white text-[22px] font-bold leading-tight tracking-[-0.015em]">
           Payment Flow Testing
         </h2>
@@ -680,7 +680,7 @@ const BrokerDashboard = () => {
         <div className="mb-8">
           <PaymentTestingPanel />
         </div>
-      )}
+      )} */}
 
       {/* Payment Modal */}
       <PaymentModal
